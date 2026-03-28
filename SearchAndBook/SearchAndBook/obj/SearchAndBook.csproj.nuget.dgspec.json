@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ursac\\source\\repos\\UBB-SE-2026-UUTSUU\\SearchAndBook\\SearchAndBook\\SearchAndBook.csproj": {}
+    "C:\\Users\\untea\\Desktop\\ISS_Code\\SearchAndBook\\SearchAndBook\\SearchAndBook.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ursac\\source\\repos\\UBB-SE-2026-UUTSUU\\SearchAndBook\\SearchAndBook\\SearchAndBook.csproj": {
+    "C:\\Users\\untea\\Desktop\\ISS_Code\\SearchAndBook\\SearchAndBook\\SearchAndBook.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ursac\\source\\repos\\UBB-SE-2026-UUTSUU\\SearchAndBook\\SearchAndBook\\SearchAndBook.csproj",
+        "projectUniqueName": "C:\\Users\\untea\\Desktop\\ISS_Code\\SearchAndBook\\SearchAndBook\\SearchAndBook.csproj",
         "projectName": "SearchAndBook",
-        "projectPath": "C:\\Users\\ursac\\source\\repos\\UBB-SE-2026-UUTSUU\\SearchAndBook\\SearchAndBook\\SearchAndBook.csproj",
-        "packagesPath": "C:\\Users\\ursac\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\ursac\\source\\repos\\UBB-SE-2026-UUTSUU\\SearchAndBook\\SearchAndBook\\obj\\",
+        "projectPath": "C:\\Users\\untea\\Desktop\\ISS_Code\\SearchAndBook\\SearchAndBook\\SearchAndBook.csproj",
+        "packagesPath": "C:\\Users\\untea\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\untea\\Desktop\\ISS_Code\\SearchAndBook\\SearchAndBook\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\ursac\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\untea\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
