@@ -5,3 +5,21 @@
 /.vs
 /SearchAndBook/.vs/SearchAndBook
 /SearchAndBook/.vs/ProjectEvaluation
+
+
+# =========================
+# .NET / C# Ignore Rules
+# =========================
+# Build results
+[Bb]in/
+[Oo]bj/
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# User-specific files
+*.user
+*.userosscache
+*.sln.docstates
