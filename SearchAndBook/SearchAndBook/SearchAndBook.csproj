@@ -12,9 +12,6 @@
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-  <ItemGroup>
-    <Content Remove="Assets\RO.txt" />
-  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -43,6 +40,9 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260317003" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Domain\" />
+    <Folder Include="Services\" />
+    <Folder Include="Utils\" />
     <Folder Include="Shared\" />
     <Folder Include="Views\" />
     <Folder Include="ViewModels\" />
