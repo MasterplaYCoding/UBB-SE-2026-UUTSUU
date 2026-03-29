@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SearchAndBook")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+615ed43870c30b97c229c449afd26e2e0ac9ccd9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+565f01fad79f0823a1f3175bcf2d51c911c9e9d9")]
 [assembly: System.Reflection.AssemblyProductAttribute("SearchAndBook")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SearchAndBook")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
