@@ -5,19 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SearchAndBook.Domain
+namespace SearchAndBook.Shared
 {
-    internal class Game
+    internal class GameDTO
     {
         public int GameId { get; set; }
-        public int OwnerId { get; set; }
         public string Name { get; set; }
+        public string Image { get; set; }
         public double Price { get; set; }
+        public string City { get; set; }
         public int MaximumPlayerNumber { get; set; }
         public int MininumPlayerNumber { get; set; }
-        public string Description { get; set; }
-        public string Image {  get; set; }
-        public bool IsActive { get; set; }
-       
     }
 }
