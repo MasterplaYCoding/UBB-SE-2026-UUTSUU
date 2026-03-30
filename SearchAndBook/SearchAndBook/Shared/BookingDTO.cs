@@ -1,22 +1,21 @@
 ﻿using System;
-namespace SearchAndBook.Shared
+
+namespace SearchAndBook.Shared;
+
+public class BookingDTO
 {
-    internal class BookingDTO
-    {
-        public int gameId { get; set; }
-        public string name { get; set; }
-        public string image { get; set; }
-        public int price { get; set; }
-        public string city { get; set; }
-        public string ownerCity { get; set; }
+    public int GameId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public byte[]? Image { get; set; }
+    public decimal Price { get; set; }
+    public string City { get; set; } = string.Empty;
+    public int MinimumNrPlayers { get; set; }
+    public int MaximumNrPlayers { get; set; }
+    public string Description {  get; set; } = string.Empty;
 
-        public int minimumNrPlayers { get; set; }
-        public int maximumNrPlayers { get; set; }
-
-        public int userId { get; set; }
-        public string displayName { get; set; }
-        public bool isSuspended { get; set; }
-        public string avatarURL { get; set; }
-        public DateTime createdAt { get; set; }
-    }
+    public int UserId { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
+    public bool IsSuspended { get; set; }
+    public string? AvatarUrl { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

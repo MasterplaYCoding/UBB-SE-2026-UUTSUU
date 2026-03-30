@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -11,6 +12,10 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Shapes;
+using SearchAndBook.Domain;
+using SearchAndBook.Repositories;
+using SearchAndBook.Services;
+using SearchAndBook.Shared;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
@@ -49,8 +54,9 @@ namespace SearchAndBook
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Seeder failed: {ex.Message}");
+                Debug.WriteLine($"Seeder failed: {ex.Message}");
             }
+            
             _window = new MainWindow();
             _window.Activate();
         }

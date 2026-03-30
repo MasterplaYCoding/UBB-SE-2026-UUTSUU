@@ -1,48 +1,78 @@
 ﻿using SearchAndBook.Repositories;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SearchAndBook.Shared;
 
 namespace SearchAndBook.Services
 {
     internal class SearchAndFilterService : ISearchAndFilterService
     {
-        private readonly IGameRepository gameRepository;
-        private readonly IRentalRepository rentalRepository;
-        public SearchAndFilterService(IGameRepository gameRepository, IRentalRepository rentalRepository)
+        private readonly IGamesRepository gamesRepository;
+        private readonly IUsersRepository usersRepository;
+        public SearchAndFilterService(IGamesRepository gamesRepository, IUsersRepository usersRepository)
         {
-            this.gameRepository = gameRepository;
-            this.rentalRepository = rentalRepository;
+            this.gamesRepository = gamesRepository;
+            this.usersRepository = usersRepository;
         }
-        public List<GameDTO> search(FilterCriteria filter)
+        public GameDTO[] Search(FilterCriteria filter)
         {
-            var games = gameRepository.getByFilter(filter);
+            var games = gamesRepository.GetByFilter(filter);
 
-            return games.Select(g => new GameDTO
+            return games.Select(g =>
             {
-                GameId = g.GameId,
-                Name = g.Name,
-                Image = g.Image,
-                Price = g.Price,
-                City = g.City,
-                MaximumPlayerNumber = g.MaximumPlayerNumber,
-                MininumPlayerNumber = g.MininumPlayerNumber
-            }).ToList();
+                var owner = usersRepository.Get(g.OwnerId);
+
+                return new GameDTO
+                {
+                    GameId = g.GameId,
+                    Name = g.Name,
+                    Image = g.Image,
+                    Price = g.Price,
+                    City = owner?.City ?? string.Empty,
+                    MaximumPlayerNumber = g.MaximumPlayerNumber,
+                    MinimumPlayerNumber = g.MinimumPlayerNumber
+                };
+            }).ToArray();
         }
-        public List<GameDTO> getFeedAvailableTonight(int userId)
+        public GameDTO[] GetFeedAvailableTonight(int userId)
         {
-            // Implement logic to get games available tonight based on the name using gameRepository and rentalRepository
-            // This is a placeholder implementation and should be replaced with actual logic
-            return new List<GameDTO>();
+            var games = gamesRepository.GetForFeedAvailableTonight(userId);
+
+            return games.Select(g =>
+            {
+                var owner = usersRepository.Get(g.OwnerId);
+
+                return new GameDTO
+                {
+                    GameId = g.GameId,
+                    Name = g.Name,
+                    Image = g.Image,
+                    Price = g.Price,
+                    City = owner?.City ?? string.Empty,
+                    MinimumPlayerNumber = g.MinimumPlayerNumber,
+                    MaximumPlayerNumber = g.MaximumPlayerNumber
+                };
+            }).ToArray();
         }
-        public List<GameDTO> getFeedOthers(int userId)
+
+        public GameDTO[] GetFeedOthers(int userId)
         {
-            // Implement logic to get other games based on the name using gameRepository and rentalRepository
-            // This is a placeholder implementation and should be replaced with actual logic
-            return new List<GameDTO>();
+            var games = gamesRepository.GetForFeedOthers(userId);
+
+            return games.Select(g =>
+            {
+                var owner = usersRepository.Get(g.OwnerId);
+
+                return new GameDTO
+                {
+                    GameId = g.GameId,
+                    Name = g.Name,
+                    Image = g.Image,
+                    Price = g.Price,
+                    City = owner?.City ?? string.Empty,
+                    MinimumPlayerNumber = g.MinimumPlayerNumber,
+                    MaximumPlayerNumber = g.MaximumPlayerNumber
+                };
+            }).ToArray();
         }
     }
 }
