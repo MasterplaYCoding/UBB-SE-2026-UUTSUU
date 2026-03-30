@@ -11,12 +11,12 @@ namespace SearchAndBook.Domain
     {
         public int GameId { get; set; }
         public int OwnerId { get; set; }
-        public string Name { get; set; }
-        public double Price { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public decimal Price { get; set; }
         public int MaximumPlayerNumber { get; set; }
-        public int MininumPlayerNumber { get; set; }
-        public string Description { get; set; }
-        public string Image {  get; set; }
+        public int MinimumPlayerNumber { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public string? Image {  get; set; }
         public bool IsActive { get; set; }
        
     }

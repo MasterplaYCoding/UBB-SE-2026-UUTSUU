@@ -9,8 +9,10 @@ namespace SearchAndBook.Services
 {
     internal interface ISearchAndFilterService
     {
-        public GameDTO[] search(FilterCriteria filter);
-        public GameDTO[] getFeedAvailableTonight(int userId);
-        public GameDTO[] getFeedOthers(int userId);
+        public GameDTO[] Search(FilterCriteria filter);
+        public GameDTO[] GetFeedAvailableTonight(int userId);
+        public GameDTO[] GetFeedOthers(int userId);
+
+        public GameDTO[] ApplyFilters(GameDTO[] sourceGames, FilterCriteria filter);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using SearchAndBook.Shared;
+using SearchAndBook.Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +10,11 @@ namespace SearchAndBook.Repositories
 {
     internal class GameRepository : IGameRepository
     {
-        public GameDTO[] getByFilter(FilterCriteria filter)
+        public Game[] getByFilter(FilterCriteria filter)
         {
             // Implement logic to retrieve games based on the filter criteria from the database
             // This is a placeholder implementation and should be replaced with actual logic
-            return new GameDTO[0];
+            return Array.Empty<Game>();
 
         }
     }
