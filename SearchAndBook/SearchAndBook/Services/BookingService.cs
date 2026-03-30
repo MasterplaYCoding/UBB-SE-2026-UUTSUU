@@ -38,7 +38,8 @@ namespace SearchAndBook.Services
                 isSuspended = user.isSuspended,
                 avatarURL = user.avatarURL,
                 createdAt = user.createdAt,
-                city = game.city
+                city = game.city,
+                ownerCity = user.city
             }; */
             return new BookingDTO { };
         }
