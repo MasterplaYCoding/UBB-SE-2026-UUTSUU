@@ -5,6 +5,7 @@ using SearchAndBook.Domain;
 using SearchAndBook.Repositories;
 using SearchAndBook.Services;
 using SearchAndBook.ViewModels;
+using System;
 
 namespace SearchAndBook.Views
 {
@@ -13,11 +14,17 @@ namespace SearchAndBook.Views
         public GameDetailsView()
         {
             InitializeComponent();
+        } 
+        
+        protected override void OnNavigatedTo(NavigationEventArgs e) {
+            base.OnNavigatedTo(e);
+            if (e.Parameter is not int gameId) { return; }
+
             var gameRepo = new GameRepository();
             var rentalRepo = new RentalRepository();
             var userRepo = new UserRepository();
             var service = new BookingService(gameRepo, rentalRepo, userRepo);
-            var vm = new GameDetailsViewModel(service, 1);
+            var vm = new GameDetailsViewModel(service, gameId);
 
             vm.OnGoBackRequested += () =>
             {
@@ -39,20 +46,45 @@ namespace SearchAndBook.Views
             vm.GoBack();
         }
 
-        private void OnBookClicked(object sender, RoutedEventArgs e)
+        private async void OnBookClicked(object sender, RoutedEventArgs e)
+        {
+            var selectedDates = RentalCalendar.SelectedDates;
+            if (selectedDates.Count == 0)
+            {
+                var dialog = new ContentDialog
+                {
+                    Title = "Invalid selection",
+                    Content = "Please select at least one date.",
+                    CloseButtonText = "OK",
+                    XamlRoot = this.XamlRoot
+                };
+                await dialog.ShowAsync();
+                return;
+            }
+
+            var vm = (GameDetailsViewModel)this.DataContext;
+            var range = new TimeRange
+            {
+                startTime = selectedDates[0].DateTime,
+                endTime = selectedDates[selectedDates.Count - 1].DateTime
+            };
+            vm.StartBooking(range);
+        }
+
+        private void OnDatesChanged(CalendarView sender, CalendarViewSelectedDatesChangedEventArgs e)
         {
             var vm = (GameDetailsViewModel)this.DataContext;
-
             var selectedDates = RentalCalendar.SelectedDates;
-            if (selectedDates.Count < 2)
+            if (selectedDates.Count < 1)
                 return;
 
-            var startTime = selectedDates[0].DateTime;
-            var endTime = selectedDates[selectedDates.Count - 1].DateTime;
+            var range = new TimeRange
+            {
+                startTime = selectedDates[0].DateTime,
+                endTime = selectedDates[selectedDates.Count - 1].DateTime
+            };
 
-            var range = new TimeRange { startTime = startTime, endTime = endTime };
-
-            vm.StartBooking(range);
+            vm.CalculatePrice(range);
         }
     }
 }
