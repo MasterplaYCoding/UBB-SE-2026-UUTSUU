@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SearchAndBook.Domain
 {
-    internal class Game
+    public class Game
     {
         public int GameId { get; set; }
         public int OwnerId { get; set; }
@@ -16,7 +16,7 @@ namespace SearchAndBook.Domain
         public int MaximumPlayerNumber { get; set; }
         public int MinimumPlayerNumber { get; set; }
         public string Description { get; set; } = string.Empty;
-        public string? Image {  get; set; }
+        public byte[]? Image {  get; set; }
         public bool IsActive { get; set; }
        
     }

@@ -3,10 +3,10 @@ using SearchAndBook.Shared;
 
 namespace SearchAndBook.Services
 {
-    internal interface IBookingService
+    public interface IBookingService
     {
-        BookingDTO getGameDetails(int gameId);
-        TimeRange[] getUnavailableRanges(int gameId);
-        bool checkTimeRange(int gameId, TimeRange range);
+        BookingDTO GetGameDetails(int gameId);
+        TimeRange[] GetUnavailableRanges(int gameId);
+        bool CheckAvailability(int gameId, TimeRange range);
     }
 }

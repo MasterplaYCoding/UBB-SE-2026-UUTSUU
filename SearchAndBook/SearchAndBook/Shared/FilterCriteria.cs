@@ -6,17 +6,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using SearchAndBook.Domain;
 
-namespace SearchAndBook.Shared
-{
-    internal class FilterCriteria
+namespace SearchAndBook.Shared;
+
+    public class FilterCriteria
     {
         public string? Name {  get; set; }
         public string? City { get; set; }
         public TimeRange? AvailabilityRange { get; set; }
 
-        public int? MinimumPlayers { get; set; }
+        public int? PlayerCount { get; set; }
         public decimal? MaximumPrice { get; set; }
-        public decimal? MinimumPrice { get; set; }
         public SortOption SortOption { get; set; }
         public int? UserId { get; set; }
 
@@ -28,19 +27,17 @@ namespace SearchAndBook.Shared
             Name = null;
             City = null;
             AvailabilityRange = null;
-            MinimumPrice = null;
             MaximumPrice = null;
-            MinimumPlayers = null;
+            PlayerCount = null;
             SortOption = SortOption.None;
             UserId = null;
         }
 
         public bool IsEmpty() { 
-            return string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(City) && AvailabilityRange == null && MinimumPlayers==null && MinimumPrice==null && MaximumPrice==null && SortOption == SortOption.None;
+            return string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(City) && AvailabilityRange == null && PlayerCount==null &&  MaximumPrice==null && SortOption == SortOption.None;
         }
 
         public bool HasValidAvailabilityRange() {
-            return AvailabilityRange == null || AvailabilityRange.IsValid();
+            return AvailabilityRange == null;
         }
     }
-}

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SearchAndBook.Domain
 {
-    internal class Rental
+    public class Rental
     {
         public int RentalId { get; set; }
         public int GameId { get; set; }

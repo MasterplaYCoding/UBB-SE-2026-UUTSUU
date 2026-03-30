@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace SearchAndBook.Services
 {
-    internal class SearchAndFilterService : ISearchAndFilterService
+    public class SearchAndFilterService : ISearchAndFilterService
     {
-        private readonly IGameRepository _gameRepository;
-        private readonly IRentalRepository _rentalRepository;
-        private readonly IUserRepository _userRepository;
-        public SearchAndFilterService(IGameRepository gameRepository, IRentalRepository rentalRepository, IUserRepository userRepository)
+        private readonly IGamesRepository _gameRepository;
+        private readonly IRentalsRepository _rentalRepository;
+        private readonly IUsersRepository _userRepository;
+        public SearchAndFilterService(IGamesRepository gameRepository, IRentalsRepository rentalRepository, IUsersRepository userRepository)
         {
             this._gameRepository = gameRepository;
             this._rentalRepository = rentalRepository;
@@ -22,7 +22,7 @@ namespace SearchAndBook.Services
         }
         public GameDTO[] Search(FilterCriteria filter)
         {
-            var games = _gameRepository.getByFilter(filter);
+            var games = _gameRepository.GetByFilter(filter);
 
             return games.Select(MapGameToDto).ToArray();
         }
@@ -50,17 +50,13 @@ namespace SearchAndBook.Services
                 filteredGames = filteredGames.Where(game => game.City.Contains(filter.City, StringComparison.OrdinalIgnoreCase));  
             }
 
-            if (filter.MinimumPrice.HasValue) { 
-                filteredGames = filteredGames.Where(game => game.Price >= filter.MinimumPrice.Value);
-            }
-
 
             if (filter.MaximumPrice.HasValue) { 
                 filteredGames = filteredGames.Where(game => game.Price <= filter.MaximumPrice.Value);
             }
 
-            if (filter.MinimumPlayers.HasValue) { 
-                filteredGames = filteredGames.Where(game => game.MaximumPlayerNumber >= filter.MinimumPlayers.Value);
+            if (filter.PlayerCount.HasValue) { 
+                filteredGames = filteredGames.Where(game => game.MaximumPlayerNumber >= filter.PlayerCount.Value);
             }
 
             switch (filter.SortOption){
@@ -76,10 +72,11 @@ namespace SearchAndBook.Services
             }
 
 
-            if (filter.AvailabilityRange != null && filter.AvailabilityRange.IsValid())
+            if (filter.AvailabilityRange != null)
             {
+
                 filteredGames = filteredGames.Where(game =>
-                    IsGameAvailable(game.GameId, filter.AvailabilityRange));
+                    _rentalRepository.CheckAvailability(filter.AvailabilityRange, game.GameId));
             }
 
 
@@ -89,28 +86,10 @@ namespace SearchAndBook.Services
 
         }
 
-        private bool IsGameAvailable(int gameId, TimeRange requestedRange)
-        {
-            var rentals = _rentalRepository.GetByGameId(gameId);
-
-            foreach (var rental in rentals)
-            {
-                bool overlaps =
-                    requestedRange.StartTime < rental.EndDate &&
-                    requestedRange.EndTime > rental.StartDate;
-
-                if (overlaps)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
 
         private GameDTO MapGameToDto(Game game)
         {
-            var owner = _userRepository.GetById(game.OwnerId);
+            var owner = _userRepository.Get(game.OwnerId);
 
             return new GameDTO
             {

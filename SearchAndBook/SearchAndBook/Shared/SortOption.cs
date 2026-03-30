@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SearchAndBook.Shared
 {
-    internal enum SortOption
+    public enum SortOption
     {
         None,
         PriceAscending,

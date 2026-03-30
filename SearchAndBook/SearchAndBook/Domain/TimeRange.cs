@@ -1,20 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.Networking.Vpn;
 
 namespace SearchAndBook.Domain
 {
-    internal class TimeRange
+    public class TimeRange
     {
-        public DateTime StartTime {  get; set; }
+        public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
 
-        public bool IsValid() { 
-            return StartTime < EndTime;
+        public TimeRange(DateTime startTime, DateTime endTime)
+        {
+            if (endTime <= startTime)
+            {
+                throw new ArgumentException("EndTime must be after StartTime");
+            }
+
+            StartTime = startTime;
+            EndTime = endTime;
         }
 
+        public bool Overlaps(TimeRange other)
+        {
+            return StartTime < other.EndTime && EndTime > other.StartTime;
+        }
     }
 }
