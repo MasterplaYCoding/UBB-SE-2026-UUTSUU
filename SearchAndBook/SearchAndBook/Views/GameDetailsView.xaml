@@ -19,7 +19,7 @@
         <StackPanel Grid.Column="0" Spacing="20">
 
             <!-- TITLE -->
-            <TextBlock Text="{Binding gameAndUserDetails.name}"
+            <TextBlock Text="{Binding GameAndUserDetails.Name}"
                        FontSize="28"
                        FontWeight="Bold"/>
 
@@ -30,9 +30,8 @@
                 <Border Background="#DDD"
                         Height="200"
                         CornerRadius="10">
-                    <TextBlock Text="{Binding gameAndUserDetails.image}"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"/>
+                    <Image Source="{Binding GameImage}"
+                           Stretch="UniformToFill"/>
                 </Border>
 
                 <!-- Info -->
@@ -40,20 +39,20 @@
 
                     <TextBlock>
                         <Run Text="📍 "/>
-                        <Run Text="{Binding gameAndUserDetails.city}"/>
+                        <Run Text="{Binding GameAndUserDetails.City}"/>
                     </TextBlock>
 
                     <TextBlock>
                         <Run Text="👥 "/>
-                        <Run Text="{Binding gameAndUserDetails.minimumNrPlayers}"/>
+                        <Run Text="{Binding GameAndUserDetails.MinimumNrPlayers}"/>
                         <Run Text=" - "/>
-                        <Run Text="{Binding gameAndUserDetails.maximumNrPlayers}"/>
+                        <Run Text="{Binding GameAndUserDetails.MaximumNrPlayers}"/>
                         <Run Text=" players"/>
                     </TextBlock>
 
                     <TextBlock>
                         <Run Text="💰 "/>
-                        <Run Text="{Binding gameAndUserDetails.price}"/>
+                        <Run Text="{Binding GameAndUserDetails.Price}"/>
                         <Run Text="$/day"/>
                     </TextBlock>
 
@@ -66,7 +65,7 @@
                 <TextBlock Text="Description"
                            FontSize="20"
                            FontWeight="Bold"/>
-                <TextBlock Text="{Binding gameAndUserDetails.description}"
+                <TextBlock Text="{Binding GameAndUserDetails.Description}"
                            TextWrapping="Wrap"/>
             </StackPanel>
 
@@ -81,12 +80,12 @@
 
                     <Ellipse Width="70" Height="70" Fill="#AAA"/>
 
-                    <TextBlock Text="{Binding gameAndUserDetails.displayName}"
+                    <TextBlock Text="{Binding GameAndUserDetails.DisplayName}"
                                FontWeight="SemiBold"/>
 
                     <TextBlock FontSize="12">
                         <Run Text="Since "/>
-                        <Run Text="{Binding gameAndUserDetails.createdAt}"/>
+                        <Run Text="{Binding GameAndUserDetails.CreatedAt}"/>
                     </TextBlock>
 
                     <Button Content="Chat with user"/>
@@ -116,7 +115,7 @@
 
             <TextBlock FontSize="16">
                 <Run Text="Price: "/>
-                <Run Text="{Binding gameAndUserDetails.price}"/>
+                <Run Text="{Binding GameAndUserDetails.Price}"/>
                 <Run Text="$"/>
             </TextBlock>
 
