@@ -22,10 +22,14 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Content Remove="Assets\SeedImages\carcassonne.jpg" />
-    <Content Remove="Assets\SeedImages\catan.png" />
-    <Content Remove="Assets\SeedImages\monopoly.jpg" />
     <Content Remove="Assets\SeedImages\terraforming_mars.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Assets\SeedImages\carcassonne.jpg" />
+    <None Remove="Assets\SeedImages\catan.png" />
+    <None Remove="Assets\SeedImages\monopoly.jpg" />
+    <None Remove="Views\Test\FeedTestPage.xaml" />
+    <None Remove="Views\Test\GameCardTestPage.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -56,11 +60,9 @@
     <Folder Include="Domain\" />
     <Folder Include="Services\" />
     <Folder Include="Utils\" />
-    <Folder Include="Views\" />
     <Folder Include="ViewModels\" />
     <Folder Include="Repositories\" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup Condition="$(VisualStudioVersion) == '17.0'">
     <Reference Include="Microsoft.Data.Tools.Schema.Sql, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(SSDTPath)\Microsoft.Data.Tools.Schema.Sql.dll</HintPath>
@@ -74,6 +76,21 @@
       <HintPath>$(SSDTUnitTestPath)\Microsoft.Data.Tools.Schema.Sql.UnitTestingAdapter.dll</HintPath>
       <Private>True</Private>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\Test\FeedTestPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\Pages\FeedPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\Tests\GameCardTestPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <!--
     Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
