@@ -8,125 +8,209 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Padding="25,75,25,25">
+    <Grid Padding="30,80,30,30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="3*"/>
-            <ColumnDefinition Width="2*"/>
-        </Grid.ColumnDefinitions>
+        <!-- TOP BAR: Back button + Title -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-        <!-- LEFT SIDE -->
-        <StackPanel Grid.Column="0" Spacing="20">
+            <Button Grid.Column="0"
+                    Content="← Back"
+                    Click="OnBackClicked"
+                    VerticalAlignment="Center"
+                    Margin="0,0,16,0"/>
 
-            <!-- TITLE -->
-            <TextBlock Text="{Binding gameAndUserDetails.name}"
+            <TextBlock Grid.Column="1"
+                       Text="{Binding gameAndUserDetails.name}"
                        FontSize="28"
-                       FontWeight="Bold"/>
+                       FontWeight="Bold"
+                       VerticalAlignment="Center"/>
+        </Grid>
 
-            <!-- IMAGE + INFO SIDE BY SIDE -->
-            <Grid ColumnDefinitions="2*,3*" ColumnSpacing="20">
+        <!-- ERROR BANNER -->
+        <InfoBar Grid.Row="1"
+                 Title="Error"
+                 Message="Could not retrieve listing details. Please try again later."
+                 Severity="Error"
+                 IsOpen="{Binding HasError}"
+                 Margin="0,0,0,12"/>
 
-                <!-- Image -->
-                <Border Background="#DDD"
-                        Height="200"
-                        CornerRadius="10">
-                    <TextBlock Text="{Binding gameAndUserDetails.image}"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"/>
-                </Border>
+        <!-- MAIN CONTENT -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="24"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
 
-                <!-- Info -->
-                <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Center">
+            <!-- ===== LEFT SIDE ===== -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="20">
 
-                    <TextBlock>
-                        <Run Text="📍 "/>
-                        <Run Text="{Binding gameAndUserDetails.city}"/>
-                    </TextBlock>
+                    <!-- IMAGE + INFO SIDE BY SIDE -->
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="20">
 
-                    <TextBlock>
-                        <Run Text="👥 "/>
-                        <Run Text="{Binding gameAndUserDetails.minimumNrPlayers}"/>
-                        <Run Text=" - "/>
-                        <Run Text="{Binding gameAndUserDetails.maximumNrPlayers}"/>
-                        <Run Text=" players"/>
-                    </TextBlock>
+                        <Border Grid.Column="0"
+                                Width="220"
+                                Height="180"
+                                CornerRadius="10">
+                            <Border.Background>
+                                <ImageBrush ImageSource="{Binding gameAndUserDetails.image}"
+                                            Stretch="UniformToFill"/>
+                            </Border.Background>
+                        </Border>
 
-                    <TextBlock>
-                        <Run Text="💰 "/>
-                        <Run Text="{Binding gameAndUserDetails.price}"/>
-                        <Run Text="$/day"/>
-                    </TextBlock>
+                        <StackPanel Grid.Column="1" Spacing="10" VerticalAlignment="Center">
+
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="📍" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding gameAndUserDetails.city}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="👥" VerticalAlignment="Center"/>
+                                <TextBlock VerticalAlignment="Center">
+                                    <Run Text="{Binding gameAndUserDetails.minimumNrPlayers}"/>
+                                    <Run Text=" – "/>
+                                    <Run Text="{Binding gameAndUserDetails.maximumNrPlayers}"/>
+                                    <Run Text=" players"/>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="💰" VerticalAlignment="Center"/>
+                                <TextBlock VerticalAlignment="Center">
+                                    <Run Text="{Binding gameAndUserDetails.price}"/>
+                                    <Run Text=" $/day"/>
+                                </TextBlock>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- DIVIDER -->
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+
+                    <!-- DESCRIPTION -->
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Description"
+                                   FontSize="18"
+                                   FontWeight="Bold"/>
+                        <TextBlock Text="{Binding gameAndUserDetails.description}"
+                                   TextWrapping="Wrap"
+                                   MinHeight="52"
+                                   LineHeight="22"/>
+                    </StackPanel>
+
+                    <!-- DIVIDER -->
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+
+                    <!-- USER'S PROFILE -->
+                    <StackPanel Spacing="10">
+
+                        <TextBlock Text="User's profile"
+                                   FontSize="16"
+                                   FontWeight="Bold"/>
+
+                        <Ellipse Width="60" Height="60" Fill="#AAA"
+                                 HorizontalAlignment="Left"/>
+
+                        <TextBlock Text="{Binding gameAndUserDetails.displayName}"
+                                   FontWeight="SemiBold"/>
+
+                        <TextBlock FontSize="12">
+                            <Run Text="Since "/>
+                            <Run Text="{Binding gameAndUserDetails.createdAt}"/>
+                        </TextBlock>
+
+                        <Button Content="Chat with user"/>
+
+                    </StackPanel>
 
                 </StackPanel>
+            </ScrollViewer>
 
-            </Grid>
+            <!-- ===== RIGHT SIDE (Booking Panel) ===== -->
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="16">
 
-            <!-- DESCRIPTION -->
-            <StackPanel Spacing="5">
-                <TextBlock Text="Description"
-                           FontSize="20"
-                           FontWeight="Bold"/>
-                <TextBlock Text="{Binding gameAndUserDetails.description}"
-                           TextWrapping="Wrap"/>
-            </StackPanel>
+                    <Border CornerRadius="12"
+                            Padding="20"
+                            BorderThickness="1"
+                            BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                        <StackPanel Spacing="16">
 
-            <!-- OWNER + OTHER DETAILS SIDE BY SIDE -->
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="20">
+                            <TextBlock Text="Book this game"
+                                       FontSize="20"
+                                       FontWeight="Bold"/>
 
-                <!-- User's Profile -->
-                <StackPanel Grid.Column="0" Spacing="8" HorizontalAlignment="Left">
-                    <TextBlock Text="User's profile"
-                               FontSize="16"
-                               FontWeight="Bold"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock FontSize="22" FontWeight="Bold">
+                                    <Run Text="{Binding gameAndUserDetails.price}"/>
+                                    <Run Text="$"/>
+                                </TextBlock>
+                                <TextBlock Text="/ day"
+                                           VerticalAlignment="Bottom"
+                                           Margin="0,0,0,3"/>
+                            </StackPanel>
 
-                    <Ellipse Width="70" Height="70" Fill="#AAA"/>
+                            <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
 
-                    <TextBlock Text="{Binding gameAndUserDetails.displayName}"
-                               FontWeight="SemiBold"/>
+                            <TextBlock Text="Choose dates" FontWeight="SemiBold"/>
 
-                    <TextBlock FontSize="12">
-                        <Run Text="Since "/>
-                        <Run Text="{Binding gameAndUserDetails.createdAt}"/>
-                    </TextBlock>
+                            <CalendarView x:Name="RentalCalendar"
+                                          SelectionMode="Multiple"
+                                          HorizontalAlignment="Stretch"/>
 
-                    <Button Content="Chat with user"/>
+                            <StackPanel Orientation="Horizontal" Spacing="16">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Ellipse Width="12" Height="12" Fill="Red" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Unavailable" FontSize="12" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Ellipse Width="12" Height="12" Fill="Green" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Available" FontSize="12" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0"
+                                           Text="Total price"
+                                           FontSize="16"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center">
+                                    <Run Text="{Binding TotalPrice}"/>
+                                    <Run Text=" $"/>
+                                </TextBlock>
+                            </Grid>
+
+                            <Button Content="Book now"
+                                    Click="OnBookClicked"
+                                    HorizontalAlignment="Stretch"
+                                    FontSize="16"
+                                    Padding="0,12"/>
+
+                        </StackPanel>
+                    </Border>
+
                 </StackPanel>
+            </ScrollViewer>
 
-                <!-- Other Details -->
-                <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Top">
-                    <TextBlock Text="Other details:"
-                               FontSize="16"
-                               FontWeight="Bold"/>
-                    <TextBlock Text="• No dice"
-                               TextWrapping="Wrap"/>
-                </StackPanel>
-
-            </Grid>
-
-        </StackPanel>
-
-        <!-- RIGHT SIDE -->
-        <StackPanel Grid.Column="1" Spacing="20" VerticalAlignment="Top">
-
-            <TextBlock Text="Choose date"
-                       FontSize="20"
-                       FontWeight="Bold"/>
-
-            <CalendarView/>
-
-            <TextBlock FontSize="16">
-                <Run Text="Price: "/>
-                <Run Text="{Binding gameAndUserDetails.price}"/>
-                <Run Text="$"/>
-            </TextBlock>
-
-            <Button Content="Book"
-                    Width="120"
-                    Padding="10,5"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"/>
-
-        </StackPanel>
-
+        </Grid>
     </Grid>
 </Page>

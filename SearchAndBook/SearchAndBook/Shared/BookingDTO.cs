@@ -8,6 +8,7 @@ namespace SearchAndBook.Shared
         public string image { get; set; }
         public int price { get; set; }
         public string city { get; set; }
+        public string ownerCity { get; set; }
 
         public int minimumNrPlayers { get; set; }
         public int maximumNrPlayers { get; set; }
