@@ -14,9 +14,10 @@ namespace SearchAndBook.Views
         public GameDetailsView()
         {
             InitializeComponent();
-        } 
-        
-        protected override void OnNavigatedTo(NavigationEventArgs e) {
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
             base.OnNavigatedTo(e);
             if (e.Parameter is not int gameId) { return; }
 
