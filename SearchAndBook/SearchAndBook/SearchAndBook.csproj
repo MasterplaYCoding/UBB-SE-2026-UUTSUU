@@ -22,12 +22,28 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-	  <Content Remove="Assets\SeedImages\carcassonne.jpg" />
-	  <Content Remove="Assets\SeedImages\catan.png" />
-	  <Content Remove="Assets\SeedImages\monopoly.jpg" />
-	  <Content Remove="Assets\SeedImages\terraforming_mars.png" />
-	  <None Remove="Views\FilteredSearchView.xaml" />
-	 <Content Include="Assets\SplashScreen.scale-200.png" />
+
+<ItemGroup>
+    <Content Remove="Assets\SeedImages\terraforming_mars.png" />
+</ItemGroup>
+
+<ItemGroup>
+    <None Remove="Assets\SeedImages\carcassonne.jpg" />
+    <None Remove="Assets\SeedImages\catan.png" />
+    <None Remove="Assets\SeedImages\monopoly.jpg" />
+    <None Remove="Views\Test\FeedTestPage.xaml" />
+    <None Remove="Views\Test\GameCardTestPage.xaml" />
+    <None Remove="Views\FilteredSearchView.xaml" />
+</ItemGroup>
+
+<ItemGroup>
+    <Content Remove="Assets\SeedImages\carcassonne.jpg" />
+    <Content Remove="Assets\SeedImages\catan.png" />
+    <Content Remove="Assets\SeedImages\monopoly.jpg" />
+    <Content Remove="Assets\SeedImages\terraforming_mars.png" />
+    <Content Include="Assets\SplashScreen.scale-200.png" />
+</ItemGroup>
+    
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\Square150x150Logo.scale-200.png" />
     <Content Include="Assets\Square44x44Logo.scale-200.png" />
@@ -55,6 +71,7 @@
     <Folder Include="Domain\" />
     <Folder Include="Services\" />
     <Folder Include="Utils\" />
+    <Folder Include="ViewModels\" />
     <Folder Include="Repositories\" />
   </ItemGroup>
   <ItemGroup Condition="$(VisualStudioVersion) == '17.0'">
@@ -72,10 +89,33 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Page Update="Views\FilteredSearchView.xaml">
+    <Page Update="Views\Test\FeedTestPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
+  <ItemGroup>
+  <Page Update="Views\Test\FeedTestPage.xaml">
+    <Generator>MSBuild:Compile</Generator>
+  </Page>
+</ItemGroup>
+
+<ItemGroup>
+  <Page Update="Views\Pages\FeedPage.xaml">
+    <Generator>MSBuild:Compile</Generator>
+  </Page>
+</ItemGroup>
+
+<ItemGroup>
+  <Page Update="Views\Test\GameCardTestPage.xaml">
+    <Generator>MSBuild:Compile</Generator>
+  </Page>
+</ItemGroup>
+
+<ItemGroup>
+  <Page Update="Views\FilteredSearchView.xaml">
+    <Generator>MSBuild:Compile</Generator>
+  </Page>
+</ItemGroup>
   <!--
     Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
     Explorer "Package and Publish" context menu entry to be enabled for this project even if

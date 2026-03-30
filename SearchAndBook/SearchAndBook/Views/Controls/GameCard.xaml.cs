@@ -1,17 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 
 namespace SearchAndBook.Views.Controls
 {
@@ -21,6 +10,20 @@ namespace SearchAndBook.Views.Controls
         {
             InitializeComponent();
         }
+
+        // GAME ID (needed for navigation)
+        public int GameId
+        {
+            get => (int)GetValue(GameIdProperty);
+            set => SetValue(GameIdProperty, value);
+        }
+
+        public static readonly DependencyProperty GameIdProperty =
+            DependencyProperty.Register(
+                nameof(GameId),
+                typeof(int),
+                typeof(GameCard),
+                new PropertyMetadata(0));
 
         public string Title
         {
@@ -35,18 +38,18 @@ namespace SearchAndBook.Views.Controls
                 typeof(GameCard),
                 new PropertyMetadata(string.Empty));
 
-        public string ImageUrl
+        public ImageSource ImageSource
         {
-            get => (string)GetValue(ImageUrlProperty);
-            set => SetValue(ImageUrlProperty, value);
+            get => (ImageSource)GetValue(ImageSourceProperty);
+            set => SetValue(ImageSourceProperty, value);
         }
 
-        public static readonly DependencyProperty ImageUrlProperty =
+        public static readonly DependencyProperty ImageSourceProperty =
             DependencyProperty.Register(
-                nameof(ImageUrl),
-                typeof(string),
+                nameof(ImageSource),
+                typeof(ImageSource),
                 typeof(GameCard),
-                new PropertyMetadata(string.Empty));
+                new PropertyMetadata(null));
 
         public string Location
         {
@@ -86,6 +89,14 @@ namespace SearchAndBook.Views.Controls
                 typeof(string),
                 typeof(GameCard),
                 new PropertyMetadata(string.Empty));
+
+        private void OnCardClicked(object sender, RoutedEventArgs e)
+        {
+            if (this.Parent is FrameworkElement parent)
+            {
+                var frame = parent.XamlRoot.Content as Frame;
+                frame?.Navigate(typeof(SearchAndBook.Views.GameDetailsView), GameId);
+            }
+        }
     }
 }
-
