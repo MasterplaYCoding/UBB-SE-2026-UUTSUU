@@ -43,6 +43,14 @@ namespace SearchAndBook
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
+            try
+            {
+                Shared.DatabaseSeeder.SeedGameImages();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Seeder failed: {ex.Message}");
+            }
             _window = new MainWindow();
             _window.Activate();
         }

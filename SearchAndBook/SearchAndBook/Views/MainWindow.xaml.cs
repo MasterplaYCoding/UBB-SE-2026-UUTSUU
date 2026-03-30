@@ -26,6 +26,7 @@ namespace SearchAndBook
         public MainWindow()
         {
             InitializeComponent();
+            RootFrame.Navigate(typeof(SearchAndBook.Views.GameDetailsView));
         }
     }
 }
