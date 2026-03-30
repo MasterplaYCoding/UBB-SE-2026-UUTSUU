@@ -1,16 +1,18 @@
 ﻿using SearchAndBook.Domain;
 using SearchAndBook.Services;
 using SearchAndBook.Shared;
+using System;
 
 namespace SearchAndBook.ViewModels
 {
     internal class GameDetailsViewModel
     {
         private readonly IBookingService bookingService;
-
         public BookingDTO gameAndUserDetails;
-
         public TimeRange[] unavailableTimeRanges;
+
+        public event Action OnGoBackRequested;
+        public event Action OnStartBookingRequested;
 
         public GameDetailsViewModel(IBookingService bookingService, int gameId)
         {
@@ -34,12 +36,12 @@ namespace SearchAndBook.ViewModels
 
         public void StartBooking(TimeRange range)
         {
-            // later
+            OnStartBookingRequested?.Invoke();
         }
 
         public void GoBack()
         {
-            // later
+            OnGoBackRequested?.Invoke();
         }
     }
 }

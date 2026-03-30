@@ -47,3 +47,10 @@ After running the script, the database should contain:
 ## Important
 
 Running `generate_db.sql` will reset the database (drops and recreates tables).
+
+How to use DatabaseConfig in repo:
+
+using Microsoft.Data.SqlClient;
+
+using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
+connection.Open();
