@@ -35,6 +35,8 @@ namespace SearchAndBook.ViewModels
         public ICommand SearchCommand { get; }
         public ICommand NextPageCommand { get;}
         public ICommand PreviousPageCommand { get; }
+        public ICommand SelectGameCommand { get; }
+        public event Action<int>? OnGameSelectedRequest;
         public void Initialize(FilterCriteria initialFilter)
         {
             Filter = initialFilter;
@@ -46,11 +48,19 @@ namespace SearchAndBook.ViewModels
             SearchCommand = new RelayCommand(_ => Search(Filter));
             NextPageCommand = new RelayCommand(_ => NextPage());
             PreviousPageCommand = new RelayCommand(_ => PreviousPage());
+            SelectGameCommand = new RelayCommand(obj =>
+            {
+                if (obj is GameDTO game)
+                {
+                    SelectGame(game.GameId);
+                }
+            }
+            );
         }
 
         public void SelectGame(int gameId)
         {
-            //null
+            OnGameSelectedRequest?.Invoke(gameId);   
         }
         public void Search(FilterCriteria criteria)
         {

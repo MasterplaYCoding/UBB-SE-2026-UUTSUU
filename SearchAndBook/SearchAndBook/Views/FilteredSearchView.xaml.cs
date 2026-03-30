@@ -15,6 +15,8 @@ using Windows.Foundation.Collections;
 using SearchAndBook.Services;
 using SearchAndBook.ViewModels;
 using SearchAndBook.Shared;
+using Windows.UI.Notifications;
+using SearchAndBook.Repositories;
 
 
 // To learn more about WinUI, the WinUI project structure,
@@ -34,12 +36,16 @@ namespace SearchAndBook.Views
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            ISearchAndFilterService searchService = new SearchAndFilterService(new Repositories.GameRepository(), new Repositories.RentalRepository());
-            var viewModel = new FilteredSearchViewModel(searchService);
-            if (e.Parameter is FilterCriteria criteriaFromFeed)
+            var criteria = e.Parameter as FilterCriteria ?? new FilterCriteria();
+            var gameRepository = new GameRepository(); 
+            var rentalRepository = new RentalRepository();
+            var service = new SearchAndFilterService(gameRepository, rentalRepository);
+            var viewModel = new FilteredSearchViewModel(service);
+            viewModel.OnGameSelectedRequest += gameId =>
             {
-                viewModel.Initialize(criteriaFromFeed);
-            }
+                Frame.Navigate(typeof(GameDetailsView), gameId);
+            };
+            viewModel.Initialize(criteria);
             this.DataContext = viewModel;
 
         }
