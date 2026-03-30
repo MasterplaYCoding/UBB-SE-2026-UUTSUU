@@ -8,8 +8,16 @@ using SearchAndBook.Shared;
 
 namespace SearchAndBook.Repositories;
 
+/// Repository responsible for reading game/listing data from the database.
+/// Important:
+/// - This repository only reads data.
+/// - It is used by the service layer, not directly by the UI.
 public class GamesRepository : IGamesRepository
 {
+    /// Gets a single game by its database id.
+    /// <param name="id">The unique id of the game.</param>
+    /// <remarks>
+    /// Use this when you already know the exact game id and need full game details.
     public Game? Get(int id)
     {
         using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
@@ -28,11 +36,30 @@ public class GamesRepository : IGamesRepository
         return MapGame(reader);
     }
 
+    /// Gets all active games that are visible in the system.
     public List<Game> GetAll()
     {
         return GetAllActiveGames(-1);
     }
 
+    /// Gets games that match the provided filter criteria.
+    /// <param name="filter">
+    /// Object containing user-entered search/filter values.
+    /// All fields may be empty/null.
+    /// </param>
+    /// <returns>A list of games matching the filter.</returns>
+    /// <remarks>
+    /// Use this for:
+    /// - search page
+    /// - filter panel
+    /// - search + filters combined
+    /// 
+    /// Behavior:
+    /// - null/empty fields are ignored
+    /// - only active games are returned
+    /// - user's own games are excluded if UserId is provided
+    /// - if an availability range is provided, only games available in that range are returned
+    /// </remarks>
     public List<Game> GetByFilter(FilterCriteria filter)
     {
         var games = new List<Game>();
@@ -61,6 +88,12 @@ public class GamesRepository : IGamesRepository
         return games;
     }
 
+    /// Gets games that are available starting today and continuing through tomorrow.
+    /// <param name="userId">
+    /// Current authenticated user id OR -1 for user not logged in. 
+    /// Used to exclude the user's own games from the feed.
+    /// </param>
+    /// <returns>A list of games for the "Available Tonight" section.</returns>
     public List<Game> GetForFeedAvailableTonight(int userId)
     {
         var games = new List<Game>();
@@ -86,6 +119,11 @@ public class GamesRepository : IGamesRepository
         return games;
     }
 
+    /// Gets all remaining active games that are not part of the "Available Tonight" section.
+    /// <param name="userId">
+    /// Current authenticated user id.
+    /// Used to exclude the user's own games from the feed.
+    /// </param>
     public List<Game> GetForFeedOthers(int userId)
     {
         var allActiveGames = GetAllActiveGames(userId);
@@ -99,6 +137,7 @@ public class GamesRepository : IGamesRepository
             .Where(game => !availableTonightIds.Contains(game.GameId))
             .ToList();
     }
+
 
     private List<Game> GetAllActiveGames(int userId)
     {
