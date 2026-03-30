@@ -9,6 +9,6 @@ namespace SearchAndBook.Repositories
 {
     internal interface IGameRepository
     {
-        public GameDTO[] getByFilter(FilterCriteria filter);
+        public List<GameDTO> getByFilter(FilterCriteria filter);
     }
 }

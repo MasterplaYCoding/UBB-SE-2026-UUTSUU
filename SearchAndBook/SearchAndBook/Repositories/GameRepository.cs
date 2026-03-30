@@ -9,11 +9,11 @@ namespace SearchAndBook.Repositories
 {
     internal class GameRepository : IGameRepository
     {
-        public GameDTO[] getByFilter(FilterCriteria filter)
+        public List<GameDTO> getByFilter(FilterCriteria filter)
         {
             // Implement logic to retrieve games based on the filter criteria from the database
             // This is a placeholder implementation and should be replaced with actual logic
-            return new GameDTO[0];
+            return new List<GameDTO>();
 
         }
     }

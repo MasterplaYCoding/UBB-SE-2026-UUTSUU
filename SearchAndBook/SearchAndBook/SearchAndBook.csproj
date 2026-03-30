@@ -22,13 +22,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Content Remove="Assets\SeedImages\carcassonne.jpg" />
-    <Content Remove="Assets\SeedImages\catan.png" />
-    <Content Remove="Assets\SeedImages\monopoly.jpg" />
-    <Content Remove="Assets\SeedImages\terraforming_mars.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Assets\SplashScreen.scale-200.png" />
+	  <Content Remove="Assets\SeedImages\carcassonne.jpg" />
+	  <Content Remove="Assets\SeedImages\catan.png" />
+	  <Content Remove="Assets\SeedImages\monopoly.jpg" />
+	  <Content Remove="Assets\SeedImages\terraforming_mars.png" />
+	  <None Remove="Views\FilteredSearchView.xaml" />
+	 <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\Square150x150Logo.scale-200.png" />
     <Content Include="Assets\Square44x44Logo.scale-200.png" />
@@ -56,11 +55,8 @@
     <Folder Include="Domain\" />
     <Folder Include="Services\" />
     <Folder Include="Utils\" />
-    <Folder Include="Views\" />
-    <Folder Include="ViewModels\" />
     <Folder Include="Repositories\" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup Condition="$(VisualStudioVersion) == '17.0'">
     <Reference Include="Microsoft.Data.Tools.Schema.Sql, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(SSDTPath)\Microsoft.Data.Tools.Schema.Sql.dll</HintPath>
@@ -74,6 +70,11 @@
       <HintPath>$(SSDTUnitTestPath)\Microsoft.Data.Tools.Schema.Sql.UnitTestingAdapter.dll</HintPath>
       <Private>True</Private>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\FilteredSearchView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <!--
     Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
@@ -93,6 +94,8 @@
   <PropertyGroup>
     <SsdtUnitTestVersion>3.1</SsdtUnitTestVersion>
   </PropertyGroup>
+	<!--
   <Import Project="$(SQLDBExtensionsRefPath)\Microsoft.Data.Tools.Schema.Sql.UnitTesting.targets" Condition="$(VisualStudioVersion) != '15.0' And '$(SQLDBExtensionsRefPath)' != ''" />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.Sql.UnitTesting.targets" Condition="$(VisualStudioVersion) != '15.0' And '$(SQLDBExtensionsRefPath)' == ''" />
+-->
 </Project>
