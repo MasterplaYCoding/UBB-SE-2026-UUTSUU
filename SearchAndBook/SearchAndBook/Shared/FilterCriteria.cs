@@ -9,8 +9,8 @@ namespace SearchAndBook.Shared
 {
     internal class FilterCriteria
     {
-        public string Name {  get; set; }
-        public string City { get; set; }
+        public string? Name {  get; set; }
+        public string? City { get; set; }
         public TimeRange AvailabilityRange { get; set; }
         public int MaximumPrice { get; set; }
         public int MinimumPrice { get; set; }

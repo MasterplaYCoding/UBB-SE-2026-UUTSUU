@@ -1,34 +1,90 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-
+using SearchAndBook.Domain;
+using SearchAndBook.Repositories;
 using SearchAndBook.Services;
 using SearchAndBook.ViewModels;
-using SearchAndBook.Repositories;
+using System;
 
 namespace SearchAndBook.Views
-{   
+{
     public sealed partial class GameDetailsView : Page
     {
         public GameDetailsView()
         {
             InitializeComponent();
+        } 
+        
+        protected override void OnNavigatedTo(NavigationEventArgs e) {
+            base.OnNavigatedTo(e);
+            if (e.Parameter is not int gameId) { return; }
+
             var gameRepo = new GameRepository();
             var rentalRepo = new RentalRepository();
             var userRepo = new UserRepository();
             var service = new BookingService(gameRepo, rentalRepo, userRepo);
-            this.DataContext = new GameDetailsViewModel(service, 1);
+            var vm = new GameDetailsViewModel(service, gameId);
+
+            vm.OnGoBackRequested += () =>
+            {
+                if (Frame.CanGoBack)
+                    Frame.GoBack();
+            };
+
+            vm.OnStartBookingRequested += () =>
+            {
+                Frame.Navigate(typeof(ConfirmBookingView));
+            };
+
+            this.DataContext = vm;
+        }
+
+        private void OnBackClicked(object sender, RoutedEventArgs e)
+        {
+            var vm = (GameDetailsViewModel)this.DataContext;
+            vm.GoBack();
+        }
+
+        private async void OnBookClicked(object sender, RoutedEventArgs e)
+        {
+            var selectedDates = RentalCalendar.SelectedDates;
+            if (selectedDates.Count == 0)
+            {
+                var dialog = new ContentDialog
+                {
+                    Title = "Invalid selection",
+                    Content = "Please select at least one date.",
+                    CloseButtonText = "OK",
+                    XamlRoot = this.XamlRoot
+                };
+                await dialog.ShowAsync();
+                return;
+            }
+
+            var vm = (GameDetailsViewModel)this.DataContext;
+            var range = new TimeRange
+            {
+                startTime = selectedDates[0].DateTime,
+                endTime = selectedDates[selectedDates.Count - 1].DateTime
+            };
+            vm.StartBooking(range);
+        }
+
+        private void OnDatesChanged(CalendarView sender, CalendarViewSelectedDatesChangedEventArgs e)
+        {
+            var vm = (GameDetailsViewModel)this.DataContext;
+            var selectedDates = RentalCalendar.SelectedDates;
+            if (selectedDates.Count < 1)
+                return;
+
+            var range = new TimeRange
+            {
+                startTime = selectedDates[0].DateTime,
+                endTime = selectedDates[selectedDates.Count - 1].DateTime
+            };
+
+            vm.CalculatePrice(range);
         }
     }
 }
