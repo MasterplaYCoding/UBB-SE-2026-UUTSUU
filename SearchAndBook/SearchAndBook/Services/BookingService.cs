@@ -2,8 +2,7 @@
 using SearchAndBook.Domain;
 using SearchAndBook.Shared;
 using SearchAndBook.Repositories;
-
-// dummy version - vane 
+ 
 namespace SearchAndBook.Services
 {
     internal class BookingService : IBookingService
