@@ -14,15 +14,16 @@ namespace SearchAndBook.Views
         public GameDetailsView()
         {
             InitializeComponent();
-        } 
-        
-        protected override void OnNavigatedTo(NavigationEventArgs e) {
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
             base.OnNavigatedTo(e);
             if (e.Parameter is not int gameId) { return; }
 
-            var gameRepo = new GameRepository();
-            var rentalRepo = new RentalRepository();
-            var userRepo = new UserRepository();
+            var gameRepo = new GamesRepository();
+            var rentalRepo = new RentalsRepository();
+            var userRepo = new UsersRepository();
             var service = new BookingService(gameRepo, rentalRepo, userRepo);
             var vm = new GameDetailsViewModel(service, gameId);
 
@@ -63,11 +64,7 @@ namespace SearchAndBook.Views
             }
 
             var vm = (GameDetailsViewModel)this.DataContext;
-            var range = new TimeRange
-            {
-                startTime = selectedDates[0].DateTime,
-                endTime = selectedDates[selectedDates.Count - 1].DateTime
-            };
+            var range = new TimeRange(selectedDates[0].DateTime, selectedDates[selectedDates.Count - 1].DateTime);
             vm.StartBooking(range);
         }
 
@@ -78,11 +75,7 @@ namespace SearchAndBook.Views
             if (selectedDates.Count < 1)
                 return;
 
-            var range = new TimeRange
-            {
-                startTime = selectedDates[0].DateTime,
-                endTime = selectedDates[selectedDates.Count - 1].DateTime
-            };
+            var range = new TimeRange(selectedDates[0].DateTime, selectedDates[selectedDates.Count - 1].DateTime);
 
             vm.CalculatePrice(range);
         }
