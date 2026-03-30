@@ -17,7 +17,7 @@ namespace SearchAndBook.Services
             this.gameRepository = gameRepository;
             this.rentalRepository = rentalRepository;
         }
-        public GameDTO[] search(FilterCriteria filter)
+        public List<GameDTO> search(FilterCriteria filter)
         {
             var games = gameRepository.getByFilter(filter);
 
@@ -30,19 +30,19 @@ namespace SearchAndBook.Services
                 City = g.City,
                 MaximumPlayerNumber = g.MaximumPlayerNumber,
                 MininumPlayerNumber = g.MininumPlayerNumber
-            }).ToArray();
+            }).ToList();
         }
-        public GameDTO[] getFeedAvailableTonight(int userId)
+        public List<GameDTO> getFeedAvailableTonight(int userId)
         {
             // Implement logic to get games available tonight based on the name using gameRepository and rentalRepository
             // This is a placeholder implementation and should be replaced with actual logic
-            return new GameDTO[0];
+            return new List<GameDTO>();
         }
-        public GameDTO[] getFeedOthers(int userId)
+        public List<GameDTO> getFeedOthers(int userId)
         {
             // Implement logic to get other games based on the name using gameRepository and rentalRepository
             // This is a placeholder implementation and should be replaced with actual logic
-            return new GameDTO[0];
+            return new List<GameDTO>();
         }
     }
 }
