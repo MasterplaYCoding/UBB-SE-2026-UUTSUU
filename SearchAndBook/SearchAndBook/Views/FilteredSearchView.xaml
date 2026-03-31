@@ -5,6 +5,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Name="Root"
+    xmlns:viewModels="using:SearchAndBook.ViewModels"
+    xmlns:shared="using:SearchAndBook.Shared"
     mc:Ignorable="d">
 
     <Grid Padding="20" RowSpacing="20" ColumnSpacing="20">
@@ -98,7 +101,7 @@
                         Margin="0,10,0,0"/>
 
 
-                    <RadioButtons SelectedItem="{Binding SelectedSortOption, Mode=TwoWay}">
+                    <RadioButtons SelectedItem="{Binding SelectedSortOption, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
 
                         <x:String>Price: lowest to highest</x:String>
                         <x:String>Price: highest to lowest</x:String>
@@ -134,38 +137,54 @@
                            FontWeight="SemiBold"/>
 
                 <ListView Grid.Row="1"
-                          ItemsSource="{Binding GamesShown}"
+                          ItemsSource="{Binding GamesShown, Mode=OneWay}"
                           SelectionMode="Single"
                           SelectedItem="{Binding SelectedGame, Mode=TwoWay}">
                     <ListView.ItemTemplate>
-                        <DataTemplate>
+                        <DataTemplate x:DataType="shared:GameDTO">
                             <Border BorderBrush="LightGray"
-                                    BorderThickness="1"
-                                    CornerRadius="8"
-                                    Padding="12"
-                                    Margin="0,0,0,10">
-                                <StackPanel Spacing="4">
-                                    <TextBlock Text="{Binding Name}"
-                                               FontSize="18"
-                                               FontWeight="SemiBold"/>
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Margin="0,0,0,10"
+                                Height="180">
+                            <Grid ColumnDefinitions="220,*" ColumnSpacing="20">
 
-                                    <TextBlock>
-                                        <Run Text="Price: "/>
-                                        <Run Text="{Binding Price}"/>
-                                    </TextBlock>
+                                <Border Grid.Column="0"
+                                        CornerRadius="8,0,0,8">
+                                    
+                                    <Border.Background>
+                                        <ImageBrush
+                                            ImageSource="{x:Bind GameImage, Mode=OneWay}"
+                                            Stretch="UniformToFill"/>
+                                        </Border.Background>
+                                    </Border>
 
-                                    <TextBlock>
-                                        <Run Text="City: "/>
-                                        <Run Text="{Binding City}"/>
-                                    </TextBlock>
+                                    <StackPanel Grid.Column="1" 
+                                                VerticalAlignment="Center" 
+                                                Spacing="8">
 
-                                    <TextBlock>
-                                        <Run Text="Players: "/>
-                                        <Run Text="{Binding MinimumPlayerNumber}"/>
-                                        <Run Text=" - "/>
-                                        <Run Text="{Binding MaximumPlayerNumber}"/>
-                                    </TextBlock>
-                                </StackPanel>
+                                        <TextBlock Text="{x:Bind Name}"
+                                                    FontSize="20"
+                                                    FontWeight="Bold"/>
+
+                                        <TextBlock Foreground="Gray">
+                                            <Run Text="Price: " FontWeight="SemiBold"/>
+                                            <Run Text="{x:Bind Price}"/>
+                                        </TextBlock>
+
+                                        <TextBlock Foreground="Gray">
+                                            <Run Text="City: " FontWeight="SemiBold"/>
+                                            <Run Text="{x:Bind City}"/>
+                                        </TextBlock>
+
+                                        <TextBlock Foreground="Gray">
+                                            <Run Text="Players: " FontWeight="SemiBold"/>
+                                            <Run Text="{x:Bind MinimumPlayerNumber}"/>
+                                            <Run Text=" - "/>
+                                            <Run Text="{x:Bind MaximumPlayerNumber}"/>
+                                        </TextBlock>
+                                    </StackPanel>
+                                </Grid>
                             </Border>
                         </DataTemplate>
                     </ListView.ItemTemplate>
