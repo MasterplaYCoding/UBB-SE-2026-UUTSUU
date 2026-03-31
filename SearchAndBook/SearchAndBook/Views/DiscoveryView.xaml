@@ -12,7 +12,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- SEARCH BAR (copied from filtered page) -->
+        <!-- SEARCH BAR -->
         <Border Grid.Row="0"
                 Padding="16"
                 CornerRadius="8"
