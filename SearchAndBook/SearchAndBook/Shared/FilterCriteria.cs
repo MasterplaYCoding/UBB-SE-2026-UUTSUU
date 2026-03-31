@@ -35,6 +35,11 @@ public class FilterCriteria
 
     public bool HasValidAvailabilityRange()
     {
-        return AvailabilityRange == null;
+        if (AvailabilityRange == null)
+        {
+            return true;
+        }
+
+        return AvailabilityRange.StartTime < AvailabilityRange.EndTime;
     }
 }
