@@ -10,7 +10,7 @@ namespace SearchAndBook.Services
     /// <summary>
     /// Provides search and filtering capabilities for games.
     /// </summary>
-    internal interface ISearchAndFilterService
+    public interface ISearchAndFilterService
     {
         /// <summary>
         /// Searches for games based on the provided filter criteria.
@@ -32,5 +32,7 @@ namespace SearchAndBook.Services
         /// <param name="userId">The ID of the user.</param>
         /// <returns>An array of other games.</returns>
         GameDTO[] GetFeedOthers(int userId);
+
+        GameDTO[] ApplyFilters(GameDTO[] games, FilterCriteria filter);
     }
 }

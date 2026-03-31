@@ -9,6 +9,32 @@ public class FilterCriteria
     public TimeRange? AvailabilityRange { get; set; }
     public decimal? MaximumPrice { get; set; }
     public int? PlayerCount { get; set; }
-    public bool? IsSortedAscending { get; set; }
+    public SortOption SortOption { get; set; }
     public int? UserId { get; set; }
+
+    public FilterCriteria()
+    {
+        Reset();
+    }
+
+    public void Reset()
+    {
+        Name = null;
+        City = null;
+        AvailabilityRange = null;
+        MaximumPrice = null;
+        PlayerCount = null;
+        SortOption = SortOption.None;
+        UserId = null;
+    }
+
+    public bool IsEmpty()
+    {
+        return string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(City) && AvailabilityRange == null && PlayerCount == null && MaximumPrice == null && SortOption == SortOption.None;
+    }
+
+    public bool HasValidAvailabilityRange()
+    {
+        return AvailabilityRange == null;
+    }
 }
