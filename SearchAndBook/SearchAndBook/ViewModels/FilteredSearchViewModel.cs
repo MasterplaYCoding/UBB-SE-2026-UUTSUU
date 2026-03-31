@@ -134,17 +134,30 @@ namespace SearchAndBook.ViewModels
                 }
             }
         }
-        
+
+        private string _locationError = string.Empty;
+        public string LocationError
+        {
+            get => _locationError;
+            set
+            {
+                _locationError = value;
+                OnPropertyChanged(nameof(LocationError));
+            }
+        }
+
         public void ApplySortOnly()
         {
-
             if (SelectedSortOption == "Closest to me" && string.IsNullOrWhiteSpace(CitySearchText))
             {
-                OnErrorOccurred?.Invoke("Please enter a city first so we know where to measure from!");
+                LocationError = "Please enter a city to measure from.";
 
-                SelectedSortOption = null;
+                _selectedSortOption = null;
+                OnPropertyChanged(nameof(SelectedSortOption));
                 return;
             }
+
+            LocationError = string.Empty;
 
             CurrentFilter.SortOption = SelectedSortOption switch
             {

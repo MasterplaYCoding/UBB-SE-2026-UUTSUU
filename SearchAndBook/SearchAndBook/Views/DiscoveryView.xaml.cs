@@ -5,6 +5,7 @@ using SearchAndBook.Domain;
 using SearchAndBook.Repositories;
 using SearchAndBook.Services;
 using SearchAndBook.Shared;
+using SearchAndBook.ViewModels; 
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,10 +13,10 @@ namespace SearchAndBook.Views
 {
     public sealed partial class DiscoveryView : Page
     {
+        public DiscoveryViewModel ViewModel { get; private set; }
+
         private SearchAndFilterService service;
-
         private List<GameDTO> allGames = new();
-
         private int currentPage = 1;
         private int pageSize = 10;
 
@@ -31,11 +32,12 @@ namespace SearchAndBook.Views
             var gamesRepository = new GamesRepository();
             var usersRepository = new UsersRepository();
             var rentalsRepository = new RentalsRepository();
+            var geoService = App.GlobalGeoService!;
 
-            service = new SearchAndFilterService(
-                gamesRepository,
-                usersRepository,
-                rentalsRepository);
+            service = new SearchAndFilterService(gamesRepository, usersRepository, rentalsRepository, geoService);
+
+            ViewModel = new DiscoveryViewModel(service, geoService);
+            this.DataContext = ViewModel;
 
             LoadGames();
         }
@@ -81,12 +83,13 @@ namespace SearchAndBook.Views
             }
         }
 
+
         private void Search_Click(object sender, RoutedEventArgs e)
         {
             var criteria = new FilterCriteria
             {
                 Name = GameTextBox.Text,
-                City = CityTextBox.Text
+                City = ViewModel.CitySearchText
             };
 
             if (StartDatePicker.Date != null && EndDatePicker.Date != null)

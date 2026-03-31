@@ -13,7 +13,7 @@ using System.Windows.Input;
 
 namespace SearchAndBook.ViewModels
 {
-    internal class DiscoveryViewModel : INotifyPropertyChanged
+    public class DiscoveryViewModel : INotifyPropertyChanged
     {
         private readonly ISearchAndFilterService _searchService;
         private readonly IGeoService _geoService;
@@ -124,7 +124,42 @@ namespace SearchAndBook.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        // --- AUTO SUGGEST LOGIC ---
+        public ObservableCollection<string> CitySuggestions { get; } = new();
 
+        private string _citySearchText = string.Empty;
+        public string CitySearchText
+        {
+            get => _citySearchText;
+            set
+            {
+                if (_citySearchText != value)
+                {
+                    _citySearchText = value;
+                    OnPropertyChanged();
+
+                    // Sync the text box directly to the filter object!
+                    Filter.City = value;
+
+                    // Fetch new suggestions every time a letter is typed
+                    UpdateCitySuggestions(value);
+                }
+            }
+        }
+
+        private void UpdateCitySuggestions(string input)
+        {
+            CitySuggestions.Clear();
+
+            if (!string.IsNullOrWhiteSpace(input) && input.Length >= 2)
+            {
+                var matches = _geoService.GetCitySuggestions(input);
+                foreach (var match in matches)
+                {
+                    CitySuggestions.Add(match);
+                }
+            }
+        }
 
     }
 }

@@ -33,7 +33,14 @@ namespace SearchAndBook.Services
         /// <returns>An array of <see cref="GameDTO"/> matching the criteria.</returns>
         public GameDTO[] Search(FilterCriteria filter)
         {
+            string? originalCity = filter.City;
+            if (filter.SortOption == SortOption.Location)
+            {
+                filter.City = null;
+            }
+
             var games = gamesRepository.GetByFilter(filter);
+            filter.City = originalCity;
 
             GameDTO[] result = games.Select(g =>
             {
@@ -56,44 +63,8 @@ namespace SearchAndBook.Services
             //// this is if we decide to only use this methode and remove the ApplyFilters method
             //// only runs this code if SortOption is set, so never from feed
 
-            if (!string.IsNullOrWhiteSpace(filter.City) && filter.SortOption == SortOption.Location)
-            {
-                var userCity = _geoService.GetCityDetails(filter.City);
 
-                if (userCity.found)
-                {
-                    var distanceCache = new Dictionary<string, double?>();
-
-                    result = result.OrderBy(g =>
-                    {
-                        if (string.IsNullOrWhiteSpace(g.City))
-                            return double.MaxValue;
-
-                        if (!distanceCache.TryGetValue(g.City, out double? distance))
-                        {
-                            var gameCity = _geoService.GetCityDetails(g.City);
-
-                            if (gameCity.found)
-                            {
-                                distance = GeographicDistance.CalculateDistance(
-                                    userCity.lat, userCity.lon,
-                                    gameCity.lat, gameCity.lon);
-                            }
-                            else
-                            {
-                                distance = null;
-                            }
-
-                            distanceCache[g.City] = distance;
-                        }
-
-                        return distance ?? double.MaxValue;
-
-                    }).ToArray();
-                }
-            }
-
-            return result;
+            return ApplyFilters(result, filter);
         }
 
         /// <summary>
