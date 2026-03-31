@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SearchAndBook.Shared
 {
-    public class GameDTO
+    internal class GameDTO
     {
         public int GameId { get; set; }
         public string Name { get; set; }

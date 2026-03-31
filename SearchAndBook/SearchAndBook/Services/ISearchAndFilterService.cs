@@ -7,12 +7,10 @@ using SearchAndBook.Shared;
 
 namespace SearchAndBook.Services
 {
-    public interface ISearchAndFilterService
+    internal interface ISearchAndFilterService
     {
-        public GameDTO[] Search(FilterCriteria filter);
-        public GameDTO[] GetFeedAvailableTonight(int userId);
-        public GameDTO[] GetFeedOthers(int userId);
-
-        public GameDTO[] ApplyFilters(GameDTO[] sourceGames, FilterCriteria filter);
+        GameDTO[] Search(FilterCriteria filter);
+        GameDTO[] GetFeedAvailableTonight(int userId);
+        GameDTO[] GetFeedOthers(int userId);
     }
 }

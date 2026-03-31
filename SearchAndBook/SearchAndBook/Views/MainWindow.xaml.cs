@@ -26,7 +26,7 @@ namespace SearchAndBook
         public MainWindow()
         {
             InitializeComponent();
-            RootFrame.Navigate(typeof(SearchAndBook.Views.Pages.FeedPage));
+            RootFrame.Navigate(typeof(SearchAndBook.Views.FilteredSearchView));
         }
     }
 }
