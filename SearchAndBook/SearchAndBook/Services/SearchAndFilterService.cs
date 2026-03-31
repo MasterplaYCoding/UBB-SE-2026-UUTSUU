@@ -1,5 +1,7 @@
-﻿using SearchAndBook.Repositories;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using SearchAndBook.Repositories;
 using SearchAndBook.Shared;
 
 namespace SearchAndBook.Services
@@ -11,11 +13,13 @@ namespace SearchAndBook.Services
     {
         private readonly IGamesRepository gamesRepository;
         private readonly IUsersRepository usersRepository;
+        private readonly IRentalsRepository rentalsRepository;
 
-        public SearchAndFilterService(IGamesRepository gamesRepository, IUsersRepository usersRepository)
+        public SearchAndFilterService(IGamesRepository gamesRepository, IUsersRepository usersRepository, IRentalsRepository rentalsRepository)
         {
             this.gamesRepository = gamesRepository;
             this.usersRepository = usersRepository;
+            this.rentalsRepository = rentalsRepository;
         }
 
         /// <summary>
@@ -94,6 +98,55 @@ namespace SearchAndBook.Services
                     MaximumPlayerNumber = g.MaximumPlayerNumber
                 };
             }).ToArray();
+        }
+
+        public GameDTO[] ApplyFilters(GameDTO[] sourceGames, FilterCriteria filter)
+        {
+            IEnumerable<GameDTO> filteredGames = sourceGames;
+
+            if (!string.IsNullOrWhiteSpace(filter.Name))
+            {
+                filteredGames = filteredGames.Where(game => game.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.City))
+            {
+                filteredGames = filteredGames.Where(game => game.City.Contains(filter.City, StringComparison.OrdinalIgnoreCase));
+            }
+
+
+            if (filter.MaximumPrice.HasValue)
+            {
+                filteredGames = filteredGames.Where(game => game.Price <= filter.MaximumPrice.Value);
+            }
+
+            if (filter.PlayerCount.HasValue)
+            {
+                filteredGames = filteredGames.Where(game => game.MaximumPlayerNumber >= filter.PlayerCount.Value);
+            }
+
+            switch (filter.SortOption)
+            {
+                case SortOption.PriceAscending:
+                    filteredGames = filteredGames.OrderBy(game => game.Price);
+                    break;
+                case SortOption.PriceDescending:
+                    filteredGames = filteredGames.OrderByDescending(game => game.Price);
+                    break;
+                case SortOption.None:
+                default:
+                    break;
+            }
+
+
+            if (filter.AvailabilityRange != null)
+            {
+
+                filteredGames = filteredGames.Where(game =>
+                    rentalsRepository.CheckAvailability(filter.AvailabilityRange, game.GameId));
+            }
+            return filteredGames.ToArray();
+
         }
     }
 }

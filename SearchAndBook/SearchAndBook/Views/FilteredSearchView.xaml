@@ -77,22 +77,33 @@
                                FontSize="22"
                                FontWeight="SemiBold"/>
 
-                    <!-- Sort -->
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Sort by price"/>
-
-                        <RadioButtons SelectedItem="{Binding SelectedSortOption, Mode=TwoWay}">
-                            <x:String>Ascending</x:String>
-                            <x:String>Descending</x:String>
-                        </RadioButtons>
-                    </StackPanel>
+                    <!-- Sort by Maximum Price -->
+                    <TextBlock Text="Maximum Price"/>
+                    <Slider
+                        x:Name="MaxPriceSlider"
+                        Minimum="1"
+                        Maximum="100"/>
 
                     <!-- Players -->
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="Minimum players"/>
-                        <TextBox Text="{Binding Filter.MinimumPlayers, Mode=TwoWay}"
-                                 PlaceholderText="e.g. 2"/>
-                    </StackPanel>
+                    <TextBlock Text="Number of players"/>
+                    <Slider
+                        x:Name="PlayersSlider"
+                        Minimum="1"
+                        Maximum="20"/>
+
+                    <!-- Sort by Price -->
+                    <TextBlock
+                        Text="Sort by"
+                        FontWeight="Bold"
+                        Margin="0,10,0,0"/>
+
+
+                    <RadioButtons SelectedItem="{Binding SelectedSortOption, Mode=TwoWay}">
+
+                        <x:String>Price: lowest to highest</x:String>
+                        <x:String>Price: highest to lowest</x:String>
+
+                    </RadioButtons>
 
                     <!-- Location -->
                     <StackPanel Spacing="6">
@@ -102,7 +113,7 @@
                     </StackPanel>
 
                     <Button Content="Apply filters"
-                            Command="{Binding SearchCommand}" />
+                            Command="{Binding ApplySelectedUiFilters}" />
 
                     <Button Content="Clear filters"
                             Command="{Binding ClearFiltersCommand}" />
@@ -139,11 +150,6 @@
                                                FontWeight="SemiBold"/>
 
                                     <TextBlock>
-                                        <Run Text="Genre: "/>
-                                        <Run Text="{Binding Genre}"/>
-                                    </TextBlock>
-
-                                    <TextBlock>
                                         <Run Text="Price: "/>
                                         <Run Text="{Binding Price}"/>
                                     </TextBlock>
@@ -155,9 +161,9 @@
 
                                     <TextBlock>
                                         <Run Text="Players: "/>
-                                        <Run Text="{Binding MinimumPlayers}"/>
+                                        <Run Text="{Binding MinimumPlayerNumber}"/>
                                         <Run Text=" - "/>
-                                        <Run Text="{Binding MaximumPlayers}"/>
+                                        <Run Text="{Binding MaximumPlayerNumber}"/>
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
