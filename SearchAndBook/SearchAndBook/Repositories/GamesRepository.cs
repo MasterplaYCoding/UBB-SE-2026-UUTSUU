@@ -138,7 +138,12 @@ public class GamesRepository : IGamesRepository
             .ToList();
     }
 
-
+    /// Gets all active games from the database.
+    /// <param name="userId">
+    /// Current authenticated user id OR -1 for user not logged in. 
+    /// Used to exclude the user's own games from the results.
+    /// </param>
+    /// <returns>A list of all active games.</returns>
     private List<Game> GetAllActiveGames(int userId)
     {
         var games = new List<Game>();
@@ -159,6 +164,7 @@ public class GamesRepository : IGamesRepository
         return games;
     }
 
+    // Used to convert game data to Game object
     private static Game MapGame(SqlDataReader reader)
     {
         return new Game
