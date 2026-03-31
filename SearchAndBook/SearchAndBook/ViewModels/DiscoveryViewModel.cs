@@ -71,8 +71,7 @@ namespace SearchAndBook.ViewModels
         }
         public void LoadDiscoveryFeed()
         {
-           // int userId = SessionContext.Instance.UserId;
-            int userId = 1; // Placeholder for user ID, replace with actual session context retrieval
+            int userId = SessionContext.GetInstance().UserId;
             GamesAvailableTonight = _searchService.GetFeedAvailableTonight(userId).ToList();
             GamesOthers = _searchService.GetFeedOthers(userId).ToList();
             DividedState = 0;

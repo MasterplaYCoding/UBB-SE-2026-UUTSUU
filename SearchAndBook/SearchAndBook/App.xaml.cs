@@ -68,7 +68,6 @@ namespace SearchAndBook
             {
                 Debug.WriteLine($"GeoService initialization failed: {ex.Message}");
             }
-
             _window = new MainWindow();
             _window.Activate();
         }
