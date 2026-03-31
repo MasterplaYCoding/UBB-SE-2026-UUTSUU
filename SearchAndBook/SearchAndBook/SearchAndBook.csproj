@@ -29,6 +29,7 @@
     <None Remove="Assets\SeedImages\carcassonne.jpg" />
     <None Remove="Assets\SeedImages\catan.png" />
     <None Remove="Assets\SeedImages\monopoly.jpg" />
+    <None Remove="Views\DiscoveryView.xaml" />
     <None Remove="Views\Test\FeedTestPage.xaml" />
     <None Remove="Views\Test\GameCardTestPage.xaml" />
     <None Remove="Views\FilteredSearchView.xaml" />
@@ -82,6 +83,11 @@
       <HintPath>$(SSDTUnitTestPath)\Microsoft.Data.Tools.Schema.Sql.UnitTestingAdapter.dll</HintPath>
       <Private>True</Private>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="Views\DiscoveryView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Page Update="Views\Test\FeedTestPage.xaml">
