@@ -7,8 +7,16 @@ using SearchAndBook.Shared;
 
 namespace SearchAndBook.Repositories;
 
+/// <summary>
+/// Repository for managing rental data.
+/// </summary>
 public class RentalsRepository : IRentalsRepository
 {
+    /// <summary>
+    /// Retrieves a rental time range by its unique identifier.
+    /// </summary>
+    /// <param name="id">The rental identifier.</param>
+    /// <returns>The rental time range if found; otherwise, null.</returns>
     public TimeRange? Get(int id)
     {
         using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
@@ -29,6 +37,10 @@ public class RentalsRepository : IRentalsRepository
             Convert.ToDateTime(reader["end_date"]));
     }
 
+    /// <summary>
+    /// Retrieves all rental time ranges.
+    /// </summary>
+    /// <returns>A list of all rental time ranges.</returns>
     public List<TimeRange> GetAll()
     {
         var ranges = new List<TimeRange>();
@@ -49,6 +61,11 @@ public class RentalsRepository : IRentalsRepository
         return ranges;
     }
 
+    /// <summary>
+    /// Retrieves unavailable rental time ranges for a specific game.
+    /// </summary>
+    /// <param name="gameId">The game identifier.</param>
+    /// <returns>A list of time ranges when the game is unavailable.</returns>
     public List<TimeRange> GetUnavailableRanges(int gameId)
     {
         var ranges = new List<TimeRange>();
@@ -72,6 +89,12 @@ public class RentalsRepository : IRentalsRepository
         return ranges;
     }
 
+    /// <summary>
+    /// Checks if a game is available for a specified time range.
+    /// </summary>
+    /// <param name="range">The requested rental time range.</param>
+    /// <param name="gameId">The game identifier.</param>
+    /// <returns>True if the game is available; otherwise, false.</returns>
     public bool CheckAvailability(TimeRange range, int gameId)
     {
         using var connection = new SqlConnection(DatabaseConfig.ConnectionString);

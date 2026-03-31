@@ -124,7 +124,8 @@
 
                 <ListView Grid.Row="1"
                           ItemsSource="{Binding GamesShown}"
-                          SelectionMode="Single">
+                          SelectionMode="Single"
+                          SelectedItem="{Binding SelectedGame, Mode=TwoWay}">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <Border BorderBrush="LightGray"

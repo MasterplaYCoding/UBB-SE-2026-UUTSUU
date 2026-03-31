@@ -9,6 +9,7 @@ namespace SearchAndBook.Repositories;
 
 public class UsersRepository : IUsersRepository
 {
+    // Get User by id
     public User? Get(int id)
     {
         using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
