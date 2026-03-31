@@ -8,7 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Padding="30,80,30,30">
+    <Grid Padding="30,50,30,30">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -24,12 +24,12 @@
 
             <Button Grid.Column="0"
                     Content="← Back"
-                    Click="OnBackClicked"
+                    Command="{Binding GoBackCommand}"
                     VerticalAlignment="Center"
                     Margin="0,0,16,0"/>
 
             <TextBlock Grid.Column="1"
-                       Text="{Binding gameAndUserDetails.name}"
+                       Text="{Binding GameAndUserDetails.Name}"
                        FontSize="28"
                        FontWeight="Bold"
                        VerticalAlignment="Center"/>
@@ -40,7 +40,7 @@
                  Title="Error"
                  Message="Could not retrieve listing details. Please try again later."
                  Severity="Error"
-                 IsOpen="{Binding hasError}"
+                 IsOpen="{Binding HasError}"
                  Margin="0,0,0,12"/>
 
         <!-- MAIN CONTENT -->
@@ -58,38 +58,38 @@
                     <!-- IMAGE + INFO SIDE BY SIDE -->
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="20">
 
-                <!-- Image -->
+                        <Border Grid.Column="0"
                                 Width="220"
                                 Height="180"
                                 CornerRadius="10">
                             <Border.Background>
-                                <ImageBrush ImageSource="{Binding gameAndUserDetails.image}"
+                                <ImageBrush ImageSource="{Binding GameImage}"
                                             Stretch="UniformToFill"/>
                             </Border.Background>
                         </Border>
 
                         <StackPanel Grid.Column="1" Spacing="10" VerticalAlignment="Center">
 
-                    <TextBlock>
-                        <Run Text="📍 "/>
-                        <Run Text="{Binding GameAndUserDetails.City}"/>
-                    </TextBlock>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="📍" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding GameAndUserDetails.City}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
 
-                    <TextBlock>
-                        <Run Text="👥 "/>
-                        <Run Text="{Binding GameAndUserDetails.MinimumNrPlayers}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="👥" VerticalAlignment="Center"/>
                                 <TextBlock VerticalAlignment="Center">
-                                    <Run Text="{Binding gameAndUserDetails.minimumNrPlayers}"/>
+                                    <Run Text="{Binding GameAndUserDetails.MinimumNrPlayers}"/>
                                     <Run Text=" – "/>
-                                    <Run Text="{Binding gameAndUserDetails.maximumNrPlayers}"/>
+                                    <Run Text="{Binding GameAndUserDetails.MaximumNrPlayers}"/>
                                     <Run Text=" players"/>
+                                </TextBlock>
+                            </StackPanel>
 
-                    <TextBlock>
-                        <Run Text="💰 "/>
-                        <Run Text="{Binding GameAndUserDetails.Price}"/>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
                                 <TextBlock Text="💰" VerticalAlignment="Center"/>
                                 <TextBlock VerticalAlignment="Center">
-                                    <Run Text="{Binding gameAndUserDetails.price}"/>
+                                    <Run Text="{Binding GameAndUserDetails.Price}"/>
                                     <Run Text=" $/day"/>
                                 </TextBlock>
                             </StackPanel>
@@ -104,16 +104,15 @@
                     <StackPanel Spacing="8">
                         <TextBlock Text="Description"
                                    FontSize="18"
-            </StackPanel>
+                                   FontWeight="Bold"/>
+                        <TextBlock Text="{Binding GameAndUserDetails.Description}"
+                                   TextWrapping="Wrap"
+                                   LineHeight="22"/>
+                    </StackPanel>
 
                     <!-- DIVIDER -->
                     <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
 
-                    <!-- USER'S PROFILE -->
-                    <StackPanel Spacing="10">
-
-                        <TextBlock Text="User's profile"
-                                   FontSize="16"
                     <!-- USER'S PROFILE -->
                     <StackPanel Spacing="10">
 
@@ -124,15 +123,16 @@
                         <Ellipse Width="60" Height="60" Fill="#AAA"
                                  HorizontalAlignment="Left"/>
 
-                        <TextBlock Text="{Binding gameAndUserDetails.displayName}"
+                        <TextBlock Text="{Binding GameAndUserDetails.DisplayName}"
                                    FontWeight="SemiBold"/>
 
-                    <TextBlock FontSize="12">
-                        <Run Text="Since "/>
-                        <Run Text="{Binding GameAndUserDetails.CreatedAt}"/>
-                    </TextBlock>
+                        <TextBlock FontSize="12">
+                            <Run Text="Since "/>
+                            <Run Text="{Binding GameAndUserDetails.CreatedAt}"/>
+                        </TextBlock>
 
-                        <Button Content="Chat with user"/>
+                        <Button Content="Chat with user"
+                                Command="{Binding ChatWithOwnerCommand}"/>
 
                     </StackPanel>
 
@@ -155,28 +155,27 @@
 
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <TextBlock FontSize="22" FontWeight="Bold">
-            <TextBlock FontSize="16">
-                <Run Text="Price: "/>
-                <Run Text="{Binding GameAndUserDetails.Price}"/>
-                <Run Text="$"/>
-            </TextBlock>
-
-                            <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Grid.Column="0"
-                                           Text="Total price"
-                                           FontSize="16"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"/>
-                                <TextBlock Grid.Column="1"
-                                           FontSize="20"
-                                           FontWeight="Bold"
-                                           VerticalAlignment="Center">
-                                    <Run Text="{Binding TotalPrice}"/>
-                                    <Run Text=" $"/>
+                                    <Run Text="{Binding GameAndUserDetails.Price}"/>
+                                    <Run Text="$"/>
                                 </TextBlock>
-                            </Grid>
+                                <TextBlock Text="/ day"
+                                           VerticalAlignment="Bottom"
+                                           Margin="0,0,0,3"/>
+                            </StackPanel>
 
-                            <Button Content="Book now"
+                            <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
+
+                            <TextBlock Text="Choose dates" FontWeight="SemiBold"/>
+
+                            <CalendarView x:Name="RentalCalendar"
+                                          SelectionMode="Multiple"
+                                          HorizontalAlignment="Stretch"/>
+
+                            <StackPanel Orientation="Horizontal" Spacing="16">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Ellipse Width="12" Height="12" Fill="Red" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Unavailable" FontSize="12" VerticalAlignment="Center"/>
+                                </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <Ellipse Width="12" Height="12" Fill="Green" VerticalAlignment="Center"/>
                                     <TextBlock Text="Available" FontSize="12" VerticalAlignment="Center"/>
@@ -201,7 +200,7 @@
                             </Grid>
 
                             <Button Content="Book now"
-                                    Click="OnBookClicked"
+                                    Command="{Binding BookCommand}"
                                     HorizontalAlignment="Stretch"
                                     FontSize="16"
                                     Padding="0,12"/>

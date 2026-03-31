@@ -1,53 +1,80 @@
 ﻿using System;
-using System.IO;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
+using System.Windows.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
+using SearchAndBook.CommandHandler;
 using SearchAndBook.Domain;
 using SearchAndBook.Services;
 using SearchAndBook.Shared;
 using Windows.Storage.Streams;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace SearchAndBook.ViewModels
 {
     public class GameDetailsViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
+        public event Action? OnGoBackRequested;
+        public event Action? OnStartBookingRequested;
 
-        private readonly IBookingService bookingService;
-        public BookingDTO GameAndUserDetails { get; private set; }
+        private void OnPropertyChanged([CallerMemberName] string? name = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-        public TimeRange[] UnavailableTimeRanges { get; private set; }
+        private BookingDTO _gameAndUserDetails;
+        public BookingDTO GameAndUserDetails
+        {
+            get => _gameAndUserDetails;
+            private set { _gameAndUserDetails = value; OnPropertyChanged(); }
+        }
 
-        private BitmapImage? gameImage;
+        private bool _hasError;
+        public bool HasError
+        {
+            get => _hasError;
+            private set { _hasError = value; OnPropertyChanged(); }
+        }
+
+        private decimal _totalPrice;
+        public decimal TotalPrice
+        {
+            get => _totalPrice;
+            private set { _totalPrice = value; OnPropertyChanged(); }
+        }
+
+        private BitmapImage? _gameImage;
         public BitmapImage? GameImage
         {
-            get => gameImage;
-            private set
-            {
-                gameImage = value;
-                OnPropertyChanged();
-            }
+            get => _gameImage;
+            private set { _gameImage = value; OnPropertyChanged(); }
         }
 
-        private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+        private readonly IBookingService _bookingService;
+        public TimeRange[] UnavailableTimeRanges { get; private set; }
+
+        public ICommand GoBackCommand => new RelayCommand(_ => GoBack());
+        public ICommand BookCommand => new RelayCommand(_ => OnStartBookingRequested?.Invoke());
+        public ICommand ChatWithOwnerCommand => new RelayCommand(_ => { /* later */ });
 
         public GameDetailsViewModel(IBookingService bookingService, int gameId)
         {
-            this.bookingService = bookingService;
-            GameAndUserDetails = this.bookingService.GetGameDetails(gameId);
-            LoadGameImage();
-            UnavailableTimeRanges = this.bookingService.GetUnavailableRanges(gameId);
+            this._bookingService = bookingService;
+            try
+            {
+                GameAndUserDetails = this._bookingService.GetGameDetails(gameId);
+                UnavailableTimeRanges = this._bookingService.GetUnavailableRanges(gameId);
+                LoadGameImage();
+                HasError = false;
+            }
+            catch
+            {
+                HasError = true;
+            }
         }
 
         public bool CheckAvailability(TimeRange range)
         {
-            return bookingService.CheckAvailability(GameAndUserDetails.GameId, range);
+            return _bookingService.CheckAvailability(GameAndUserDetails.GameId, range);
         }
 
         public decimal CalculatePrice(TimeRange range)
@@ -55,7 +82,8 @@ namespace SearchAndBook.ViewModels
             int days = (range.EndTime - range.StartTime).Days;
             if (days == 0)
                 days = 1;
-            return days * GameAndUserDetails.Price;
+            TotalPrice = days * GameAndUserDetails.Price;
+            return TotalPrice;
         }
 
         private async void LoadGameImage()
@@ -65,26 +93,22 @@ namespace SearchAndBook.ViewModels
                 GameImage = null;
                 return;
             }
-
             using var stream = new InMemoryRandomAccessStream();
             await stream.WriteAsync(GameAndUserDetails.Image.AsBuffer());
             stream.Seek(0);
-
             var bitmap = new BitmapImage();
             await bitmap.SetSourceAsync(stream);
-
             GameImage = bitmap;
         }
 
         public void StartBooking(TimeRange range)
         {
-            // later
+            OnStartBookingRequested?.Invoke();
         }
 
         public void GoBack()
         {
-            // later
+            OnGoBackRequested?.Invoke();
         }
     }
 }
-
