@@ -36,8 +36,9 @@
 
                 <StackPanel Grid.Column="1" Spacing="6">
                     <TextBlock Text="City"/>
-                    <TextBox x:Name="CityTextBox"
-                             PlaceholderText="Enter city"/>
+                    <AutoSuggestBox PlaceholderText="Enter city"
+                                    Text="{x:Bind ViewModel.CitySearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    ItemsSource="{x:Bind ViewModel.CitySuggestions, Mode=OneWay}" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Spacing="6">

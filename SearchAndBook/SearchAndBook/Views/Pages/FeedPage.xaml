@@ -107,7 +107,7 @@
                     HorizontalAlignment="Center"/>
 
             </StackPanel>
-            
+
             <!-- FILTER PANEL -->
             <Border
                 Grid.Column="0"
@@ -229,7 +229,7 @@
                 </StackPanel>
 
             </Grid>
-            
+
         </Grid>
 
     </Grid>

@@ -1,8 +1,9 @@
-﻿using System;
+﻿using SearchAndBook.Repositories;
+using SearchAndBook.Shared;
+using SearchAndBook.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using SearchAndBook.Repositories;
-using SearchAndBook.Shared;
 
 namespace SearchAndBook.Services
 {
@@ -15,11 +16,14 @@ namespace SearchAndBook.Services
         private readonly IUsersRepository usersRepository;
         private readonly IRentalsRepository rentalsRepository;
 
-        public SearchAndFilterService(IGamesRepository gamesRepository, IUsersRepository usersRepository, IRentalsRepository rentalsRepository)
+        private readonly IGeoService _geoService;
+
+        public SearchAndFilterService(IGamesRepository gamesRepository, IUsersRepository usersRepository, IRentalsRepository rentalsRepository, IGeoService geoService)
         {
             this.gamesRepository = gamesRepository;
             this.usersRepository = usersRepository;
             this.rentalsRepository = rentalsRepository;
+            this._geoService = geoService;
         }
 
         /// <summary>
@@ -29,9 +33,16 @@ namespace SearchAndBook.Services
         /// <returns>An array of <see cref="GameDTO"/> matching the criteria.</returns>
         public GameDTO[] Search(FilterCriteria filter)
         {
-            var games = gamesRepository.GetByFilter(filter);
+            string? originalCity = filter.City;
+            if (filter.SortOption == SortOption.Location)
+            {
+                filter.City = null;
+            }
 
-            return games.Select(g =>
+            var games = gamesRepository.GetByFilter(filter);
+            filter.City = originalCity;
+
+            GameDTO[] result = games.Select(g =>
             {
                 var owner = usersRepository.Get(g.OwnerId);
 
@@ -46,6 +57,14 @@ namespace SearchAndBook.Services
                     MinimumPlayerNumber = g.MinimumPlayerNumber
                 };
             }).ToArray();
+
+            //// sorting by distance
+            
+            //// this is if we decide to only use this methode and remove the ApplyFilters method
+            //// only runs this code if SortOption is set, so never from feed
+
+
+            return ApplyFilters(result, filter);
         }
 
         /// <summary>
@@ -109,12 +128,6 @@ namespace SearchAndBook.Services
                 filteredGames = filteredGames.Where(game => game.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
             }
 
-            if (!string.IsNullOrWhiteSpace(filter.City))
-            {
-                filteredGames = filteredGames.Where(game => game.City.Contains(filter.City, StringComparison.OrdinalIgnoreCase));
-            }
-
-
             if (filter.MaximumPrice.HasValue)
             {
                 filteredGames = filteredGames.Where(game => game.Price <= filter.MaximumPrice.Value);
@@ -125,14 +138,52 @@ namespace SearchAndBook.Services
                 filteredGames = filteredGames.Where(game => game.MaximumPlayerNumber >= filter.PlayerCount.Value);
             }
 
+            if (!string.IsNullOrWhiteSpace(filter.City) && filter.SortOption != SortOption.Location)
+            {
+                filteredGames = filteredGames.Where(game =>
+                    !string.IsNullOrWhiteSpace(game.City) &&
+                    game.City.Contains(filter.City, StringComparison.OrdinalIgnoreCase));
+            }
+
+
             switch (filter.SortOption)
             {
                 case SortOption.PriceAscending:
                     filteredGames = filteredGames.OrderBy(game => game.Price);
                     break;
+
                 case SortOption.PriceDescending:
                     filteredGames = filteredGames.OrderByDescending(game => game.Price);
                     break;
+
+                case SortOption.Location:
+                    if (!string.IsNullOrWhiteSpace(filter.City))
+                    {
+                        var userCity = _geoService.GetCityDetails(filter.City);
+                        if (userCity.found)
+                        {
+                            var distanceCache = new Dictionary<string, double?>();
+
+                            filteredGames = filteredGames.OrderBy(g =>
+                            {
+                                if (string.IsNullOrWhiteSpace(g.City)) return double.MaxValue;
+
+                                if (!distanceCache.TryGetValue(g.City, out double? distance))
+                                {
+                                    var gameCity = _geoService.GetCityDetails(g.City);
+                                    distance = gameCity.found
+                                        ? GeographicDistance.CalculateDistance(userCity.lat, userCity.lon, gameCity.lat, gameCity.lon)
+                                        : null;
+
+                                    distanceCache[g.City] = distance;
+                                }
+
+                                return distance ?? double.MaxValue;
+                            });
+                        }
+                    }
+                    break;
+
                 case SortOption.None:
                 default:
                     break;
@@ -141,12 +192,11 @@ namespace SearchAndBook.Services
 
             if (filter.AvailabilityRange != null)
             {
-
                 filteredGames = filteredGames.Where(game =>
                     rentalsRepository.CheckAvailability(filter.AvailabilityRange, game.GameId));
             }
-            return filteredGames.ToArray();
 
+            return filteredGames.ToArray();
         }
     }
 }
