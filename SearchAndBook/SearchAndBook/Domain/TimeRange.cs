@@ -9,7 +9,7 @@ namespace SearchAndBook.Domain
 
         public TimeRange(DateTime startTime, DateTime endTime)
         {
-            if (endTime <= startTime)
+            if (endTime < startTime)
             {
                 throw new ArgumentException("EndTime must be after StartTime");
             }

@@ -30,24 +30,24 @@
 
                 <StackPanel Grid.Column="0" Spacing="6">
                     <TextBlock Text="Game name"/>
-                    <TextBox Text="{Binding Filter.Name, Mode=TwoWay}"
+                    <TextBox Text="{Binding CurrentFilter.Name, Mode=TwoWay}"
                              PlaceholderText="Enter game name"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Spacing="6">
                     <TextBlock Text="City"/>
-                    <TextBox Text="{Binding Filter.City, Mode=TwoWay}"
+                    <TextBox Text="{Binding CurrentFilter.City, Mode=TwoWay}"
                              PlaceholderText="Enter city"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Spacing="6">
                     <TextBlock Text="Start date"/>
-                    <CalendarDatePicker Date="{Binding Filter.StartDate, Mode=TwoWay}"/>
+                    <CalendarDatePicker Date="{Binding SelectedStartDate, Mode=TwoWay}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="3" Spacing="6">
                     <TextBlock Text="End date"/>
-                    <CalendarDatePicker Date="{Binding Filter.EndDate, Mode=TwoWay}"/>
+                    <CalendarDatePicker Date="{Binding SelectedEndDate, Mode=TwoWay}"/>
                 </StackPanel>
 
                 <Button Grid.Column="4"
@@ -80,16 +80,16 @@
                     <!-- Sort by Maximum Price -->
                     <TextBlock Text="Maximum Price"/>
                     <Slider
-                        x:Name="MaxPriceSlider"
                         Minimum="1"
-                        Maximum="100"/>
+                        Maximum="100"
+                        Value="{Binding SelectedMaximumPrice, Mode=TwoWay}"/>
 
                     <!-- Players -->
                     <TextBlock Text="Number of players"/>
                     <Slider
-                        x:Name="PlayersSlider"
                         Minimum="1"
-                        Maximum="20"/>
+                        Maximum="20"
+                        Value="{Binding SelectedMinimumPlayers, Mode=TwoWay}"/>
 
                     <!-- Sort by Price -->
                     <TextBlock
@@ -108,12 +108,12 @@
                     <!-- Location -->
                     <StackPanel Spacing="6">
                         <TextBlock Text="Location"/>
-                        <TextBox Text="{Binding Filter.Location, Mode=TwoWay}"
+                        <TextBox 
                                  PlaceholderText="Filter by location"/>
                     </StackPanel>
 
                     <Button Content="Apply filters"
-                            Command="{Binding ApplySelectedUiFilters}" />
+                            Command="{Binding ApplySelectedUiFiltersCommand}" />
 
                     <Button Content="Clear filters"
                             Command="{Binding ClearFiltersCommand}" />

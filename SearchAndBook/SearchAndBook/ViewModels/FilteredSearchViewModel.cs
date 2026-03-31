@@ -1,15 +1,19 @@
-﻿using SearchAndBook.Services;
+﻿using Microsoft.UI.Xaml.Media.Imaging;
+using SearchAndBook.CommandHandler;
+using SearchAndBook.Domain;
+using SearchAndBook.Services;
+using SearchAndBook.Shared;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
-using SearchAndBook.Shared;
-using System.ComponentModel;
 using System.Windows.Input;
-using System.Collections.ObjectModel;
-using System.Runtime.CompilerServices;
-using SearchAndBook.CommandHandler;
+using Windows.Storage.Streams;
 
 namespace SearchAndBook.ViewModels
 {
@@ -17,9 +21,7 @@ namespace SearchAndBook.ViewModels
     {
         private readonly ISearchAndFilterService _searchService;
 
-        public FilterCriteria CurrentFilter { get; set; }
-        public FilterCriteria Filter { get; set; } = new();
-
+        public FilterCriteria CurrentFilter { get; set; } 
         public GameDTO[] BaseResults { get; private set; }
         public GameDTO[] DisplayedResults { get; private set; }
         public bool HasNoResults { get; private set; }
@@ -47,6 +49,20 @@ namespace SearchAndBook.ViewModels
         }
 
         public ObservableCollection<GameDTO> GamesShown { get; set; } = new();
+        private readonly Dictionary<int, BitmapImage?> _gameImages = new();
+
+        public Dictionary<int, BitmapImage?> GameImages => _gameImages;
+
+        private BitmapImage? _selectedGameImage;
+        public BitmapImage? SelectedGameImage
+        {
+            get => _selectedGameImage;
+            set
+            {
+                _selectedGameImage = value;
+                OnPropertyChanged();
+            }
+        }
 
         private int _currentPage = 1;
         public int CurrentPage
@@ -61,24 +77,87 @@ namespace SearchAndBook.ViewModels
 
         private const int PageSize = 10;
 
-        public decimal? SelectedMaximumPrice { get; set; }
-        public int? SelectedMinimumPlayers { get; set; }
+        private decimal _selectedMaximumPrice;
+        public decimal SelectedMaximumPrice { 
+            get => _selectedMaximumPrice; 
+            set
+            {
+                _selectedMaximumPrice = value;
+                OnPropertyChanged(nameof(SelectedMaximumPrice));
+            }
+        }
+        private int _selectedMinimumPlayers;
+        public int SelectedMinimumPlayers
+        {
+            get => _selectedMinimumPlayers;
+            set
+            {
+                _selectedMinimumPlayers = value;
+                OnPropertyChanged((nameof(SelectedMinimumPlayers)));
+            }
+        }
+        private DateTimeOffset? _selectedStartDate;
+        public DateTimeOffset? SelectedStartDate
+        {
+            get => _selectedStartDate;
+            set
+            {
+                _selectedStartDate = value;
+                OnPropertyChanged(nameof(SelectedStartDate));
+            }
+        }
 
-        public DateTime? SelectedStartDate { get; set; }
-        public DateTime? SelectedEndDate { get; set; }
-
+        private DateTimeOffset? _selectedEndDate;
+        public DateTimeOffset? SelectedEndDate
+        {
+            get => _selectedEndDate;
+            set
+            {
+                _selectedEndDate = value;
+                OnPropertyChanged(nameof(SelectedEndDate));
+            }
+        }
+        private void UpdateAvailabilityRange()
+        {
+            if (SelectedStartDate.HasValue && SelectedEndDate.HasValue && SelectedStartDate.Value <= SelectedEndDate.Value)
+            {
+                CurrentFilter.AvailabilityRange = new TimeRange(
+                    SelectedStartDate.Value.Date,
+                    SelectedEndDate.Value.Date
+                );
+            }
+            else
+            {
+                CurrentFilter.AvailabilityRange = null;
+            }
+        }
+        private string? _selectedSortOption;
+        public string? SelectedSortOption
+        {
+            get => _selectedSortOption;
+            set
+            {
+                if (_selectedSortOption != value)
+                {
+                    _selectedSortOption = value;
+                    OnPropertyChanged(nameof(SelectedSortOption));
+                }
+            }
+        }
         public ICommand SearchCommand { get; }
         public ICommand NextPageCommand { get; }
         public ICommand PreviousPageCommand { get; }
         public ICommand SelectGameCommand { get; }
+        public ICommand ApplySelectedUiFiltersCommand { get; }
+        public ICommand ClearFiltersCommand { get; }
 
         public event Action<int>? OnGameSelectedRequest;
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public void Initialize(FilterCriteria initialFilter)
         {
-            Filter = initialFilter;
-            Search(Filter);
+            CurrentFilter = initialFilter;
+            Search(CurrentFilter);
         }
 
         public FilteredSearchViewModel(ISearchAndFilterService searchService)
@@ -91,20 +170,31 @@ namespace SearchAndBook.ViewModels
             DisplayedResults = Array.Empty<GameDTO>();
             HasNoResults = false;
 
-            SelectedMaximumPrice = null;
+            SelectedMaximumPrice = 0;
             SelectedStartDate = null;
             SelectedEndDate = null;
 
-            SearchCommand = new RelayCommand(_ => Search(Filter));
+            SearchCommand = new RelayCommand(_ => Search(CurrentFilter));
             NextPageCommand = new RelayCommand(_ => NextPage());
             PreviousPageCommand = new RelayCommand(_ => PreviousPage());
             SelectGameCommand = new RelayCommand(obj =>
             {
                 if (obj is GameDTO game)
                 {
+                    if (GameImages.TryGetValue(game.GameId, out var image))
+                    {
+                        SelectedGameImage = image;
+                    }
+                    else
+                    {
+                        SelectedGameImage = null;
+                    }
+
                     SelectGame(game.GameId);
                 }
             });
+            ApplySelectedUiFiltersCommand = new RelayCommand(_ => ApplySelectedUiFilters());
+            ClearFiltersCommand = new RelayCommand(_ => ClearAllFilters());
         }
 
         public void LoadSearchResults(FilterCriteria searchCriteria)
@@ -143,13 +233,28 @@ namespace SearchAndBook.ViewModels
 
         public void ApplySelectedUiFilters()
         {
-            if (!HasValidPlayersValue())
+           
+            if (!HasValidPlayersValue() || !HasValidDateRange())
             {
                 return;
             }
+            UpdateAvailabilityRange();
 
-            CurrentFilter.MaximumPrice = SelectedMaximumPrice;
-            CurrentFilter.PlayerCount = SelectedMinimumPlayers;
+            CurrentFilter.MaximumPrice = (decimal)SelectedMaximumPrice;
+            CurrentFilter.PlayerCount = (int)SelectedMinimumPlayers;
+
+            if (SelectedSortOption == "Price: lowest to highest")
+            {
+                CurrentFilter.SortOption = SortOption.PriceAscending;
+            }
+            else if (SelectedSortOption == "Price: highest to lowest")
+            {
+                CurrentFilter.SortOption = SortOption.PriceDescending;
+            }
+            else
+            {
+                CurrentFilter.SortOption = SortOption.None;
+            }
 
             ApplyFilters();
         }
@@ -157,12 +262,7 @@ namespace SearchAndBook.ViewModels
 
         public bool HasValidPlayersValue()
         {
-            if (!SelectedMinimumPlayers.HasValue)
-            {
-                return true;
-            }
-
-            return SelectedMinimumPlayers.Value > 0;
+            return SelectedMinimumPlayers >= 0;
         }
 
         public bool HasValidDateRange()
@@ -231,6 +331,11 @@ namespace SearchAndBook.ViewModels
         public void ClearAllFilters()
         {
             CurrentFilter.Reset();
+            SelectedMaximumPrice = 1;
+            SelectedMinimumPlayers = 1;
+            SelectedStartDate = null;
+            SelectedEndDate = null;
+            SelectedSortOption = null;
             DisplayedResults = BaseResults;
             Games = DisplayedResults.ToList();
             CurrentPage = 1;
@@ -251,6 +356,11 @@ namespace SearchAndBook.ViewModels
 
         public void Search(FilterCriteria criteria)
         {
+            if (!HasValidDateRange())
+            {
+                return;
+            }
+            UpdateAvailabilityRange();
             Games = _searchService.Search(criteria).ToList();
             DisplayedResults = Games.ToArray();
             BaseResults = DisplayedResults;
@@ -280,12 +390,40 @@ namespace SearchAndBook.ViewModels
         private void RefreshPage()
         {
             GamesShown.Clear();
-            var pageListings = Games.Skip((CurrentPage - 1) * PageSize).Take(PageSize);
+
+            var pageListings = Games
+                .Skip((CurrentPage - 1) * PageSize)
+                .Take(PageSize);
+
             foreach (var game in pageListings)
             {
                 GamesShown.Add(game);
+                LoadGameImage(game);
             }
+
             OnPropertyChanged(nameof(GamesShown));
+        }
+        private async void LoadGameImage(GameDTO game)
+        {
+            if (game.Image == null || game.Image.Length == 0)
+            {
+                _gameImages[game.GameId] = null;
+                return;
+            }
+
+            using var stream = new InMemoryRandomAccessStream();
+            await stream.WriteAsync(game.Image.AsBuffer());
+            stream.Seek(0);
+
+            var bitmap = new BitmapImage();
+            await bitmap.SetSourceAsync(stream);
+
+            _gameImages[game.GameId] = bitmap;
+        }
+
+        public BitmapImage? GetGameImage(int gameId)
+        {
+            return _gameImages.TryGetValue(gameId, out var image) ? image : null;
         }
 
         protected void OnPropertyChanged(string? propertyName = null)
