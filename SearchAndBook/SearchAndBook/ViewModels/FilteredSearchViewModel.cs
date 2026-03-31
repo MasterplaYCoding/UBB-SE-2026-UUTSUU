@@ -17,6 +17,7 @@ namespace SearchAndBook.ViewModels
     public class FilteredSearchViewModel : INotifyPropertyChanged
     {
         private readonly ISearchAndFilterService _searchService;
+        private readonly IGeoService _geoService;
 
         public FilterCriteria CurrentFilter { get; set; }
         public GameDTO[] BaseResults { get; private set; }
@@ -133,16 +134,34 @@ namespace SearchAndBook.ViewModels
                 }
             }
         }
-
+        
         public void ApplySortOnly()
         {
+
+            if (SelectedSortOption == "Closest to me" && string.IsNullOrWhiteSpace(CitySearchText))
+            {
+                OnErrorOccurred?.Invoke("Please enter a city first so we know where to measure from!");
+
+                SelectedSortOption = null;
+                return;
+            }
+
             CurrentFilter.SortOption = SelectedSortOption switch
             {
                 "Price: lowest to highest" => SortOption.PriceAscending,
                 "Price: highest to lowest" => SortOption.PriceDescending,
+                "Closest to me" => SortOption.Location,
                 _ => SortOption.None
             };
-            ApplyFilters();
+
+            if (CurrentFilter.SortOption == SortOption.Location)
+            {
+                Search(CurrentFilter);
+            }
+            else
+            {
+                ApplyFilters();
+            }
         }
 
         public ICommand SearchCommand { get; }
@@ -152,11 +171,13 @@ namespace SearchAndBook.ViewModels
         public ICommand ApplySelectedUiFiltersCommand { get; }
         public ICommand ClearFiltersCommand { get; }
 
+        public event Action<string>? OnErrorOccurred;
         public event Action<int>? OnGameSelectedRequest;
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public FilteredSearchViewModel(ISearchAndFilterService searchService)
+        public FilteredSearchViewModel(ISearchAndFilterService searchService, IGeoService geoService)
         {
+            _geoService = geoService;
             _searchService = searchService;
 
             CurrentFilter = new FilterCriteria();
@@ -344,6 +365,7 @@ namespace SearchAndBook.ViewModels
             SelectedStartDate = null;
             SelectedEndDate = null;
             SelectedSortOption = null;
+            CitySearchText = string.Empty;
             DisplayedResults = BaseResults;
             Games = DisplayedResults.ToList();
             CurrentPage = 1;
@@ -427,6 +449,47 @@ namespace SearchAndBook.ViewModels
         protected void OnPropertyChanged(string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        /////Location logic
+        ///
+        public ObservableCollection<string> CitySuggestions { get; } = new();
+
+        // 2. The property that captures what the user is typing
+        private string _citySearchText = string.Empty;
+        public string CitySearchText
+        {
+            get => _citySearchText;
+            set
+            {
+                if (_citySearchText != value)
+                {
+                    _citySearchText = value;
+                    OnPropertyChanged(nameof(CitySearchText));
+
+                    // Sync the text box directly to the filter object!
+                    // (Use 'Filter.City' for Discovery, and 'CurrentFilter.City' for FilteredSearch)
+                    CurrentFilter.City = value;
+
+                    // Fetch new suggestions every time a letter is typed
+                    UpdateCitySuggestions(value);
+                }
+            }
+        }
+
+        // 3. The method that talks to your dictionary
+        private void UpdateCitySuggestions(string input)
+        {
+            CitySuggestions.Clear();
+
+            if (!string.IsNullOrWhiteSpace(input) && input.Length >= 2) // Wait until they type 2 letters
+            {
+                var matches = _geoService.GetCitySuggestions(input);
+                foreach (var match in matches)
+                {
+                    CitySuggestions.Add(match);
+                }
+            }
         }
     }
 }

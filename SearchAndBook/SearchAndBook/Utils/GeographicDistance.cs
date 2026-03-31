@@ -11,7 +11,7 @@ namespace SearchAndBook.Utils
 {
     public class GeographicDistance
     {
-        public double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+        public static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
         {
             const double R = 6371;
 
@@ -28,7 +28,7 @@ namespace SearchAndBook.Utils
             return R * c;
         }
 
-        private double DegreesToRadians(double deg)
+        private static double DegreesToRadians(double deg)
             => deg * (Math.PI / 180);
     }
 }

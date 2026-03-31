@@ -11,5 +11,6 @@ namespace SearchAndBook.Shared
         None,
         PriceAscending,
         PriceDescending,
+        Location,
     }
 }

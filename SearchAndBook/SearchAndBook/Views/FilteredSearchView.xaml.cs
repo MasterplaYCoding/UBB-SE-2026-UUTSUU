@@ -41,8 +41,9 @@ namespace SearchAndBook.Views
             var gamesRepository = new GamesRepository();
             var usersRepository = new UsersRepository();
             var rentalsRepository = new RentalsRepository();
-            var service = new SearchAndFilterService(gamesRepository, usersRepository, rentalsRepository);
-            var viewModel = new FilteredSearchViewModel(service);
+            var geoService = App.GlobalGeoService!;
+            var service = new SearchAndFilterService(gamesRepository, usersRepository, rentalsRepository, geoService);
+            var viewModel = new FilteredSearchViewModel(service, geoService);
             viewModel.OnGameSelectedRequest += gameId =>
             {
                 Frame.Navigate(typeof(GameDetailsView), gameId);

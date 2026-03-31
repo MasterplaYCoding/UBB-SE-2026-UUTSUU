@@ -16,7 +16,6 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- TOP SEARCH AREA -->
         <Border Grid.Row="0"
                 Padding="16"
                 CornerRadius="8"
@@ -39,8 +38,9 @@
 
                 <StackPanel Grid.Column="1" Spacing="6">
                     <TextBlock Text="City"/>
-                    <TextBox Text="{Binding CurrentFilter.City, Mode=TwoWay}"
-                             PlaceholderText="Enter city"/>
+                    <AutoSuggestBox PlaceholderText="Enter city"
+                                    Text="{Binding CitySearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    ItemsSource="{Binding CitySuggestions, Mode=OneWay}" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Spacing="6">
@@ -61,14 +61,12 @@
             </Grid>
         </Border>
 
-        <!-- MAIN CONTENT -->
         <Grid Grid.Row="1" ColumnSpacing="20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="280"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- LEFT FILTER PANEL -->
             <Border Grid.Column="0"
                     Padding="16"
                     CornerRadius="8"
@@ -80,50 +78,38 @@
                                FontSize="22"
                                FontWeight="SemiBold"/>
 
-                    <!-- Sort by Maximum Price -->
                     <TextBlock Text="Maximum Price"/>
                     <Slider
                         Minimum="1"
                         Maximum="100"
                         Value="{Binding SelectedMaximumPrice, Mode=TwoWay}"/>
 
-                    <!-- Players -->
                     <TextBlock Text="Number of players"/>
                     <Slider
                         Minimum="1"
                         Maximum="20"
                         Value="{Binding SelectedMinimumPlayers, Mode=TwoWay}"/>
 
-                    <!-- Sort by Price -->
                     <TextBlock
                         Text="Sort by"
                         FontWeight="Bold"
                         Margin="0,10,0,0"/>
 
-
                     <RadioButtons SelectedItem="{Binding SelectedSortOption, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-
                         <x:String>Price: lowest to highest</x:String>
                         <x:String>Price: highest to lowest</x:String>
-
+                        <x:String>Closest to me</x:String>
                     </RadioButtons>
 
-                    <!-- Location -->
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="Location"/>
-                        <TextBox 
-                                 PlaceholderText="Filter by location"/>
-                    </StackPanel>
-
                     <Button Content="Apply filters"
-                            Command="{Binding ApplySelectedUiFiltersCommand}" />
+                            Command="{Binding ApplySelectedUiFiltersCommand}" 
+                            Margin="0,10,0,0"/>
 
                     <Button Content="Clear filters"
                             Command="{Binding ClearFiltersCommand}" />
                 </StackPanel>
             </Border>
 
-            <!-- RIGHT RESULTS PANEL -->
             <Grid Grid.Column="1" RowSpacing="12">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -147,25 +133,25 @@
                                 CornerRadius="8"
                                 Margin="0,0,0,10"
                                 Height="180">
-                            <Grid ColumnDefinitions="220,*" ColumnSpacing="20">
+                                <Grid ColumnDefinitions="220,*" ColumnSpacing="20">
 
-                                <Border Grid.Column="0"
+                                    <Border Grid.Column="0"
                                         CornerRadius="8,0,0,8">
-                                    
-                                    <Border.Background>
-                                        <ImageBrush
+
+                                        <Border.Background>
+                                            <ImageBrush
                                             ImageSource="{x:Bind GameImage, Mode=OneWay}"
                                             Stretch="UniformToFill"/>
                                         </Border.Background>
                                     </Border>
 
                                     <StackPanel Grid.Column="1" 
-                                                VerticalAlignment="Center" 
-                                                Spacing="8">
+                                            VerticalAlignment="Center" 
+                                            Spacing="8">
 
                                         <TextBlock Text="{x:Bind Name}"
-                                                    FontSize="20"
-                                                    FontWeight="Bold"/>
+                                                   FontSize="20"
+                                                   FontWeight="Bold"/>
 
                                         <TextBlock Foreground="Gray">
                                             <Run Text="Price: " FontWeight="SemiBold"/>

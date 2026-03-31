@@ -33,6 +33,8 @@ namespace SearchAndBook
     {
         private Window? _window;
 
+        public static IGeoService? GlobalGeoService { get; private set; }
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -46,7 +48,8 @@ namespace SearchAndBook
         /// Invoked when the application is launched.
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
-        protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+
+        protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             try
             {
@@ -56,7 +59,16 @@ namespace SearchAndBook
             {
                 Debug.WriteLine($"Seeder failed: {ex.Message}");
             }
-            
+
+            try
+            {
+                GlobalGeoService = await GeoService.CreateAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"GeoService initialization failed: {ex.Message}");
+            }
+
             _window = new MainWindow();
             _window.Activate();
         }

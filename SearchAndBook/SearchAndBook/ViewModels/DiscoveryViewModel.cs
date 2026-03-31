@@ -16,6 +16,8 @@ namespace SearchAndBook.ViewModels
     internal class DiscoveryViewModel : INotifyPropertyChanged
     {
         private readonly ISearchAndFilterService _searchService;
+        private readonly IGeoService _geoService;
+
         private const int PageSize = 10;
         public List<GameDTO> GamesAvailableTonight { get; set; } = new();
         public List<GameDTO> GamesOthers { get; set; } = new();
@@ -49,8 +51,9 @@ namespace SearchAndBook.ViewModels
         public ICommand SearchCommand { get; }
         public event Action<int>? OnGameSelectedRequest;
         public event Action<FilterCriteria>? OnSearchRequest;
-        public DiscoveryViewModel(ISearchAndFilterService searchService)
+        public DiscoveryViewModel(ISearchAndFilterService searchService, IGeoService geoService)
         {
+            _geoService = geoService;
             _searchService = searchService;
             NextPageCommand = new RelayCommand(_ => NextPage());
             PreviousPageCommand = new RelayCommand(_ => PreviousPage());
@@ -64,6 +67,7 @@ namespace SearchAndBook.ViewModels
             );
             SearchCommand = new RelayCommand(_ => Search(Filter));
             LoadDiscoveryFeed();
+            _geoService = geoService;
         }
         public void LoadDiscoveryFeed()
         {
@@ -119,5 +123,8 @@ namespace SearchAndBook.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+
+
     }
 }

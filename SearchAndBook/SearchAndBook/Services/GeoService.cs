@@ -5,10 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
+using SearchAndBook.Utils;
 
 namespace SearchAndBook.Services
 {
-    public class GeoService
+    public class GeoService : IGeoService
     {
         private readonly Dictionary<string, City> _lookup = new();
 
@@ -107,6 +108,36 @@ namespace SearchAndBook.Services
                 .Replace("ș", "s")
                 .Replace("ţ", "t")
                 .Replace("ț", "t");
+        }
+
+        public double? GetDistanceBetweenCities(string city1, string city2)
+        {
+            var firstCity = GetCityDetails(city1);
+            var secondCity = GetCityDetails(city2);
+
+            if (!firstCity.found || !secondCity.found)
+            {
+                return null;
+            }
+
+            return GeographicDistance.CalculateDistance(
+                firstCity.lat, firstCity.lon,
+                secondCity.lat, secondCity.lon);
+        }
+
+        public List<string> GetCitySuggestions(string partialName)
+        {
+            if (string.IsNullOrWhiteSpace(partialName))
+                return new List<string>();
+
+            var normalizedInput = Normalize(partialName);
+
+            return _lookup
+                .Where(kvp => kvp.Key.Contains(normalizedInput))
+                .Select(kvp => kvp.Value.MainName)
+                .Distinct()
+                .Take(10)
+                .ToList();
         }
     }
 }
