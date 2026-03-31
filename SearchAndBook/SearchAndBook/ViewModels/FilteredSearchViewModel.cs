@@ -64,7 +64,7 @@ namespace SearchAndBook.ViewModels
         }
         public void Search(FilterCriteria criteria)
         {
-            Games = _searchService.Search(criteria).ToList();
+            Games = _searchService.Search(criteria).ToList() ;
             CurrentPage = 1;
             RefreshPage();
         }

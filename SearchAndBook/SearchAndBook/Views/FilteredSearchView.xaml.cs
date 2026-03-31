@@ -37,9 +37,9 @@ namespace SearchAndBook.Views
         {
             base.OnNavigatedTo(e);
             var criteria = e.Parameter as FilterCriteria ?? new FilterCriteria();
-            var gameRepository = new GamesRepository(); 
+            var gamesRepository = new GamesRepository();
             var usersRepository = new UsersRepository();
-            var service = new SearchAndFilterService(gameRepository, usersRepository);
+            var service = new SearchAndFilterService(gamesRepository, usersRepository);
             var viewModel = new FilteredSearchViewModel(service);
             viewModel.OnGameSelectedRequest += gameId =>
             {

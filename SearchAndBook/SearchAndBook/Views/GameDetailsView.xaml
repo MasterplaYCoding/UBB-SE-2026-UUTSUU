@@ -63,7 +63,7 @@
                                 Height="180"
                                 CornerRadius="10">
                             <Border.Background>
-                                <ImageBrush ImageSource="{Binding GameAndUserDetails.Image}"
+                                <ImageBrush ImageSource="{Binding GameImage}"
                                             Stretch="UniformToFill"/>
                             </Border.Background>
                         </Border>

@@ -50,7 +50,7 @@ namespace SearchAndBook
         {
             try
             {
-                Shared.DatabaseSeeder.SeedGameImages();
+                DatabaseSeeder.SeedGameImages();
             }
             catch (Exception ex)
             {
