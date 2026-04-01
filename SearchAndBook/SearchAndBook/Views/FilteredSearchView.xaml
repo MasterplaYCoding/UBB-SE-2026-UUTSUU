@@ -6,7 +6,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     x:Name="Root"
-    xmlns:viewModels="using:SearchAndBook.ViewModels"
     xmlns:shared="using:SearchAndBook.Shared"
     mc:Ignorable="d">
 
@@ -65,6 +64,7 @@
                     <CalendarDatePicker PlaceholderText="Tomorrow"
                         MinDate="{Binding MinEndDate}"
                         Date="{Binding SelectedEndDate, Mode=TwoWay}"/>
+
                 </StackPanel>
 
                 <Button Grid.Column="4"
@@ -149,54 +149,61 @@
 
                 <ListView Grid.Row="1"
                           ItemsSource="{Binding GamesShown, Mode=OneWay}"
-                          SelectionMode="Single"
-                          SelectedItem="{Binding SelectedGame, Mode=TwoWay}">
+                          SelectionMode="Single">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="shared:GameDTO">
-                            <Border BorderBrush="LightGray"
+                            <Button
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Padding="0"
+                            HorizontalAlignment="Stretch"
+                            Command="{Binding DataContext.SelectGameCommand, ElementName=Root}"
+                            CommandParameter="{Binding}">
+                                <Border BorderBrush="LightGray"
                                     BorderThickness="1"
                                     CornerRadius="8"
                                     Margin="0,0,0,10"
                                     Height="180">
-                                <Grid ColumnDefinitions="220,*" ColumnSpacing="20">
+                                    <Grid ColumnDefinitions="220,*" ColumnSpacing="20">
 
-                                    <Border Grid.Column="0"
+                                        <Border Grid.Column="0"
                                             CornerRadius="8,0,0,8">
 
-                                        <Border.Background>
-                                            <ImageBrush
+                                            <Border.Background>
+                                                <ImageBrush
                                                 ImageSource="{x:Bind GameImage, Mode=OneWay}"
                                                 Stretch="UniformToFill"/>
-                                        </Border.Background>
-                                    </Border>
+                                            </Border.Background>
+                                        </Border>
 
-                                    <StackPanel Grid.Column="1" 
+                                        <StackPanel Grid.Column="1" 
                                                 VerticalAlignment="Center" 
                                                 Spacing="8">
 
-                                        <TextBlock Text="{x:Bind Name}"
+                                            <TextBlock Text="{x:Bind Name}"
                                                    FontSize="20"
                                                    FontWeight="Bold"/>
 
-                                        <TextBlock Foreground="Gray">
+                                            <TextBlock Foreground="Gray">
                                             <Run Text="Price: " FontWeight="SemiBold"/>
                                             <Run Text="{x:Bind Price}"/>
-                                        </TextBlock>
+                                            </TextBlock>
 
-                                        <TextBlock Foreground="Gray">
+                                            <TextBlock Foreground="Gray">
                                             <Run Text="City: " FontWeight="SemiBold"/>
                                             <Run Text="{x:Bind City}"/>
-                                        </TextBlock>
+                                            </TextBlock>
 
-                                        <TextBlock Foreground="Gray">
+                                            <TextBlock Foreground="Gray">
                                             <Run Text="Players: " FontWeight="SemiBold"/>
                                             <Run Text="{x:Bind MinimumPlayerNumber}"/>
                                             <Run Text=" - "/>
                                             <Run Text="{x:Bind MaximumPlayerNumber}"/>
-                                        </TextBlock>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </Button>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
