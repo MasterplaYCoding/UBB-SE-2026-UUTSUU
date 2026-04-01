@@ -68,6 +68,11 @@ namespace SearchAndBook
             {
                 Debug.WriteLine($"GeoService initialization failed: {ex.Message}");
             }
+
+            var usersRepository = new UsersRepository();
+            var user = usersRepository.Get(1);
+            //SessionContext.GetInstance().Populate(user);
+
             _window = new MainWindow();
             _window.Activate();
         }

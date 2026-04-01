@@ -17,6 +17,7 @@ namespace SearchAndBook.ViewModels
         public event PropertyChangedEventHandler? PropertyChanged;
         public event Action? OnGoBackRequested;
         public event Action<BookingDTO, TimeRange> OnStartBookingRequested;
+        public event Action<string>? OnMessageRequested;
 
         private void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -60,16 +61,22 @@ namespace SearchAndBook.ViewModels
         public TimeRange[] UnavailableTimeRanges { get; private set; }
 
         public ICommand GoBackCommand => new RelayCommand(_ => GoBack());
-       // public ICommand BookCommand => new RelayCommand(_ => OnStartBookingRequested?.Invoke(GameAndUserDetails, ));
+        public ICommand BookCommand => new RelayCommand(obj =>
+        {
+            if (obj is TimeRange range)
+            {
+                StartBooking(range);
+            }
+        });
         public ICommand ChatWithOwnerCommand => new RelayCommand(_ => { /* later */ });
 
         public GameDetailsViewModel(IBookingService bookingService, int gameId)
         {
-            this._bookingService = bookingService;
+            _bookingService = bookingService;
             try
             {
-                GameAndUserDetails = this._bookingService.GetGameDetails(gameId);
-                UnavailableTimeRanges = this._bookingService.GetUnavailableRanges(gameId);
+                GameAndUserDetails = _bookingService.GetGameDetails(gameId);
+                UnavailableTimeRanges = _bookingService.GetUnavailableRanges(gameId);
                 LoadGameImage();
                 LoadOwnerImage();
                 HasError = false;
@@ -90,6 +97,7 @@ namespace SearchAndBook.ViewModels
             int days = (range.EndTime - range.StartTime).Days + 1;
             if (days == 0)
                 days = 1;
+
             TotalPrice = days * GameAndUserDetails.Price;
             return TotalPrice;
         }
@@ -101,9 +109,11 @@ namespace SearchAndBook.ViewModels
                 GameImage = null;
                 return;
             }
+
             using var stream = new InMemoryRandomAccessStream();
             await stream.WriteAsync(GameAndUserDetails.Image.AsBuffer());
             stream.Seek(0);
+
             var bitmap = new BitmapImage();
             await bitmap.SetSourceAsync(stream);
             GameImage = bitmap;
@@ -116,12 +126,19 @@ namespace SearchAndBook.ViewModels
                 OwnerImage = null;
                 return;
             }
+
             var bitmap = new BitmapImage(new Uri(GameAndUserDetails.AvatarUrl));
             OwnerImage = bitmap;
         }
 
         public void StartBooking(TimeRange range)
         {
+            if (SessionContext.GetInstance().UserId == -1)
+            {
+                OnMessageRequested?.Invoke("User not logged in. Please log in first");
+                return;
+            }
+
             OnStartBookingRequested?.Invoke(GameAndUserDetails, range);
         }
 

@@ -11,7 +11,7 @@ namespace SearchAndBook.Shared
 
         private SessionContext()
         {
-            UserId = 0;
+            UserId = -1;
             IsLoggedIn = false;
         }
 
@@ -35,7 +35,7 @@ namespace SearchAndBook.Shared
 
         public void Clear()
         {
-            UserId = 0;
+            UserId = -1;
             IsLoggedIn = false;
         }
     }

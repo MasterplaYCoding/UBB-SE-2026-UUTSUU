@@ -17,9 +17,10 @@ namespace SearchAndBook.Views
         public GameDetailsView()
         {
             InitializeComponent();
-        } 
-        
-        protected override void OnNavigatedTo(NavigationEventArgs e) {
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
             base.OnNavigatedTo(e);
             if (e.Parameter is not int gameId) { return; }
 
@@ -38,6 +39,19 @@ namespace SearchAndBook.Views
             vm.OnStartBookingRequested += (bookingDto, range) =>
             {
                 Frame.Navigate(typeof(ConfirmBookingView), (bookingDto, range));
+            };
+
+            vm.OnMessageRequested += async message =>
+            {
+                var dialog = new ContentDialog
+                {
+                    Title = "Booking",
+                    Content = message,
+                    CloseButtonText = "OK",
+                    XamlRoot = this.XamlRoot
+                };
+
+                await dialog.ShowAsync();
             };
 
             this.DataContext = vm;
@@ -78,17 +92,19 @@ namespace SearchAndBook.Views
         {
             var vm = (GameDetailsViewModel)this.DataContext;
             var selectedDates = RentalCalendar.SelectedDates;
+
             if (selectedDates.Count > 2)
             {
-                // remove the oldest selection, keep only last 2
                 var toKeep = new List<DateTimeOffset>
                 {
                     selectedDates[selectedDates.Count - 2],
                     selectedDates[selectedDates.Count - 1]
                 };
+
                 RentalCalendar.SelectedDates.Clear();
                 foreach (var date in toKeep)
                     RentalCalendar.SelectedDates.Add(date);
+
                 return;
             }
 
@@ -100,8 +116,7 @@ namespace SearchAndBook.Views
                 .OrderBy(d => d)
                 .ToList();
 
-            var range = new TimeRange(sorted[0], sorted[selectedDates.Count - 1]);
-
+            var range = new TimeRange(sorted[0], sorted[sorted.Count - 1]);
             vm.CalculatePrice(range);
         }
 

@@ -245,6 +245,7 @@ namespace SearchAndBook.ViewModels
             Filter.SortOption = criteria.SortOption;
             Filter.MaximumPrice = criteria.MaximumPrice;
             Filter.PlayerCount = criteria.PlayerCount;
+            Filter.UserId = SessionContext.GetInstance().UserId;
 
             UpdateAvailabilityRange();
 
