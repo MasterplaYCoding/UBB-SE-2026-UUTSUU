@@ -1,10 +1,14 @@
 ﻿USE master;
 GO
 
-IF DB_ID(N'BoardGamesRentMockDb') IS NULL
+IF DB_ID(N'BoardGamesRentMockDb') IS NOT NULL
 BEGIN
-    CREATE DATABASE BoardGamesRentMockDb;
+    ALTER DATABASE BoardGamesRentMockDb SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE BoardGamesRentMockDb;
 END
+GO
+
+CREATE DATABASE BoardGamesRentMockDb;
 GO
 
 USE BoardGamesRentMockDb;
@@ -160,7 +164,8 @@ INSERT INTO dbo.Rentals
 )
 VALUES
 (1, 1, 2, 1, '2026-05-10T00:00:00', '2026-05-15T00:00:00', 75.00),
-(2, 2, 1, 2, '2026-05-20T00:00:00', '2026-05-22T00:00:00', 20.00);
+(2, 2, 1, 2, '2026-05-20T00:00:00', '2026-05-22T00:00:00', 20.00),
+(3, 1, 1, 2, '2026-04-01T00:00:00', '2026-04-02T00:00:00', 20.00);
 GO
 
 -- add 30 more games
