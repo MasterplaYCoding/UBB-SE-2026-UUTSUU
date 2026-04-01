@@ -57,7 +57,7 @@
                     <TextBlock Text="Start date"/>
                     <CalendarDatePicker PlaceholderText="Today"
                         MinDate="{Binding MinStartDate}"
-                        Date="{Binding SelectedStartDate, Mode=TwoWay}"/>   
+                        Date="{Binding SelectedStartDate, Mode=TwoWay}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="3" Spacing="6">

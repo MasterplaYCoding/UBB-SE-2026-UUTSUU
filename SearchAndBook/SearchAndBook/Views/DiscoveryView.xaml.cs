@@ -39,6 +39,10 @@ namespace SearchAndBook.Views
                 Frame.Navigate(typeof(GameDetailsView), gameId);
             };
 
+            ViewModel.OnPageChanged += () =>
+            {
+                MainScrollViewer.ScrollToVerticalOffset(0);
+            };
             DataContext = ViewModel;
         }
 
