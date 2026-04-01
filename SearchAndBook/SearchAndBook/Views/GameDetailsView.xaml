@@ -24,7 +24,7 @@
 
             <Button Grid.Column="0"
                     Content="← Back"
-                    Command="{Binding GoBackCommand}"
+                    Click="OnBackClicked"
                     VerticalAlignment="Center"
                     Margin="0,0,16,0"/>
 
@@ -120,8 +120,11 @@
                                    FontSize="16"
                                    FontWeight="Bold"/>
 
-                        <Ellipse Width="60" Height="60" Fill="#AAA"
-                                 HorizontalAlignment="Left"/>
+                        <Border Width="60" Height="60" CornerRadius="30" HorizontalAlignment="Left">
+                            <Border.Background>
+                            <ImageBrush ImageSource="{Binding OwnerImage}" Stretch="UniformToFill"/>
+                            </Border.Background>        
+                        </Border>
 
                         <TextBlock Text="{Binding GameAndUserDetails.DisplayName}"
                                    FontWeight="SemiBold"/>
@@ -169,7 +172,9 @@
 
                             <CalendarView x:Name="RentalCalendar"
                                           SelectionMode="Multiple"
-                                          HorizontalAlignment="Stretch"/>
+                                          HorizontalAlignment="Stretch"
+                                          SelectedDatesChanged="OnDatesChanged"
+                                          CalendarViewDayItemChanging="OnDayItemChanging"/>
 
                             <StackPanel Orientation="Horizontal" Spacing="16">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
@@ -200,7 +205,7 @@
                             </Grid>
 
                             <Button Content="Book now"
-                                    Command="{Binding BookCommand}"
+                                    Click="OnBookClicked"
                                     HorizontalAlignment="Stretch"
                                     FontSize="16"
                                     Padding="0,12"/>

@@ -20,6 +20,9 @@ namespace SearchAndBook.ViewModels
         private readonly ISearchAndFilterService _searchService;
         private readonly IGeoService _geoService;
 
+        public DateTimeOffset Today => DateTimeOffset.Now.Date;
+        public DateTimeOffset Tomorrow => DateTimeOffset.Now.Date.AddDays(1);
+
         public FilterCriteria CurrentFilter { get; set; }
         public GameDTO[] BaseResults { get; private set; }
         public GameDTO[] DisplayedResults { get; private set; }
@@ -109,6 +112,9 @@ namespace SearchAndBook.ViewModels
             }
         }
 
+        public DateTimeOffset MinEndDate => SelectedStartDate.HasValue
+            ? SelectedStartDate.Value.AddDays(1) : Today;
+
         private DateTimeOffset? _selectedStartDate;
         public DateTimeOffset? SelectedStartDate
         {
@@ -117,8 +123,16 @@ namespace SearchAndBook.ViewModels
             {
                 _selectedStartDate = value;
                 OnPropertyChanged(nameof(SelectedStartDate));
+                OnPropertyChanged(nameof(MinEndDate));
+
+                if (SelectedEndDate.HasValue && value.HasValue && SelectedEndDate.Value <= value.Value)
+                {
+                    SelectedEndDate = null;
+                }
             }
         }
+
+        public DateTimeOffset MinStartDate;
 
         private DateTimeOffset? _selectedEndDate;
         public DateTimeOffset? SelectedEndDate
