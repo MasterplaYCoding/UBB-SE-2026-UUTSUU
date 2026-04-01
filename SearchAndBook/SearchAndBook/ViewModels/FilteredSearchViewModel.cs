@@ -23,6 +23,7 @@ namespace SearchAndBook.ViewModels
         public GameDTO[] BaseResults { get; private set; }
         public GameDTO[] DisplayedResults { get; private set; }
         public bool HasNoResults { get; private set; }
+        public string NoResultsMessage => "No games found matching your criteria. Try adjusting your filters or search terms.";
 
         public List<GameDTO> Games { get; set; } = new();
 
@@ -71,6 +72,15 @@ namespace SearchAndBook.ViewModels
             {
                 _currentPage = value;
                 OnPropertyChanged(nameof(CurrentPage));
+            }
+        }
+        public int TotalPages
+        {
+            get
+            {
+                if (Games == null || Games.Count == 0)
+                    return 1;
+                return (int)Math.Ceiling((double)Games.Count / PageSize);
             }
         }
 
@@ -254,6 +264,7 @@ namespace SearchAndBook.ViewModels
             DisplayedResults = BaseResults;
             Games = DisplayedResults.ToList();
             CurrentPage = 1;
+            OnPropertyChanged(nameof(TotalPages));
             RefreshPage();
             UpdateNoResultsState();
         }
@@ -264,6 +275,7 @@ namespace SearchAndBook.ViewModels
             DisplayedResults = BaseResults;
             Games = DisplayedResults.ToList();
             CurrentPage = 1;
+            OnPropertyChanged(nameof(TotalPages));
             RefreshPage();
             UpdateNoResultsState();
         }
@@ -278,6 +290,7 @@ namespace SearchAndBook.ViewModels
             DisplayedResults = _searchService.ApplyFilters(BaseResults, CurrentFilter);
             Games = DisplayedResults.ToList();
             CurrentPage = 1;
+            OnPropertyChanged(nameof(TotalPages));
             RefreshPage();
             UpdateNoResultsState();
         }
@@ -382,6 +395,7 @@ namespace SearchAndBook.ViewModels
             DisplayedResults = BaseResults;
             Games = DisplayedResults.ToList();
             CurrentPage = 1;
+            OnPropertyChanged(nameof(TotalPages));
             RefreshPage();
             UpdateNoResultsState();
         }
@@ -390,6 +404,7 @@ namespace SearchAndBook.ViewModels
         {
             HasNoResults = DisplayedResults.Length == 0;
             OnPropertyChanged(nameof(HasNoResults));
+            OnPropertyChanged(nameof(NoResultsMessage));
         }
 
         public void SelectGame(int gameId)
@@ -409,6 +424,7 @@ namespace SearchAndBook.ViewModels
             DisplayedResults = Games.ToArray();
             BaseResults = DisplayedResults;
             CurrentPage = 1;
+            OnPropertyChanged(nameof(TotalPages));
             RefreshPage();
             UpdateNoResultsState();
         }
