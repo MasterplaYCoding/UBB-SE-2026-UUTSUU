@@ -141,6 +141,7 @@ public static class GameQueries
         FROM dbo.Games g
         INNER JOIN dbo.Users u ON g.owner_id = u.user_id
         WHERE g.is_active = 1
+          AND g.owner_id <> @UserId
           AND (@Title IS NULL OR g.name LIKE '%' + @Title + '%')
           AND (@City IS NULL OR u.city = @City)
           AND NOT EXISTS
@@ -180,6 +181,7 @@ public static class GameQueries
         FROM dbo.Games g
         INNER JOIN dbo.Users u ON g.owner_id = u.user_id
         WHERE g.is_active = 1
+          AND g.owner_id <> @UserId
           AND (@Title IS NULL OR g.name LIKE '%' + @Title + '%')
           AND (@City IS NULL OR u.city = @City)
           AND (@MaxPrice IS NULL OR g.price <= @MaxPrice)
