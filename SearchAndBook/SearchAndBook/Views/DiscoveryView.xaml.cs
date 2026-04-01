@@ -1,7 +1,5 @@
-using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
-using SearchAndBook.Domain;
 using SearchAndBook.Repositories;
 using SearchAndBook.Services;
 using SearchAndBook.Shared;
@@ -34,31 +32,19 @@ namespace SearchAndBook.Views
                 geoService);
 
             ViewModel = new DiscoveryViewModel(service, geoService);
+
+            ViewModel.OnSearchRequest += HandleSearchRequest;
             ViewModel.OnGameSelectedRequest += gameId =>
             {
                 Frame.Navigate(typeof(GameDetailsView), gameId);
             };
 
             DataContext = ViewModel;
-          
         }
 
-        private void Search_Click(object sender, RoutedEventArgs e)
+        private void HandleSearchRequest(FilterCriteria filter)
         {
-            var criteria = new FilterCriteria
-            {
-                Name = GameTextBox.Text,
-                City = ViewModel.CitySearchText
-            };
-
-            if (StartDatePicker.Date != null && EndDatePicker.Date != null)
-            {
-                criteria.AvailabilityRange = new TimeRange(
-                    StartDatePicker.Date.Value.DateTime,
-                    EndDatePicker.Date.Value.DateTime);
-            }
-
-            Frame.Navigate(typeof(FilteredSearchView), criteria);
+            Frame.Navigate(typeof(FilteredSearchView), filter);
         }
 
         private void Game_Click(object sender, ItemClickEventArgs e)

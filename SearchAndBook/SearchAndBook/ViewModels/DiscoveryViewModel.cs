@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using SearchAndBook.CommandHandler;
+using SearchAndBook.Domain;
 using SearchAndBook.Services;
 using SearchAndBook.Shared;
 using SearchAndBook.Utils;
@@ -26,7 +27,40 @@ namespace SearchAndBook.ViewModels
         public ObservableCollection<GameDTO> PagedGamesAvailableTonight { get; } = new();
         public ObservableCollection<GameDTO> PagedGamesOthers { get; } = new();
 
+        private bool _showOthersHeader;
+        public bool ShowOthersHeader
+        {
+            get => _showOthersHeader;
+            set
+            {
+                _showOthersHeader = value;
+                OnPropertyChanged(nameof(ShowOthersHeader));
+            }
+        }
+
         public FilterCriteria Filter { get; set; } = new();
+
+        private DateTimeOffset? _selectedStartDate;
+        public DateTimeOffset? SelectedStartDate
+        {
+            get => _selectedStartDate;
+            set
+            {
+                _selectedStartDate = value;
+                OnPropertyChanged(nameof(SelectedStartDate));
+            }
+        }
+
+        private DateTimeOffset? _selectedEndDate;
+        public DateTimeOffset? SelectedEndDate
+        {
+            get => _selectedEndDate;
+            set
+            {
+                _selectedEndDate = value;
+                OnPropertyChanged(nameof(SelectedEndDate));
+            }
+        }
 
         private int _currentPage = 1;
         public int CurrentPage
@@ -52,6 +86,8 @@ namespace SearchAndBook.ViewModels
         public bool HasPagedAvailableTonight => PagedGamesAvailableTonight.Any();
         public bool HasPagedOthers => PagedGamesOthers.Any();
 
+        public string OthersTitle => HasPagedOthers ? "Others" : " ";
+
         public ICommand NextPageCommand { get; }
         public ICommand PreviousPageCommand { get; }
         public ICommand SearchCommand { get; }
@@ -64,6 +100,9 @@ namespace SearchAndBook.ViewModels
         {
             _searchService = searchService;
             _geoService = geoService;
+
+            SelectedStartDate = DateTimeOffset.Now.Date;
+            SelectedEndDate = DateTimeOffset.Now.Date.AddDays(1);
 
             NextPageCommand = new RelayCommand(_ => NextPage());
             PreviousPageCommand = new RelayCommand(_ => PreviousPage());
@@ -166,11 +205,26 @@ namespace SearchAndBook.ViewModels
             OnPropertyChanged(nameof(PagedGamesOthers));
             OnPropertyChanged(nameof(HasPagedAvailableTonight));
             OnPropertyChanged(nameof(HasPagedOthers));
+            OnPropertyChanged(nameof(OthersTitle));
         }
 
         public void Search(FilterCriteria criteria)
         {
-            OnSearchRequest?.Invoke(criteria);
+            if (!HasValidDateRange())
+            {
+                return;
+            }
+
+            Filter.Name = criteria.Name;
+            Filter.City = criteria.City;
+            Filter.SortOption = criteria.SortOption;
+            Filter.MaximumPrice = criteria.MaximumPrice;
+            Filter.PlayerCount = criteria.PlayerCount;
+
+            UpdateAvailabilityRange();
+
+            CurrentPage = 1;
+            OnSearchRequest?.Invoke(Filter);
         }
 
         public ObservableCollection<string> CitySuggestions { get; } = new();
@@ -209,6 +263,38 @@ namespace SearchAndBook.ViewModels
         protected void OnPropertyChanged(string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private void UpdateAvailabilityRange()
+        {
+            if (SelectedStartDate.HasValue &&
+                SelectedEndDate.HasValue &&
+                SelectedStartDate.Value <= SelectedEndDate.Value)
+            {
+                Filter.AvailabilityRange = new TimeRange(
+                    SelectedStartDate.Value.Date,
+                    SelectedEndDate.Value.Date
+                );
+            }
+            else
+            {
+                Filter.AvailabilityRange = null;
+            }
+        }
+
+        public bool HasValidDateRange()
+        {
+            if (!SelectedStartDate.HasValue && !SelectedEndDate.HasValue)
+            {
+                return true;
+            }
+
+            if (!SelectedStartDate.HasValue || !SelectedEndDate.HasValue)
+            {
+                return false;
+            }
+
+            return SelectedStartDate.Value < SelectedEndDate.Value;
         }
     }
 }

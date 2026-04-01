@@ -48,9 +48,12 @@ namespace SearchAndBook.Views
             {
                 Frame.Navigate(typeof(GameDetailsView), gameId);
             };
+            viewModel.OnGoBackRequest += () => Frame.Navigate(typeof(DiscoveryView));
             viewModel.Initialize(criteria);
             this.DataContext = viewModel;
+            
 
         }
+
     }
 }

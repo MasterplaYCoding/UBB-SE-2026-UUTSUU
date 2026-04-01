@@ -35,7 +35,8 @@
                 <StackPanel Grid.Column="0" Spacing="6">
                     <TextBlock Text="Game name"/>
                     <TextBox x:Name="GameTextBox"
-                             PlaceholderText="Enter game name"/>
+                             PlaceholderText="Enter game name"
+                             Text="{Binding Filter.Name, Mode=TwoWay}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Spacing="6">
@@ -47,19 +48,19 @@
 
                 <StackPanel Grid.Column="2" Spacing="6">
                     <TextBlock Text="Start date"/>
-                    <CalendarDatePicker x:Name="StartDatePicker"/>
+                    <CalendarDatePicker Date="{Binding SelectedStartDate, Mode=TwoWay}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="3" Spacing="6">
                     <TextBlock Text="End date"/>
-                    <CalendarDatePicker x:Name="EndDatePicker"/>
+                    <CalendarDatePicker  Date="{Binding SelectedEndDate, Mode=TwoWay}"/>
                 </StackPanel>
 
                 <Button Grid.Column="4"
                         Content="Search"
                         Height="40"
                         VerticalAlignment="Bottom"
-                        Click="Search_Click"/>
+                        Command="{Binding SearchCommand}"/>
             </Grid>
         </Border>
 
@@ -78,7 +79,7 @@
                 <StackPanel Grid.Column="1" Spacing="12">
 
                     <!-- TITLE -->
-                    <TextBlock Text="Recommended Games"
+                    <TextBlock Text="Available Tonight"
                                FontSize="22"
                                FontWeight="SemiBold"/>
 
@@ -142,7 +143,7 @@
                     </ListView>
 
                     <!-- OTHERS TITLE -->
-                    <TextBlock Text="Others"
+                    <TextBlock Text="{Binding OthersTitle}"
                                FontSize="22"
                                FontWeight="SemiBold"
                                Margin="0,8,0,0"/>
