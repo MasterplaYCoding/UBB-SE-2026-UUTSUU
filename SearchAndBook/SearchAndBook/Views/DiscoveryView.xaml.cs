@@ -16,7 +16,7 @@ namespace SearchAndBook.Views
             InitializeComponent();
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
 
@@ -44,19 +44,12 @@ namespace SearchAndBook.Views
                 MainScrollViewer.ScrollToVerticalOffset(0);
             };
             DataContext = ViewModel;
+            await ViewModel.LoadDiscoveryFeed();
         }
 
         private void HandleSearchRequest(FilterCriteria filter)
         {
             Frame.Navigate(typeof(FilteredSearchView), filter);
-        }
-
-        private void Game_Click(object sender, ItemClickEventArgs e)
-        {
-            if (e.ClickedItem is GameDTO game)
-            {
-                Frame.Navigate(typeof(GameDetailsView), game.GameId);
-            }
         }
     }
 }
