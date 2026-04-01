@@ -5,20 +5,13 @@ using SearchAndBook.Domain;
 using SearchAndBook.Repositories;
 using SearchAndBook.Services;
 using SearchAndBook.Shared;
-using SearchAndBook.ViewModels; 
-using System.Collections.Generic;
-using System.Linq;
+using SearchAndBook.ViewModels;
 
 namespace SearchAndBook.Views
 {
     public sealed partial class DiscoveryView : Page
     {
         public DiscoveryViewModel ViewModel { get; private set; }
-
-        private SearchAndFilterService service;
-        private List<GameDTO> allGames = new();
-        private int currentPage = 1;
-        private int pageSize = 10;
 
         public DiscoveryView()
         {
@@ -34,55 +27,21 @@ namespace SearchAndBook.Views
             var rentalsRepository = new RentalsRepository();
             var geoService = App.GlobalGeoService!;
 
-            service = new SearchAndFilterService(gamesRepository, usersRepository, rentalsRepository, geoService);
+            var service = new SearchAndFilterService(
+                gamesRepository,
+                usersRepository,
+                rentalsRepository,
+                geoService);
 
             ViewModel = new DiscoveryViewModel(service, geoService);
-            this.DataContext = ViewModel;
-
-            LoadGames();
-        }
-
-        private void LoadGames()
-        {
-            var criteria = new FilterCriteria();
-
-            allGames = service.Search(criteria).ToList();
-
-            currentPage = 1;
-
-            DisplayPage();
-        }
-
-        private void DisplayPage()
-        {
-            var games = allGames
-                .Skip((currentPage - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            GamesList.ItemsSource = games;
-
-            PageText.Text = $"Page {currentPage}";
-        }
-
-        private void Next_Click(object sender, RoutedEventArgs e)
-        {
-            if (currentPage * pageSize < allGames.Count)
+            ViewModel.OnGameSelectedRequest += gameId =>
             {
-                currentPage++;
-                DisplayPage();
-            }
-        }
+                Frame.Navigate(typeof(GameDetailsView), gameId);
+            };
 
-        private void Previous_Click(object sender, RoutedEventArgs e)
-        {
-            if (currentPage > 1)
-            {
-                currentPage--;
-                DisplayPage();
-            }
+            DataContext = ViewModel;
+            PageText.Text = $"Page {ViewModel.CurrentPage}";
         }
-
 
         private void Search_Click(object sender, RoutedEventArgs e)
         {
@@ -102,12 +61,24 @@ namespace SearchAndBook.Views
             Frame.Navigate(typeof(FilteredSearchView), criteria);
         }
 
-        private void Game_Click(object sender, RoutedEventArgs e)
+        private void Game_Click(object sender, ItemClickEventArgs e)
         {
-            if ((sender as Button)?.DataContext is GameDTO game)
+            if (e.ClickedItem is GameDTO game)
             {
                 Frame.Navigate(typeof(GameDetailsView), game.GameId);
             }
+        }
+
+        private void Next_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.NextPage();
+            PageText.Text = $"Page {ViewModel.CurrentPage}";
+        }
+
+        private void Previous_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.PreviousPage();
+            PageText.Text = $"Page {ViewModel.CurrentPage}";
         }
     }
 }

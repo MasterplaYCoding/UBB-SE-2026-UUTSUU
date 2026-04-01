@@ -26,7 +26,14 @@ namespace SearchAndBook
         public MainWindow()
         {
             InitializeComponent();
+
             RootFrame.Navigate(typeof(SearchAndBook.Views.DiscoveryView));
+            this.Closed += MainWindow_Closed;
+
+        }
+        private void MainWindow_Closed(object sender, WindowEventArgs args)
+        {
+            Environment.Exit(0);
         }
     }
 }
