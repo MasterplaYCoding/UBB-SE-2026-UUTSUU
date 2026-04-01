@@ -1,11 +1,12 @@
 ﻿using SearchAndBook.Domain;
+using SearchAndBook.Utils;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
-using SearchAndBook.Utils;
 
 namespace SearchAndBook.Services
 {
@@ -33,28 +34,37 @@ namespace SearchAndBook.Services
             {
                 var parts = line.Split('\t');
 
-                if (parts.Length < 7) continue;
+                if (parts.Length < 15) continue;
 
                 var featureClass = parts[6];
-                if (featureClass != "P") continue;
+                if (featureClass != "P" && featureClass != "PPLC") continue;
+
+                long.TryParse(parts[14], out var pop);
+
+                if (pop < 5000) continue;
 
                 var name = parts[1];
                 var name2 = parts[2];
                 var alternateNames = parts[3];
 
-                if (!double.TryParse(parts[4], out var lat)) continue;
-                if (!double.TryParse(parts[5], out var lon)) continue;
+                if (!double.TryParse(parts[4], NumberStyles.Any, CultureInfo.InvariantCulture, out var lat)) continue;
+                if (!double.TryParse(parts[5], NumberStyles.Any, CultureInfo.InvariantCulture, out var lon)) continue;
 
                 var city = new City
                 {
                     MainName = name,
                     Latitude = lat,
                     Longitude = lon,
-                    Names = new List<string>()
+                    Names = new List<string>(),
                 };
 
                 AddName(city, name);
                 AddName(city, name2);
+
+                if (name2.Trim().Equals("Bucuresti", StringComparison.OrdinalIgnoreCase))
+                {
+                    AddName(city, "Bucharest");
+                }
 
                 if (!string.IsNullOrWhiteSpace(alternateNames))
                 {
@@ -64,6 +74,7 @@ namespace SearchAndBook.Services
                     }
                 }
             }
+
         }
 
         private void AddName(City city, string rawName)

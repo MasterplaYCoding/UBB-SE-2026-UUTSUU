@@ -23,3 +23,7 @@ x86/
 *.user
 *.userosscache
 *.sln.docstates
+
+*.mdf
+*.ldf
+*.ndf
