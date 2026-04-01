@@ -38,6 +38,16 @@ namespace SearchAndBook.ViewModels
                 OnPropertyChanged(nameof(CurrentPage));
             }
         }
+        private int TotalGamesCount => GamesAvailableTonight.Count + GamesOthers.Count;
+        public int TotalPages
+        {
+            get
+            {
+                if (TotalGamesCount == 0)
+                    return 1;
+                return (int)Math.Ceiling((double)TotalGamesCount/ PageSize);
+            }
+        }
 
         public bool HasPagedAvailableTonight => PagedGamesAvailableTonight.Any();
         public bool HasPagedOthers => PagedGamesOthers.Any();
@@ -61,6 +71,7 @@ namespace SearchAndBook.ViewModels
 
             LoadDiscoveryFeed();
         }
+        public string NoResultsMessage => TotalGamesCount == 0 ? "No games available." : "";
 
         public async void LoadDiscoveryFeed()
         {
@@ -74,9 +85,10 @@ namespace SearchAndBook.ViewModels
 
             CurrentPage = 1;
             RefreshPage();
-
+            OnPropertyChanged(nameof(TotalPages));
             OnPropertyChanged(nameof(GamesAvailableTonight));
             OnPropertyChanged(nameof(GamesOthers));
+            OnPropertyChanged(nameof(NoResultsMessage));
         }
 
         private async Task LoadImagesForGames(IEnumerable<GameDTO> games)
@@ -90,11 +102,9 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        private int TotalItemCount => GamesAvailableTonight.Count + GamesOthers.Count;
-
         public void NextPage()
         {
-            if (CurrentPage * PageSize < TotalItemCount)
+            if (CurrentPage * PageSize < TotalGamesCount)
             {
                 CurrentPage++;
                 RefreshPage();
@@ -152,7 +162,6 @@ namespace SearchAndBook.ViewModels
                     PagedGamesOthers.Add(game);
                 }
             }
-
             OnPropertyChanged(nameof(PagedGamesAvailableTonight));
             OnPropertyChanged(nameof(PagedGamesOthers));
             OnPropertyChanged(nameof(HasPagedAvailableTonight));

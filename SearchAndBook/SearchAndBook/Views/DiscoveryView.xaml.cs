@@ -40,7 +40,7 @@ namespace SearchAndBook.Views
             };
 
             DataContext = ViewModel;
-            PageText.Text = $"Page {ViewModel.CurrentPage}";
+          
         }
 
         private void Search_Click(object sender, RoutedEventArgs e)
@@ -67,18 +67,6 @@ namespace SearchAndBook.Views
             {
                 Frame.Navigate(typeof(GameDetailsView), game.GameId);
             }
-        }
-
-        private void Next_Click(object sender, RoutedEventArgs e)
-        {
-            ViewModel.NextPage();
-            PageText.Text = $"Page {ViewModel.CurrentPage}";
-        }
-
-        private void Previous_Click(object sender, RoutedEventArgs e)
-        {
-            ViewModel.PreviousPage();
-            PageText.Text = $"Page {ViewModel.CurrentPage}";
         }
     }
 }

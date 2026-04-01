@@ -82,6 +82,11 @@
                                FontSize="22"
                                FontWeight="SemiBold"/>
 
+                    <TextBlock Text="{Binding NoResultsMessage}"
+                                FontSize="16"
+                                Foreground="Gray"
+                                Margin="0,4,0,10"/>
+
                     <!-- AVAILABLE TONIGHT -->
                     <ListView ItemsSource="{Binding PagedGamesAvailableTonight}"
                               SelectionMode="Single"
@@ -141,6 +146,10 @@
                                FontSize="22"
                                FontWeight="SemiBold"
                                Margin="0,8,0,0"/>
+                    <TextBlock Text="{Binding NoResultsMessage}"
+                                FontSize="16"
+                                Foreground="Gray"
+                                Margin="0,4,0,10"/>
 
                     <!-- OTHERS -->
                     <ListView ItemsSource="{Binding PagedGamesOthers}"
@@ -205,15 +214,17 @@
                     Orientation="Horizontal"
                     HorizontalAlignment="Center"
                     Spacing="10">
-
             <Button Content="Previous"
-                    Click="Previous_Click"/>
+                    Command="{Binding PreviousPageCommand}"/>
 
-            <TextBlock x:Name="PageText"
-                       VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <TextBlock Text="{Binding CurrentPage}"/>
+                <TextBlock Text="/"/>
+                <TextBlock Text="{Binding TotalPages}"/>
+            </StackPanel>
 
             <Button Content="Next"
-                    Click="Next_Click"/>
+                    Command="{Binding NextPageCommand}"/>
         </StackPanel>
     </Grid>
 </Page>

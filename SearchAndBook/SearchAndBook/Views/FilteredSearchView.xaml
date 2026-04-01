@@ -122,10 +122,15 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
+                <StackPanel>
                 <TextBlock Grid.Row="0"
                            Text="Results"
                            FontSize="22"
                            FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding NoResultsMessage}"
+                           FontSize="16"
+                           Foreground="Gray"/>
+                </StackPanel>
 
                 <ListView Grid.Row="1"
                           ItemsSource="{Binding GamesShown, Mode=OneWay}"
@@ -188,8 +193,11 @@
                     <Button Content="Previous"
                             Command="{Binding PreviousPageCommand}"/>
 
-                    <TextBlock Text="{Binding CurrentPage}"
-                               VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding CurrentPage}"/>
+                        <TextBlock Text="/"/>
+                        <TextBlock Text="{Binding TotalPages}"/>
+                    </StackPanel>
 
                     <Button Content="Next"
                             Command="{Binding NextPageCommand}"/>
