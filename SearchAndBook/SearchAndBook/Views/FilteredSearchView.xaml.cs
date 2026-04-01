@@ -51,9 +51,6 @@ namespace SearchAndBook.Views
             viewModel.OnGoBackRequest += () => Frame.Navigate(typeof(DiscoveryView));
             viewModel.Initialize(criteria);
             this.DataContext = viewModel;
-            
-
         }
-
     }
 }

@@ -27,6 +27,8 @@ namespace SearchAndBook.ViewModels
         public ObservableCollection<GameDTO> PagedGamesAvailableTonight { get; } = new();
         public ObservableCollection<GameDTO> PagedGamesOthers { get; } = new();
 
+        public event Action? OnPageChanged;
+
         private bool _showOthersHeader;
         public bool ShowOthersHeader
         {
@@ -168,6 +170,7 @@ namespace SearchAndBook.ViewModels
             {
                 CurrentPage++;
                 RefreshPage();
+                OnPageChanged?.Invoke();
             }
         }
 
@@ -177,6 +180,7 @@ namespace SearchAndBook.ViewModels
             {
                 CurrentPage--;
                 RefreshPage();
+                OnPageChanged?.Invoke();
             }
         }
 

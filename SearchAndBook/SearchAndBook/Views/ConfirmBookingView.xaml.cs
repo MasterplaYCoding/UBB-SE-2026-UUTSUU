@@ -52,8 +52,18 @@ public sealed partial class ConfirmBookingView : Page
                 Frame.GoBack();
         };
 
-        vm.OnConfirmBookingRequested += () =>
+
+        vm.OnConfirmBookingRequested += async () =>
         {
+            var dialog = new ContentDialog
+            {
+                Title = "Success",
+                Content = "Booking request was sent successfully!",
+                CloseButtonText = "OK",
+                XamlRoot = this.XamlRoot
+            };
+            await dialog.ShowAsync();
+            Frame.Navigate(typeof(DiscoveryView));
         };
 
         this.DataContext = vm;

@@ -80,11 +80,11 @@ namespace SearchAndBook.Views
             }
 
             var vm = (GameDetailsViewModel)this.DataContext;
-            var range = new TimeRange(
-                selectedDates[0].DateTime,
-                selectedDates[selectedDates.Count - 1].DateTime
-            );
-
+            var sorted = selectedDates
+               .Select(d => d.DateTime)
+               .OrderBy(d => d)
+               .ToList();
+            var range = new TimeRange(sorted[0], sorted[selectedDates.Count - 1]);
             vm.StartBooking(range);
         }
 

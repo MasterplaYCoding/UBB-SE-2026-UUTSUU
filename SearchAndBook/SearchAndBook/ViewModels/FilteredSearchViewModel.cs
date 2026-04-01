@@ -421,7 +421,6 @@ namespace SearchAndBook.ViewModels
             SelectedStartDate = null;
             SelectedEndDate = null;
             SelectedSortOption = null;
-            CitySearchText = string.Empty;
             DisplayedResults = BaseResults;
             Games = DisplayedResults.ToList();
             CurrentPage = 1;
@@ -502,7 +501,7 @@ namespace SearchAndBook.ViewModels
         private void GoBack()
         {
             OnGoBackRequest?.Invoke();
-        }   
+        }
 
         private async Task LoadGameImage(GameDTO game)
         {
