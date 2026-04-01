@@ -16,7 +16,7 @@ namespace SearchAndBook.ViewModels
     {
         public event PropertyChangedEventHandler? PropertyChanged;
         public event Action? OnGoBackRequested;
-        public event Action? OnStartBookingRequested;
+        public event Action<BookingDTO, TimeRange> OnStartBookingRequested;
 
         private void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -49,11 +49,18 @@ namespace SearchAndBook.ViewModels
             private set { _gameImage = value; OnPropertyChanged(); }
         }
 
+        private BitmapImage? _ownerImage;
+        public BitmapImage? OwnerImage
+        {
+            get => _ownerImage;
+            private set { _ownerImage = value; OnPropertyChanged(); }
+        }
+
         private readonly IBookingService _bookingService;
         public TimeRange[] UnavailableTimeRanges { get; private set; }
 
         public ICommand GoBackCommand => new RelayCommand(_ => GoBack());
-        public ICommand BookCommand => new RelayCommand(_ => OnStartBookingRequested?.Invoke());
+       // public ICommand BookCommand => new RelayCommand(_ => OnStartBookingRequested?.Invoke(GameAndUserDetails, ));
         public ICommand ChatWithOwnerCommand => new RelayCommand(_ => { /* later */ });
 
         public GameDetailsViewModel(IBookingService bookingService, int gameId)
@@ -64,6 +71,7 @@ namespace SearchAndBook.ViewModels
                 GameAndUserDetails = this._bookingService.GetGameDetails(gameId);
                 UnavailableTimeRanges = this._bookingService.GetUnavailableRanges(gameId);
                 LoadGameImage();
+                LoadOwnerImage();
                 HasError = false;
             }
             catch
@@ -79,7 +87,7 @@ namespace SearchAndBook.ViewModels
 
         public decimal CalculatePrice(TimeRange range)
         {
-            int days = (range.EndTime - range.StartTime).Days;
+            int days = (range.EndTime - range.StartTime).Days + 1;
             if (days == 0)
                 days = 1;
             TotalPrice = days * GameAndUserDetails.Price;
@@ -101,9 +109,20 @@ namespace SearchAndBook.ViewModels
             GameImage = bitmap;
         }
 
+        private async void LoadOwnerImage()
+        {
+            if (GameAndUserDetails.AvatarUrl == null || GameAndUserDetails.AvatarUrl.Length == 0)
+            {
+                OwnerImage = null;
+                return;
+            }
+            var bitmap = new BitmapImage(new Uri(GameAndUserDetails.AvatarUrl));
+            OwnerImage = bitmap;
+        }
+
         public void StartBooking(TimeRange range)
         {
-            OnStartBookingRequested?.Invoke();
+            OnStartBookingRequested?.Invoke(GameAndUserDetails, range);
         }
 
         public void GoBack()
