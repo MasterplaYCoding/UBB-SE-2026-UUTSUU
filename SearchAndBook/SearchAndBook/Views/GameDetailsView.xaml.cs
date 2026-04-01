@@ -4,8 +4,11 @@ using Microsoft.UI.Xaml.Navigation;
 using SearchAndBook.Domain;
 using SearchAndBook.Repositories;
 using SearchAndBook.Services;
+using SearchAndBook.Shared;
 using SearchAndBook.ViewModels;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SearchAndBook.Views
 {
@@ -32,9 +35,9 @@ namespace SearchAndBook.Views
                     Frame.GoBack();
             };
 
-            vm.OnStartBookingRequested += () =>
+            vm.OnStartBookingRequested += (bookingDto, range) =>
             {
-                Frame.Navigate(typeof(ConfirmBookingView));
+                Frame.Navigate(typeof(ConfirmBookingView), (bookingDto, range));
             };
 
             this.DataContext = vm;
@@ -71,12 +74,69 @@ namespace SearchAndBook.Views
         {
             var vm = (GameDetailsViewModel)this.DataContext;
             var selectedDates = RentalCalendar.SelectedDates;
+            if (selectedDates.Count > 2)
+            {
+                // remove the oldest selection, keep only last 2
+                var toKeep = new List<DateTimeOffset>
+                {
+                    selectedDates[selectedDates.Count - 2],
+                    selectedDates[selectedDates.Count - 1]
+                };
+                RentalCalendar.SelectedDates.Clear();
+                foreach (var date in toKeep)
+                    RentalCalendar.SelectedDates.Add(date);
+                return;
+            }
+
             if (selectedDates.Count < 1)
                 return;
 
-            var range = new TimeRange(selectedDates[0].DateTime, selectedDates[selectedDates.Count - 1].DateTime);
+            var sorted = selectedDates
+                .Select(d => d.DateTime)
+                .OrderBy(d => d)
+                .ToList();
+
+            var range = new TimeRange(sorted[0], sorted[selectedDates.Count - 1]);
 
             vm.CalculatePrice(range);
+        }
+
+        private void OnDayItemChanging(CalendarView sender, CalendarViewDayItemChangingEventArgs e)
+        {
+            if (this.DataContext is not GameDetailsViewModel vm)
+                return;
+
+            var date = e.Item.Date.DateTime;
+            var today = DateTime.Today;
+
+            if (date < today)
+            {
+                e.Item.IsBlackout = true;
+                return;
+            }
+
+            bool isUnavailable = false;
+            if (vm.UnavailableTimeRanges != null)
+            {
+                foreach (var range in vm.UnavailableTimeRanges)
+                {
+                    if (date >= range.StartTime && date <= range.EndTime)
+                    {
+                        isUnavailable = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isUnavailable)
+            {
+                e.Item.IsBlackout = true;
+                e.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkRed);
+            }
+            else
+            {
+                e.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkGreen);
+            }
         }
     }
 }
