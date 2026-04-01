@@ -132,7 +132,7 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public DateTimeOffset MinStartDate;
+        public DateTimeOffset MinStartDate => Today;
 
         private DateTimeOffset? _selectedEndDate;
         public DateTimeOffset? SelectedEndDate

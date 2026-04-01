@@ -53,10 +53,8 @@ namespace SearchAndBook.ViewModels
                 OnPropertyChanged(nameof(SelectedStartDate));
                 OnPropertyChanged(nameof(MinEndDate));
 
-                if (SelectedEndDate.HasValue && value.HasValue && SelectedEndDate.Value <= value.Value)
-                {
-                    SelectedEndDate = null;
-                }
+                _selectedEndDate = null;
+                OnPropertyChanged(nameof(SelectedEndDate));
             }
         }
 
@@ -68,6 +66,12 @@ namespace SearchAndBook.ViewModels
             get => _selectedEndDate;
             set
             {
+                if (value.HasValue && SelectedStartDate.HasValue && value.Value <= SelectedStartDate.Value)
+                {
+                    _selectedEndDate = null;
+                    OnPropertyChanged(nameof(SelectedEndDate));
+                    return;
+                }
                 _selectedEndDate = value;
                 OnPropertyChanged(nameof(SelectedEndDate));
             }
@@ -118,8 +122,8 @@ namespace SearchAndBook.ViewModels
             _searchService = searchService;
             _geoService = geoService;
 
-            SelectedStartDate = null;
-            SelectedEndDate = null;
+            _selectedStartDate = null;
+            _selectedEndDate = null;
 
             NextPageCommand = new RelayCommand(_ => NextPage());
             PreviousPageCommand = new RelayCommand(_ => PreviousPage());
