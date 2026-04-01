@@ -22,7 +22,35 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 <ItemGroup>
+    <Content Remove="Assets\SeedImages\7Wonders.png" />
+    <Content Remove="Assets\SeedImages\Agricola.jpg" />
+    <Content Remove="Assets\SeedImages\ArkNova.jpg" />
+    <Content Remove="Assets\SeedImages\Azul.jpg" />
+    <Content Remove="Assets\SeedImages\Bang!.png" />
+    <Content Remove="Assets\SeedImages\BrassBirmingham.jpg" />
+    <Content Remove="Assets\SeedImages\Clank!.jpg" />
+    <Content Remove="Assets\SeedImages\Codenames.jpg" />
+    <Content Remove="Assets\SeedImages\Dixit.jpg" />
+    <Content Remove="Assets\SeedImages\Dominion.jpg" />
+    <Content Remove="Assets\SeedImages\Everdell.jpg" />
+    <Content Remove="Assets\SeedImages\ExplodingKittens.png" />
+    <Content Remove="Assets\SeedImages\Gloomhaven.jpg" />
+    <Content Remove="Assets\SeedImages\Hanabi.jpg" />
+    <Content Remove="Assets\SeedImages\KingOfTokyo.jpg" />
+    <Content Remove="Assets\SeedImages\LoveLetter.jpg" />
+    <Content Remove="Assets\SeedImages\Mysterium.jpg" />
+    <Content Remove="Assets\SeedImages\Pandemic.jpg" />
+    <Content Remove="Assets\SeedImages\Patchwork.jpg" />
+    <Content Remove="Assets\SeedImages\Risk.jpg" />
+    <Content Remove="Assets\SeedImages\Root.jpg" />
+    <Content Remove="Assets\SeedImages\Scythe.jpg" />
+    <Content Remove="Assets\SeedImages\SheriffOfNottingham.jpg" />
+    <Content Remove="Assets\SeedImages\Splendor.jpg" />
     <Content Remove="Assets\SeedImages\terraforming_mars.png" />
+    <Content Remove="Assets\SeedImages\TheCrew.jpg" />
+    <Content Remove="Assets\SeedImages\TicketToRide.jpg" />
+    <Content Remove="Assets\SeedImages\Uno.jpg" />
+    <Content Remove="Assets\SeedImages\Wingspan.jpg" />
 </ItemGroup>
 
 <ItemGroup>
