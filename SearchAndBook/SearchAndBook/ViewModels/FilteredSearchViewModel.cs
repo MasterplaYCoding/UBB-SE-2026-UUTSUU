@@ -31,6 +31,27 @@ namespace SearchAndBook.ViewModels
 
         public List<GameDTO> Games { get; set; } = new();
 
+        private GameDTO? _selectedGame;
+        public GameDTO? SelectedGame
+        {
+            get => _selectedGame;
+            set
+            {
+                if (_selectedGame != value)
+                {
+                    _selectedGame = value;
+                    OnPropertyChanged(nameof(SelectedGame));
+
+                    if (_selectedGame != null)
+                    {
+                        SelectGame(_selectedGame.GameId);
+                        _selectedGame = null;
+                        OnPropertyChanged(nameof(SelectedGame));
+                    }
+                }
+            }
+        }
+
         public ObservableCollection<GameDTO> GamesShown { get; set; } = new();
 
         private readonly Dictionary<int, BitmapImage?> _gameImages = new();
@@ -254,7 +275,7 @@ namespace SearchAndBook.ViewModels
 
         private void UpdateAvailabilityRange()
         {
-            if (SelectedStartDate.HasValue && SelectedEndDate.HasValue && SelectedStartDate.Value < SelectedEndDate.Value)
+            if (SelectedStartDate.HasValue && SelectedEndDate.HasValue && SelectedStartDate.Value <= SelectedEndDate.Value)
             {
                 CurrentFilter.AvailabilityRange = new TimeRange(
                     SelectedStartDate.Value.Date,
@@ -274,7 +295,7 @@ namespace SearchAndBook.ViewModels
             Games = DisplayedResults.ToList();
             CurrentPage = 1;
             OnPropertyChanged(nameof(TotalPages));
-            _ = RefreshPage();
+            RefreshPage();
             UpdateNoResultsState();
         }
 
@@ -285,7 +306,7 @@ namespace SearchAndBook.ViewModels
             Games = DisplayedResults.ToList();
             CurrentPage = 1;
             OnPropertyChanged(nameof(TotalPages));
-            _ = RefreshPage();
+            RefreshPage();
             UpdateNoResultsState();
         }
 
@@ -300,7 +321,7 @@ namespace SearchAndBook.ViewModels
             Games = DisplayedResults.ToList();
             CurrentPage = 1;
             OnPropertyChanged(nameof(TotalPages));
-            _ = RefreshPage();
+            RefreshPage();
             UpdateNoResultsState();
         }
 
@@ -404,7 +425,7 @@ namespace SearchAndBook.ViewModels
             Games = DisplayedResults.ToList();
             CurrentPage = 1;
             OnPropertyChanged(nameof(TotalPages));
-            _=RefreshPage();
+            RefreshPage();
             UpdateNoResultsState();
         }
 
@@ -426,14 +447,14 @@ namespace SearchAndBook.ViewModels
             {
                 return;
             }
-            //criteria.UserId = SessionContext.GetInstance().UserId;
+
             UpdateAvailabilityRange();
             Games = _searchService.Search(criteria).ToList();
             DisplayedResults = Games.ToArray();
             BaseResults = DisplayedResults;
             CurrentPage = 1;
             OnPropertyChanged(nameof(TotalPages));
-            _ = RefreshPage();
+            RefreshPage();
             UpdateNoResultsState();
         }
 
@@ -442,7 +463,7 @@ namespace SearchAndBook.ViewModels
             if (CurrentPage * PageSize < Games.Count)
             {
                 CurrentPage++;
-                _ =RefreshPage();
+                RefreshPage();
             }
         }
 
@@ -451,11 +472,11 @@ namespace SearchAndBook.ViewModels
             if (CurrentPage > 1)
             {
                 CurrentPage--;
-               _ = RefreshPage();
+                RefreshPage();
             }
         }
 
-        private async Task RefreshPage()
+        private async void RefreshPage()
         {
             GamesShown.Clear();
 

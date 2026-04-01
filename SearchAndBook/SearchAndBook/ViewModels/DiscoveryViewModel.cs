@@ -40,7 +40,7 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public FilterCriteria Filter { get; } = new();
+        public FilterCriteria Filter { get; set; } = new();
 
         public DateTimeOffset MinEndDate => SelectedStartDate.HasValue
             ? SelectedStartDate.Value.AddDays(1) : Today;
@@ -96,7 +96,7 @@ namespace SearchAndBook.ViewModels
             {
                 if (TotalGamesCount == 0)
                     return 1;
-                return (int)Math.Ceiling((double)TotalGamesCount/ PageSize);
+                return (int)Math.Ceiling((double)TotalGamesCount / PageSize);
             }
         }
 
@@ -108,7 +108,6 @@ namespace SearchAndBook.ViewModels
         public ICommand NextPageCommand { get; }
         public ICommand PreviousPageCommand { get; }
         public ICommand SearchCommand { get; }
-        public ICommand OpenGameCommand { get; }
 
         public event Action<int>? OnGameSelectedRequest;
         public event Action<FilterCriteria>? OnSearchRequest;
@@ -130,19 +129,13 @@ namespace SearchAndBook.ViewModels
 
             NextPageCommand = new RelayCommand(_ => NextPage());
             PreviousPageCommand = new RelayCommand(_ => PreviousPage());
-            SearchCommand = new RelayCommand(_ => Search());
-            OpenGameCommand = new RelayCommand(parameter =>
-            {
-                if (parameter is GameDTO game)
-                {
-                    OnGameSelectedRequest?.Invoke(game.GameId);
-                }
-            });
+            SearchCommand = new RelayCommand(_ => Search(Filter));
 
+            LoadDiscoveryFeed();
         }
         public string NoResultsMessage => TotalGamesCount == 0 ? "No games available." : "";
 
-        public async Task LoadDiscoveryFeed()
+        public async void LoadDiscoveryFeed()
         {
             int userId = SessionContext.GetInstance().UserId;
 
@@ -240,13 +233,20 @@ namespace SearchAndBook.ViewModels
             OnPropertyChanged(nameof(OthersTitle));
         }
 
-        public void Search()
+        public void Search(FilterCriteria criteria)
         {
             if (!HasValidDateRange())
             {
                 return;
             }
-            //Filter.UserId = SessionContext.GetInstance().UserId;
+
+            Filter.Name = criteria.Name;
+            Filter.City = criteria.City;
+            Filter.SortOption = criteria.SortOption;
+            Filter.MaximumPrice = criteria.MaximumPrice;
+            Filter.PlayerCount = criteria.PlayerCount;
+            Filter.UserId = SessionContext.GetInstance().UserId;
+
             UpdateAvailabilityRange();
 
             CurrentPage = 1;
@@ -295,7 +295,7 @@ namespace SearchAndBook.ViewModels
         {
             if (SelectedStartDate.HasValue &&
                 SelectedEndDate.HasValue &&
-                SelectedStartDate.Value < SelectedEndDate.Value)
+                SelectedStartDate.Value <= SelectedEndDate.Value)
             {
                 Filter.AvailabilityRange = new TimeRange(
                     SelectedStartDate.Value.Date,
