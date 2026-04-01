@@ -126,20 +126,21 @@ namespace SearchAndBook.Views
                 return;
 
             var date = e.Item.Date.DateTime;
-            var today = DateTime.Today;
+            var today = DateTimeOffset.Now.Date;
 
-            if (date < today)
+            if (e.Item.Date.Date < today)
             {
                 e.Item.IsBlackout = true;
                 return;
             }
 
+            // check unavailable ranges for THIS specific game
             bool isUnavailable = false;
             if (vm.UnavailableTimeRanges != null)
             {
                 foreach (var range in vm.UnavailableTimeRanges)
                 {
-                    if (date >= range.StartTime && date <= range.EndTime)
+                    if (date >= range.StartTime.Date && date <= range.EndTime.Date)
                     {
                         isUnavailable = true;
                         break;

@@ -173,6 +173,7 @@
                             <CalendarView x:Name="RentalCalendar"
                                           SelectionMode="Multiple"
                                           HorizontalAlignment="Stretch"
+                                          MinDate="{Binding Today}"
                                           SelectedDatesChanged="OnDatesChanged"
                                           CalendarViewDayItemChanging="OnDayItemChanging"/>
 
