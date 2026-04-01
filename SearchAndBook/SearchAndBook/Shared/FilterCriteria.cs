@@ -28,11 +28,6 @@ public class FilterCriteria
         UserId = null;
     }
 
-    public bool IsEmpty()
-    {
-        return string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(City) && AvailabilityRange == null && PlayerCount == null && MaximumPrice == null && SortOption == SortOption.None;
-    }
-
     public bool HasValidAvailabilityRange()
     {
         if (AvailabilityRange == null)

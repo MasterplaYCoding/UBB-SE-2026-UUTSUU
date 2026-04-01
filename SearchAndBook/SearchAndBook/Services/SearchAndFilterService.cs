@@ -15,7 +15,6 @@ namespace SearchAndBook.Services
         private readonly IGamesRepository gamesRepository;
         private readonly IUsersRepository usersRepository;
         private readonly IRentalsRepository rentalsRepository;
-
         private readonly IGeoService _geoService;
 
         public SearchAndFilterService(IGamesRepository gamesRepository, IUsersRepository usersRepository, IRentalsRepository rentalsRepository, IGeoService geoService)
@@ -188,7 +187,6 @@ namespace SearchAndBook.Services
                 default:
                     break;
             }
-
 
             if (filter.AvailabilityRange != null)
             {

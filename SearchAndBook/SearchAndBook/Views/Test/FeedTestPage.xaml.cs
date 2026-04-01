@@ -52,11 +52,11 @@ namespace SearchAndBook.Views.Test
 
     public class GameFeedItem
     {
-        public int GameId { get; set; }
-        public string Title { get; set; }
-        public string Location { get; set; }
-        public string PlayersText { get; set; }
-        public string PriceText { get; set; }
-        public BitmapImage ImageSource { get; set; }
+        public required int GameId { get; set; }
+        public required string Title { get; set; }
+        public required string Location { get; set; }
+        public required string PlayersText { get; set; }
+        public required string PriceText { get; set; }
+        public required BitmapImage ImageSource { get; set; }
     }
 }

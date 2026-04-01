@@ -1,5 +1,0 @@
-ISearchAndFilterService
-IBookingService
-
-SearchAndFilterService
-BookingService
