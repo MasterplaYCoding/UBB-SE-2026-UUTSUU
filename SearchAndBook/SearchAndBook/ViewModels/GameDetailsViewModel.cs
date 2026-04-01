@@ -50,11 +50,11 @@ namespace SearchAndBook.ViewModels
             private set { _gameImage = value; OnPropertyChanged(); }
         }
 
-        private BitmapImage? _ownerImage;
-        public BitmapImage? OwnerImage
+        private string? _ownerImageUrl;
+        public string? OwnerImageUrl
         {
-            get => _ownerImage;
-            private set { _ownerImage = value; OnPropertyChanged(); }
+            get => _ownerImageUrl;
+            private set { _ownerImageUrl = value; OnPropertyChanged(); }
         }
 
         private readonly IBookingService _bookingService;
@@ -119,16 +119,15 @@ namespace SearchAndBook.ViewModels
             GameImage = bitmap;
         }
 
-        private async void LoadOwnerImage()
+        private void LoadOwnerImage()
         {
-            if (GameAndUserDetails.AvatarUrl == null || GameAndUserDetails.AvatarUrl.Length == 0)
+            if (string.IsNullOrWhiteSpace(GameAndUserDetails.AvatarUrl))
             {
-                OwnerImage = null;
+                OwnerImageUrl = null;
                 return;
             }
 
-            var bitmap = new BitmapImage(new Uri(GameAndUserDetails.AvatarUrl));
-            OwnerImage = bitmap;
+            OwnerImageUrl = GameAndUserDetails.AvatarUrl;
         }
 
         public void StartBooking(TimeRange range)

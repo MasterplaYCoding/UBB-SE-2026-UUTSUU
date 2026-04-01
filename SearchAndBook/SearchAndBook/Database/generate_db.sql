@@ -123,9 +123,9 @@ INSERT INTO dbo.Users
     country
 )
 VALUES
-(1, 'alice01', 'Alice', 'alice@example.com', 'hash1', '0711111111', NULL, 0, GETDATE(), GETDATE(), 'Main Street', '10', 'Cluj-Napoca', 'Romania'),
-(2, 'bob02', 'Bob', 'bob@example.com', 'hash2', '0722222222', NULL, 0, GETDATE(), GETDATE(), 'Liberty Street', '21', 'Cluj-Napoca', 'Romania'),
-(3, 'carol03', 'Carol', 'carol@example.com', 'hash3', '0733333333', NULL, 0, GETDATE(), GETDATE(), 'Oak Street', '5', 'Oradea', 'Romania'),
+(1, 'alice01', 'Alice', 'alice@example.com', 'hash1', '0711111111', 'https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg?semt=ais_hybrid&w=740&q=80', 0, GETDATE(), GETDATE(), 'Main Street', '10', 'Cluj-Napoca', 'Romania'),
+(2, 'bob02', 'Bob', 'bob@example.com', 'hash2', '0722222222', 'https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg?semt=ais_hybrid&w=740&q=80', 0, GETDATE(), GETDATE(), 'Liberty Street', '21', 'Cluj-Napoca', 'Romania'),
+(3, 'carol03', 'Carol', 'carol@example.com', 'hash3', '0733333333', 'https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg?semt=ais_hybrid&w=740&q=80', 0, GETDATE(), GETDATE(), 'Oak Street', '5', 'Oradea', 'Romania'),
 (4, 'david04', 'David', 'david@example.com', 'hash4', '0744444444', NULL, 0, GETDATE(), GETDATE(), 'River Street', '12', 'Cluj-Napoca', 'Romania'),
 (5, 'emma05', 'Emma', 'emma@example.com', 'hash5', '0755555555', NULL, 0, GETDATE(), GETDATE(), 'Forest Street', '7', 'Bucharest', 'Romania'),
 (6, 'frank06', 'Frank', 'frank@example.com', 'hash6', '0766666666', NULL, 0, GETDATE(), GETDATE(), 'Sunset Blvd', '45', 'Timisoara', 'Romania'),
