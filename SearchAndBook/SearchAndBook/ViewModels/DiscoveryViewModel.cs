@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Microsoft.UI.Xaml.Media.Imaging;
 using SearchAndBook.CommandHandler;
 using SearchAndBook.Domain;
 using SearchAndBook.Services;

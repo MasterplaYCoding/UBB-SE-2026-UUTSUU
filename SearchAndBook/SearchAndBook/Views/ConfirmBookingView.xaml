@@ -150,9 +150,15 @@
                         Padding="16"
                         BorderThickness="1"
                         BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
-                    <Grid ColumnDefinitions="*,Auto">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
 
-                        <StackPanel Grid.Column="0" Spacing="6">
+                        <Border Grid.Column="0" Width="60" Height="60" CornerRadius="30" VerticalAlignment="Center" HorizontalAlignment="Left">
+                            <Border.Background>
+                                <ImageBrush ImageSource="{Binding OwnerImage}" Stretch="UniformToFill"/>
+                            </Border.Background>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
                             <TextBlock Text="{Binding GameAndUserDetails.DisplayName}"
                                        FontWeight="Bold"
                                        FontSize="16"/>
@@ -161,12 +167,6 @@
                                 <Run Text="{Binding GameAndUserDetails.City}"/>
                             </TextBlock>
                         </StackPanel>
-
-                        <Border Width="60" Height="60" CornerRadius="30" VerticalAlignment="Center">
-                            <Border.Background>
-                                <ImageBrush ImageSource="{Binding OwnerImage}" Stretch="UniformToFill"/>
-                            </Border.Background>
-                        </Border>
 
                     </Grid>
                 </Border>

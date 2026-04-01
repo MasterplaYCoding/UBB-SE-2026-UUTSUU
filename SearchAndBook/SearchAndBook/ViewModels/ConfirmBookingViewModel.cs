@@ -39,8 +39,8 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        private int _totalPrice;
-        public int TotalPrice
+        private decimal _totalPrice;
+        public decimal TotalPrice
         {
             get => _totalPrice;
             private set { _totalPrice = value; OnPropertyChanged(); }
@@ -119,11 +119,11 @@ namespace SearchAndBook.ViewModels
             OnGoBackRequested?.Invoke();
         }
 
-        public int CalculatePrice()
+        public decimal CalculatePrice()
         {
             int days = (SelectedTimeRange.EndTime - SelectedTimeRange.StartTime).Days + 1;
             if (days == 0) days = 1;
-            TotalPrice = days * (int)GameAndUserDetails.Price;
+            TotalPrice = days * GameAndUserDetails.Price;
             return TotalPrice;
         }
 

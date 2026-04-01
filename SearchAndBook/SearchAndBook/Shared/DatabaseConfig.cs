@@ -1,5 +1,4 @@
-﻿
-namespace SearchAndBook.Shared
+﻿namespace SearchAndBook.Shared
 {
     internal class DatabaseConfig
     {
