@@ -1,4 +1,0 @@
-GameDTO
-BookingDTO
-FilterCriteria
-TimeRange

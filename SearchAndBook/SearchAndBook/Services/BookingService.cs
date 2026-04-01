@@ -40,14 +40,12 @@ public class BookingService : IBookingService
     public BookingDTO GetGameDetails(int gameId)
     {
         var game = gamesRepo.Get(gameId);
-
         if (game == null)
         {
             throw new InvalidOperationException($"Game with id {gameId} was not found.");
         }
 
         var owner = usersRepo.Get(game.OwnerId);
-
         if (owner == null)
         {
             throw new InvalidOperationException($"Owner for game id {gameId} was not found.");

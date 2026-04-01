@@ -17,10 +17,5 @@ namespace SearchAndBook.Domain
             StartTime = startTime;
             EndTime = endTime;
         }
-
-        public bool Overlaps(TimeRange other)
-        {
-            return StartTime < other.EndTime && EndTime > other.StartTime;
-        }
     }
 }
