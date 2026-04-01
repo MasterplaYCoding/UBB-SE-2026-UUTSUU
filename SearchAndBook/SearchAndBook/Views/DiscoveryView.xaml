@@ -48,12 +48,16 @@
 
                 <StackPanel Grid.Column="2" Spacing="6">
                     <TextBlock Text="Start date"/>
-                    <CalendarDatePicker Date="{Binding SelectedStartDate, Mode=TwoWay}"/>
+                    <CalendarDatePicker PlaceholderText="Today"
+                        MinDate="{Binding MinStartDate}"
+                        Date="{Binding SelectedStartDate, Mode=TwoWay}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="3" Spacing="6">
                     <TextBlock Text="End date"/>
-                    <CalendarDatePicker  Date="{Binding SelectedEndDate, Mode=TwoWay}"/>
+                    <CalendarDatePicker PlaceholderText="Tomorrow"
+                        MinDate="{Binding MinEndDate}"
+                        Date="{Binding SelectedEndDate, Mode=TwoWay}"/>
                 </StackPanel>
 
                 <Button Grid.Column="4"

@@ -40,6 +40,9 @@ namespace SearchAndBook.ViewModels
 
         public FilterCriteria Filter { get; set; } = new();
 
+        public DateTimeOffset MinEndDate => SelectedStartDate.HasValue
+            ? SelectedStartDate.Value.AddDays(1) : Today;
+
         private DateTimeOffset? _selectedStartDate;
         public DateTimeOffset? SelectedStartDate
         {
@@ -48,8 +51,16 @@ namespace SearchAndBook.ViewModels
             {
                 _selectedStartDate = value;
                 OnPropertyChanged(nameof(SelectedStartDate));
+                OnPropertyChanged(nameof(MinEndDate));
+
+                if (SelectedEndDate.HasValue && value.HasValue && SelectedEndDate.Value <= value.Value)
+                {
+                    SelectedEndDate = null;
+                }
             }
         }
+
+        public DateTimeOffset MinStartDate => Today;
 
         private DateTimeOffset? _selectedEndDate;
         public DateTimeOffset? SelectedEndDate
@@ -96,13 +107,19 @@ namespace SearchAndBook.ViewModels
         public event Action<FilterCriteria>? OnSearchRequest;
         public event PropertyChangedEventHandler? PropertyChanged;
 
+        public string StartDatePlaceholder => "Today";
+        public string EndDatePlaceholder => "Tomorrow";
+
+        public DateTimeOffset Today => DateTimeOffset.Now.Date;
+        public DateTimeOffset Tomorrow => DateTimeOffset.Now.Date.AddDays(1);
+
         public DiscoveryViewModel(ISearchAndFilterService searchService, IGeoService geoService)
         {
             _searchService = searchService;
             _geoService = geoService;
 
-            SelectedStartDate = DateTimeOffset.Now.Date;
-            SelectedEndDate = DateTimeOffset.Now.Date.AddDays(1);
+            SelectedStartDate = null;
+            SelectedEndDate = null;
 
             NextPageCommand = new RelayCommand(_ => NextPage());
             PreviousPageCommand = new RelayCommand(_ => PreviousPage());
