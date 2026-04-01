@@ -244,6 +244,18 @@ namespace SearchAndBook.ViewModels
         public void Initialize(FilterCriteria initialFilter)
         {
             CurrentFilter = initialFilter;
+
+            if (CurrentFilter.AvailabilityRange != null)
+            {
+                SelectedStartDate = new DateTimeOffset(CurrentFilter.AvailabilityRange.StartTime);
+                SelectedEndDate = new DateTimeOffset(CurrentFilter.AvailabilityRange.EndTime);
+            }
+            else
+            {
+                SelectedStartDate = null;
+                SelectedEndDate = null;
+            }
+
             Search(CurrentFilter);
         }
 
