@@ -18,6 +18,7 @@ namespace SearchAndBook.ViewModels
         public event Action? OnGoBackRequested;
         public event Action<BookingDTO, TimeRange> OnStartBookingRequested;
         public event Action<string>? OnMessageRequested;
+        public DateTimeOffset Today => DateTimeOffset.Now.Date;
 
         private void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
