@@ -15,6 +15,11 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        <Button Grid.Column="0"
+            Content="← Back"
+            Command="{Binding GoBackCommand}"
+            VerticalAlignment="Center"
+            Margin="0,0,16,0"/>
 
         <Border Grid.Row="0"
                 Padding="16"

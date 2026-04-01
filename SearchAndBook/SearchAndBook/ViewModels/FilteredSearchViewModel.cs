@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -23,7 +24,7 @@ namespace SearchAndBook.ViewModels
         public GameDTO[] BaseResults { get; private set; }
         public GameDTO[] DisplayedResults { get; private set; }
         public bool HasNoResults { get; private set; }
-        public string NoResultsMessage => "No games found matching your criteria. Try adjusting your filters or search terms.";
+        public string NoResultsMessage => HasNoResults == true ? "No games found matching your criteria. Try adjusting your filters or search terms." : "";
 
         public List<GameDTO> Games { get; set; } = new();
 
@@ -193,9 +194,11 @@ namespace SearchAndBook.ViewModels
         public ICommand SelectGameCommand { get; }
         public ICommand ApplySelectedUiFiltersCommand { get; }
         public ICommand ClearFiltersCommand { get; }
+        public ICommand GoBackCommand { get; }
 
         public event Action<string>? OnErrorOccurred;
         public event Action<int>? OnGameSelectedRequest;
+        public event Action? OnGoBackRequest;
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public FilteredSearchViewModel(ISearchAndFilterService searchService, IGeoService geoService)
@@ -215,6 +218,7 @@ namespace SearchAndBook.ViewModels
             SearchCommand = new RelayCommand(_ => Search(CurrentFilter));
             NextPageCommand = new RelayCommand(_ => NextPage());
             PreviousPageCommand = new RelayCommand(_ => PreviousPage());
+            GoBackCommand = new RelayCommand(_ => GoBack());
 
             SelectGameCommand = new RelayCommand(obj =>
             {
@@ -469,6 +473,10 @@ namespace SearchAndBook.ViewModels
 
             OnPropertyChanged(nameof(GamesShown));
         }
+        private void GoBack()
+        {
+            OnGoBackRequest?.Invoke();
+        }   
 
         private async Task LoadGameImage(GameDTO game)
         {
