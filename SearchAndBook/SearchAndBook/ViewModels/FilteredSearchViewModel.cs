@@ -418,8 +418,6 @@ namespace SearchAndBook.ViewModels
             CurrentFilter.Reset();
             SelectedMaximumPrice = 0;
             SelectedMinimumPlayers = 0;
-            SelectedStartDate = null;
-            SelectedEndDate = null;
             SelectedSortOption = null;
             DisplayedResults = BaseResults;
             Games = DisplayedResults.ToList();
