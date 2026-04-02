@@ -259,6 +259,8 @@ namespace SearchAndBook.ViewModels
         {
             CurrentFilter = initialFilter;
 
+            CitySearchText = CurrentFilter.City ?? string.Empty; 
+
             if (CurrentFilter.AvailabilityRange != null)
             {
                 SelectedStartDate = new DateTimeOffset(CurrentFilter.AvailabilityRange.StartTime);
