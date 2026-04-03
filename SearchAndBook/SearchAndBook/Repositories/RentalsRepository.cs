@@ -19,22 +19,29 @@ public class RentalsRepository : IRentalsRepository
     /// <returns>The rental time range if found; otherwise, null.</returns>
     public TimeRange? Get(int id)
     {
-        using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
-        connection.Open();
-
-        using var command = new SqlCommand(RentalQueries.GetRentalRangeById, connection);
-        command.Parameters.AddWithValue("@RentalId", id);
-
-        using var reader = command.ExecuteReader();
-
-        if (!reader.Read())
+        try
         {
-            return null;
-        }
+            using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
+            connection.Open();
 
-        return new TimeRange(
-            Convert.ToDateTime(reader["start_date"]),
-            Convert.ToDateTime(reader["end_date"]));
+            using var command = new SqlCommand(RentalQueries.GetRentalRangeById, connection);
+            command.Parameters.AddWithValue("@RentalId", id);
+
+            using var reader = command.ExecuteReader();
+
+            if (!reader.Read())
+            {
+                return null;
+            }
+
+            return new TimeRange(
+                Convert.ToDateTime(reader["start_date"]),
+                Convert.ToDateTime(reader["end_date"]));
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
 
     /// <summary>
@@ -43,22 +50,29 @@ public class RentalsRepository : IRentalsRepository
     /// <returns>A list of all rental time ranges.</returns>
     public List<TimeRange> GetAll()
     {
-        var ranges = new List<TimeRange>();
-
-        using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
-        connection.Open();
-
-        using var command = new SqlCommand(RentalQueries.GetAllRentalRanges, connection);
-        using var reader = command.ExecuteReader();
-
-        while (reader.Read())
+        try
         {
-            ranges.Add(new TimeRange(
-                Convert.ToDateTime(reader["start_date"]),
-                Convert.ToDateTime(reader["end_date"])));
-        }
+            var ranges = new List<TimeRange>();
 
-        return ranges;
+            using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
+            connection.Open();
+
+            using var command = new SqlCommand(RentalQueries.GetAllRentalRanges, connection);
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                ranges.Add(new TimeRange(
+                    Convert.ToDateTime(reader["start_date"]),
+                    Convert.ToDateTime(reader["end_date"])));
+            }
+
+            return ranges;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
 
     /// <summary>
@@ -68,25 +82,32 @@ public class RentalsRepository : IRentalsRepository
     /// <returns>A list of time ranges when the game is unavailable.</returns>
     public List<TimeRange> GetUnavailableRanges(int gameId)
     {
-        var ranges = new List<TimeRange>();
-
-        using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
-        connection.Open();
-
-        using var command = new SqlCommand(RentalQueries.GetUnavailablePeriodsByGameId, connection);
-        command.Parameters.AddWithValue("@GameId", gameId);
-
-        using var reader = command.ExecuteReader();
-
-        while (reader.Read())
+        try
         {
-            var start = Convert.ToDateTime(reader["start_date"]);
-            var end = Convert.ToDateTime(reader["end_date"]);
+            var ranges = new List<TimeRange>();
 
-            ranges.Add(new TimeRange(start, end));
+            using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
+            connection.Open();
+
+            using var command = new SqlCommand(RentalQueries.GetUnavailablePeriodsByGameId, connection);
+            command.Parameters.AddWithValue("@GameId", gameId);
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                var start = Convert.ToDateTime(reader["start_date"]);
+                var end = Convert.ToDateTime(reader["end_date"]);
+
+                ranges.Add(new TimeRange(start, end));
+            }
+
+            return ranges;
         }
-
-        return ranges;
+        catch (Exception)
+        {
+            throw;
+        }
     }
 
     /// <summary>
@@ -97,16 +118,23 @@ public class RentalsRepository : IRentalsRepository
     /// <returns>True if the game is available; otherwise, false.</returns>
     public bool CheckAvailability(TimeRange range, int gameId)
     {
-        using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
-        connection.Open();
+        try
+        {
+            using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
+            connection.Open();
 
-        using var command = new SqlCommand(RentalQueries.HasOverlappingRental, connection);
-        command.Parameters.AddWithValue("@GameId", gameId);
-        command.Parameters.AddWithValue("@RequestedStartDate", range.StartTime);
-        command.Parameters.AddWithValue("@RequestedEndDate", range.EndTime);
+            using var command = new SqlCommand(RentalQueries.HasOverlappingRental, connection);
+            command.Parameters.AddWithValue("@GameId", gameId);
+            command.Parameters.AddWithValue("@RequestedStartDate", range.StartTime);
+            command.Parameters.AddWithValue("@RequestedEndDate", range.EndTime);
 
-        var result = command.ExecuteScalar();
+            var result = command.ExecuteScalar();
 
-        return result == null;
+            return result == null;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
 }
