@@ -12,38 +12,52 @@ public class UsersRepository : IUsersRepository
     // Get User by id
     public User? Get(int id)
     {
-        using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
-        connection.Open();
-
-        using var command = new SqlCommand(UserQueries.GetUserById, connection);
-        command.Parameters.AddWithValue("@UserId", id);
-
-        using var reader = command.ExecuteReader();
-
-        if (!reader.Read())
+        try
         {
-            return null;
-        }
+            using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
+            connection.Open();
 
-        return MapUser(reader);
+            using var command = new SqlCommand(UserQueries.GetUserById, connection);
+            command.Parameters.AddWithValue("@UserId", id);
+
+            using var reader = command.ExecuteReader();
+
+            if (!reader.Read())
+            {
+                return null;
+            }
+
+            return MapUser(reader);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
 
     public List<User> GetAll()
     {
-        var users = new List<User>();
-
-        using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
-        connection.Open();
-
-        using var command = new SqlCommand(UserQueries.GetAllUsers, connection);
-        using var reader = command.ExecuteReader();
-
-        while (reader.Read())
+        try
         {
-            users.Add(MapUser(reader));
-        }
+            var users = new List<User>();
 
-        return users;
+            using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
+            connection.Open();
+
+            using var command = new SqlCommand(UserQueries.GetAllUsers, connection);
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                users.Add(MapUser(reader));
+            }
+
+            return users;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
     }
 
     private static User MapUser(SqlDataReader reader)
