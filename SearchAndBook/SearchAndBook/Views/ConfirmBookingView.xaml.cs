@@ -60,6 +60,9 @@ public sealed partial class ConfirmBookingView : Page
         vm.GoBack();
     }
 
+    private DateTime? _modifySelectedStart;
+    private DateTime? _modifySelectedEnd;
+
     private async void OnModifyClicked(object sender, RoutedEventArgs e)
     {
         var vm = (ConfirmBookingViewModel)this.DataContext;
@@ -68,7 +71,10 @@ public sealed partial class ConfirmBookingView : Page
         {
             SelectionMode = CalendarViewSelectionMode.Multiple,
             HorizontalAlignment = HorizontalAlignment.Stretch,
-            MinDate = DateTimeOffset.Now.Date
+            MinDate = DateTimeOffset.Now.Date,
+            SelectedBorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Goldenrod),
+            SelectedHoverBorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Goldenrod),
+            SelectedPressedBorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Goldenrod),
         };
 
         calendar.CalendarViewDayItemChanging += (calSender, args) =>
@@ -92,11 +98,17 @@ public sealed partial class ConfirmBookingView : Page
             {
                 args.Item.IsBlackout = true;
                 args.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkRed);
+                return;
             }
-            else
+
+            if (_modifySelectedStart.HasValue && _modifySelectedEnd.HasValue &&
+                date.Date >= _modifySelectedStart.Value.Date && date.Date <= _modifySelectedEnd.Value.Date)
             {
-                args.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkGreen);
+                args.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Goldenrod);
+                return;
             }
+
+            args.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkGreen);
         };
 
         calendar.SelectedDatesChanged += (calSender, args) =>
@@ -105,14 +117,35 @@ public sealed partial class ConfirmBookingView : Page
             if (selectedDates.Count > 2)
             {
                 var toKeep = new List<DateTimeOffset>
-                {
-                    selectedDates[selectedDates.Count - 2],
-                    selectedDates[selectedDates.Count - 1]
-                };
+        {
+            selectedDates[selectedDates.Count - 2],
+            selectedDates[selectedDates.Count - 1]
+        };
                 calSender.SelectedDates.Clear();
                 foreach (var date in toKeep)
                     calSender.SelectedDates.Add(date);
+                return;
             }
+
+            if (selectedDates.Count < 1)
+            {
+                _modifySelectedStart = null;
+                _modifySelectedEnd = null;
+                return;
+            }
+
+            var sorted = selectedDates
+                .Select(d => d.DateTime)
+                .OrderBy(d => d)
+                .ToList();
+
+            _modifySelectedStart = sorted[0];
+            _modifySelectedEnd = sorted[sorted.Count - 1];
+
+            // force redraw
+            var minDate = calSender.MinDate;
+            calSender.MinDate = DateTimeOffset.Now.Date.AddDays(1);
+            calSender.MinDate = minDate;
         };
 
         calendar.SelectedDates.Add(vm.SelectedTimeRange.StartTime);
