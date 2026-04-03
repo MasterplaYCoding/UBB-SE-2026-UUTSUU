@@ -171,11 +171,11 @@
                             <TextBlock Text="Choose dates" FontWeight="SemiBold"/>
 
                             <CalendarView x:Name="RentalCalendar"
-                                          SelectionMode="Multiple"
-                                          HorizontalAlignment="Stretch"
-                                          MinDate="{Binding Today}"
-                                          SelectedDatesChanged="OnDatesChanged"
-                                          CalendarViewDayItemChanging="OnDayItemChanging"/>
+                                  SelectionMode="Multiple"
+                                  HorizontalAlignment="Stretch"
+                                  MinDate="{Binding Today}"
+                                  SelectedDatesChanged="OnDatesChanged"
+                                  CalendarViewDayItemChanging="OnDayItemChanging"/>
 
                             <StackPanel Orientation="Horizontal" Spacing="16">
                                 <StackPanel Orientation="Horizontal" Spacing="6">

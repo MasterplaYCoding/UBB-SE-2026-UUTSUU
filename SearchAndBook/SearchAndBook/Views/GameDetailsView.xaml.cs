@@ -88,36 +88,56 @@ namespace SearchAndBook.Views
             vm.StartBooking(range);
         }
 
+        private DateTime? _selectedStart;
+        private DateTime? _selectedEnd;
+
         private void OnDatesChanged(CalendarView sender, CalendarViewSelectedDatesChangedEventArgs e)
         {
-            var vm = (GameDetailsViewModel)this.DataContext;
+            if (this.DataContext is not GameDetailsViewModel vm)
+                return;
+
             var selectedDates = RentalCalendar.SelectedDates;
 
             if (selectedDates.Count > 2)
             {
                 var toKeep = new List<DateTimeOffset>
-                {
-                    selectedDates[selectedDates.Count - 2],
-                    selectedDates[selectedDates.Count - 1]
-                };
-
+        {
+            selectedDates[selectedDates.Count - 2],
+            selectedDates[selectedDates.Count - 1]
+        };
                 RentalCalendar.SelectedDates.Clear();
                 foreach (var date in toKeep)
                     RentalCalendar.SelectedDates.Add(date);
-
                 return;
             }
 
             if (selectedDates.Count < 1)
+            {
+                _selectedStart = null;
+                _selectedEnd = null;
+                ForceRedraw();
                 return;
+            }
 
             var sorted = selectedDates
                 .Select(d => d.DateTime)
                 .OrderBy(d => d)
                 .ToList();
 
-            var range = new TimeRange(sorted[0], sorted[sorted.Count - 1]);
+            _selectedStart = sorted[0];
+            _selectedEnd = sorted[sorted.Count - 1];
+
+            var range = new TimeRange(_selectedStart.Value, _selectedEnd.Value);
             vm.CalculatePrice(range);
+
+            ForceRedraw();
+        }
+
+        private void ForceRedraw()
+        {
+            var current = RentalCalendar.MinDate;
+            RentalCalendar.MinDate = current.AddDays(1);
+            RentalCalendar.MinDate = current;
         }
 
         private void OnDayItemChanging(CalendarView sender, CalendarViewDayItemChangingEventArgs e)
@@ -125,16 +145,15 @@ namespace SearchAndBook.Views
             if (this.DataContext is not GameDetailsViewModel vm)
                 return;
 
-            var date = e.Item.Date.DateTime;
+            var date = e.Item.Date.Date;
             var today = DateTimeOffset.Now.Date;
 
-            if (e.Item.Date.Date < today)
+            if (date < today)
             {
                 e.Item.IsBlackout = true;
                 return;
             }
 
-            // check unavailable ranges for THIS specific game
             bool isUnavailable = false;
             if (vm.UnavailableTimeRanges != null)
             {
@@ -152,11 +171,19 @@ namespace SearchAndBook.Views
             {
                 e.Item.IsBlackout = true;
                 e.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkRed);
+                return;
             }
-            else
+
+            if (_selectedStart.HasValue && _selectedEnd.HasValue &&
+                date >= _selectedStart.Value.Date && date <= _selectedEnd.Value.Date)
             {
-                e.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkGreen);
+                e.Item.IsBlackout = false;
+                e.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Goldenrod);
+                return;
             }
+
+            e.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkGreen);
         }
+
     }
 }
