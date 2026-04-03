@@ -17,6 +17,8 @@ namespace SearchAndBook.Services
         /// </summary>
         /// <param name="filter">The criteria to filter the games.</param>
         /// <returns>An array of games matching the filter criteria.</returns>
+
+        /// <exception cref="InvalidOperationException">Thrown when search fails.</exception>
         GameDTO[] Search(FilterCriteria filter);
 
         /// <summary>
@@ -24,6 +26,8 @@ namespace SearchAndBook.Services
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
         /// <returns>An array of games available tonight.</returns>
+
+        /// <exception cref="InvalidOperationException">Thrown when feed retrieval fails.</exception>
         GameDTO[] GetFeedAvailableTonight(int userId);
 
         /// <summary>
@@ -31,8 +35,11 @@ namespace SearchAndBook.Services
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
         /// <returns>An array of other games.</returns>
+
+        /// <exception cref="InvalidOperationException">Thrown when feed retrieval fails.</exception>
         GameDTO[] GetFeedOthers(int userId);
 
+        /// <exception cref="InvalidOperationException">Thrown when filtering fails.</exception>
         GameDTO[] ApplyFilters(GameDTO[] games, FilterCriteria filter);
     }
 }

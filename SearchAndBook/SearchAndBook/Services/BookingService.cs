@@ -39,34 +39,42 @@ public class BookingService : IBookingService
     /// <exception cref="InvalidOperationException">Thrown when the game or its owner cannot be found.</exception>
     public BookingDTO GetGameDetails(int gameId)
     {
-        var game = gamesRepo.Get(gameId);
-        if (game == null)
+        try
         {
-            throw new InvalidOperationException($"Game with id {gameId} was not found.");
-        }
+            var game = gamesRepo.Get(gameId);
+            if (game == null)
+            {
+                throw new InvalidOperationException($"Game with id {gameId} was not found.");
+            }
 
-        var owner = usersRepo.Get(game.OwnerId);
-        if (owner == null)
-        {
-            throw new InvalidOperationException($"Owner for game id {gameId} was not found.");
-        }
+            var owner = usersRepo.Get(game.OwnerId);
+            if (owner == null)
+            {
+                throw new InvalidOperationException($"Owner for game id {gameId} was not found.");
+            }
 
-        return new BookingDTO
+            return new BookingDTO
+            {
+                GameId = game.GameId,
+                Name = game.Name,
+                Image = game.Image,
+                Price = game.Price,
+                City = owner.City,
+                MinimumNrPlayers = game.MinimumPlayerNumber,
+                MaximumNrPlayers = game.MaximumPlayerNumber,
+                Description = game.Description,
+                UserId = owner.UserId,
+                DisplayName = owner.DisplayName,
+                IsSuspended = owner.IsSuspended,
+                AvatarUrl = owner.AvatarUrl,
+                CreatedAt = owner.CreatedAt
+            };
+        }
+        catch (Exception ex)
         {
-            GameId = game.GameId,
-            Name = game.Name,
-            Image = game.Image,
-            Price = game.Price,
-            City = owner.City,
-            MinimumNrPlayers = game.MinimumPlayerNumber,
-            MaximumNrPlayers = game.MaximumPlayerNumber,
-            Description = game.Description,
-            UserId = owner.UserId,
-            DisplayName = owner.DisplayName,
-            IsSuspended = owner.IsSuspended,
-            AvatarUrl = owner.AvatarUrl,
-            CreatedAt = owner.CreatedAt
-        };
+            throw new InvalidOperationException($"Failed to retrieve details for game {gameId}.", ex);
+
+        }
     }
 
     /// <summary>
@@ -76,9 +84,15 @@ public class BookingService : IBookingService
     /// <returns>An array of <see cref="TimeRange"/> representing the unavailable periods.</returns>
     public TimeRange[] GetUnavailableRanges(int gameId)
     {
-        return rentalsRepo
-            .GetUnavailableRanges(gameId)
-            .ToArray();
+        try
+        {
+            return rentalsRepo
+                .GetUnavailableRanges(gameId)
+                .ToArray();
+        } catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to retrieve unavailable time ranges for game {gameId}.", ex);
+        }
     }
 
     /// <summary>
@@ -89,6 +103,12 @@ public class BookingService : IBookingService
     /// <returns><c>true</c> if the game is available for the specified range; otherwise, <c>false</c>.</returns>
     public bool CheckAvailability(int gameId, TimeRange range)
     {
-        return rentalsRepo.CheckAvailability(range, gameId);
+        try
+        {
+            return rentalsRepo.CheckAvailability(range, gameId);
+        } catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to check availability for game {gameId}.", ex);
+        }
     }
 }

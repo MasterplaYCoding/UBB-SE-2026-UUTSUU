@@ -4,6 +4,7 @@ using SearchAndBook.Repositories;
 using SearchAndBook.Services;
 using SearchAndBook.Shared;
 using SearchAndBook.ViewModels;
+using System;
 
 namespace SearchAndBook.Views
 {
@@ -15,6 +16,7 @@ namespace SearchAndBook.Views
         {
             InitializeComponent();
         }
+
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -43,7 +45,10 @@ namespace SearchAndBook.Views
             {
                 MainScrollViewer.ScrollToVerticalOffset(0);
             };
+
             DataContext = ViewModel;
+            StartDatePicker.Date = null;
+            EndDatePicker.Date = null;
         }
 
         private void HandleSearchRequest(FilterCriteria filter)
@@ -59,5 +64,18 @@ namespace SearchAndBook.Views
             }
         }
 
+        private void EndDatePicker_DayItemChanging(CalendarView sender, CalendarViewDayItemChangingEventArgs args)
+        {
+            if (ViewModel?.SelectedStartDate.HasValue == true)
+            {
+                var date = args.Item.Date.Date;
+                var startDate = ViewModel.SelectedStartDate.Value.Date;
+
+                if (date < startDate)
+                {
+                    args.Item.IsBlackout = true;
+                }
+            }
+        }
     }
 }

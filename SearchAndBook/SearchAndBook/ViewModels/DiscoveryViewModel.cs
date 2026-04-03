@@ -1,15 +1,15 @@
-﻿using System;
+﻿using SearchAndBook.CommandHandler;
+using SearchAndBook.Domain;
+using SearchAndBook.Services;
+using SearchAndBook.Shared;
+using SearchAndBook.Utils;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using SearchAndBook.CommandHandler;
-using SearchAndBook.Domain;
-using SearchAndBook.Services;
-using SearchAndBook.Shared;
-using SearchAndBook.Utils;
 
 namespace SearchAndBook.ViewModels
 {
@@ -26,6 +26,8 @@ namespace SearchAndBook.ViewModels
         public ObservableCollection<GameDTO> PagedGamesAvailableTonight { get; } = new();
         public ObservableCollection<GameDTO> PagedGamesOthers { get; } = new();
 
+        public bool IsEndDateEnabled => SelectedStartDate.HasValue;
+
         public event Action? OnPageChanged;
 
         private bool _showOthersHeader;
@@ -41,8 +43,12 @@ namespace SearchAndBook.ViewModels
 
         public FilterCriteria Filter { get; set; } = new();
 
-        public DateTimeOffset MinEndDate => SelectedStartDate.HasValue
-            ? SelectedStartDate.Value.AddDays(1) : Today;
+        public DateTimeOffset MinStartDate => DateTimeOffset.Now.Date;
+
+        public DateTimeOffset MinEndDate =>
+        SelectedStartDate.HasValue
+        ? new DateTimeOffset(SelectedStartDate.Value.Year, SelectedStartDate.Value.Month, 1, 0, 0, 0, TimeSpan.Zero)
+        : DateTimeOffset.Now.Date;
 
         private DateTimeOffset? _selectedStartDate;
         public DateTimeOffset? SelectedStartDate
@@ -50,16 +56,28 @@ namespace SearchAndBook.ViewModels
             get => _selectedStartDate;
             set
             {
-                _selectedStartDate = value;
-                OnPropertyChanged(nameof(SelectedStartDate));
-                OnPropertyChanged(nameof(MinEndDate));
+                var newValue = value?.Date;
 
-                _selectedEndDate = null;
-                OnPropertyChanged(nameof(SelectedEndDate));
+                if (_selectedStartDate != newValue)
+                {
+                    _selectedStartDate = newValue;
+                    OnPropertyChanged(nameof(SelectedStartDate));
+                    OnPropertyChanged(nameof(MinEndDate));
+                    OnPropertyChanged(nameof(IsEndDateEnabled));
+
+                    if (_selectedStartDate.HasValue)
+                    {
+                        _selectedEndDate = _selectedStartDate.Value;
+                    }
+                    else
+                    {
+                        _selectedEndDate = null;
+                    }
+
+                    OnPropertyChanged(nameof(SelectedEndDate));
+                }
             }
         }
-
-        public DateTimeOffset MinStartDate => Today;
 
         private DateTimeOffset? _selectedEndDate;
         public DateTimeOffset? SelectedEndDate
@@ -67,13 +85,15 @@ namespace SearchAndBook.ViewModels
             get => _selectedEndDate;
             set
             {
-                if (value.HasValue && SelectedStartDate.HasValue && value.Value <= SelectedStartDate.Value)
+                var newValue = value?.Date;
+
+                if (SelectedStartDate.HasValue && newValue.HasValue &&
+                    newValue.Value < SelectedStartDate.Value)
                 {
-                    _selectedEndDate = null;
-                    OnPropertyChanged(nameof(SelectedEndDate));
-                    return;
+                    newValue = SelectedStartDate.Value.Date;
                 }
-                _selectedEndDate = value;
+
+                _selectedEndDate = newValue;
                 OnPropertyChanged(nameof(SelectedEndDate));
             }
         }
@@ -88,6 +108,7 @@ namespace SearchAndBook.ViewModels
                 OnPropertyChanged(nameof(CurrentPage));
             }
         }
+
         private int TotalGamesCount => GamesAvailableTonight.Count + GamesOthers.Count;
         public int TotalPages
         {
@@ -101,7 +122,6 @@ namespace SearchAndBook.ViewModels
 
         public bool HasPagedAvailableTonight => PagedGamesAvailableTonight.Any();
         public bool HasPagedOthers => PagedGamesOthers.Any();
-
         public string OthersTitle => HasPagedOthers ? "Others" : " ";
 
         public ICommand NextPageCommand { get; }
@@ -112,11 +132,8 @@ namespace SearchAndBook.ViewModels
         public event Action<FilterCriteria>? OnSearchRequest;
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public string StartDatePlaceholder => "Today";
-        public string EndDatePlaceholder => "Tomorrow";
-
-        public DateTimeOffset Today => DateTimeOffset.Now.Date;
-        public DateTimeOffset Tomorrow => DateTimeOffset.Now.Date.AddDays(1);
+        //public DateTimeOffset Today => DateTimeOffset.Now.Date;
+        //public DateTimeOffset Tomorrow => DateTimeOffset.Now.Date.AddDays(1);
 
         public DiscoveryViewModel(ISearchAndFilterService searchService, IGeoService geoService)
         {
@@ -132,6 +149,7 @@ namespace SearchAndBook.ViewModels
 
             LoadDiscoveryFeed();
         }
+
         public string NoResultsMessage => TotalGamesCount == 0 ? "No games available." : "";
 
         public async void LoadDiscoveryFeed()
@@ -191,7 +209,6 @@ namespace SearchAndBook.ViewModels
             int globalStart = (CurrentPage - 1) * PageSize;
             int remaining = PageSize;
 
-            // Take from AvailableTonight first
             if (globalStart < GamesAvailableTonight.Count)
             {
                 var availableSlice = GamesAvailableTonight
@@ -200,9 +217,7 @@ namespace SearchAndBook.ViewModels
                     .ToList();
 
                 foreach (var game in availableSlice)
-                {
                     PagedGamesAvailableTonight.Add(game);
-                }
 
                 remaining -= availableSlice.Count;
                 globalStart = 0;
@@ -212,7 +227,6 @@ namespace SearchAndBook.ViewModels
                 globalStart -= GamesAvailableTonight.Count;
             }
 
-            // Then continue with Others if page still has room
             if (remaining > 0)
             {
                 var othersSlice = GamesOthers
@@ -221,10 +235,9 @@ namespace SearchAndBook.ViewModels
                     .ToList();
 
                 foreach (var game in othersSlice)
-                {
                     PagedGamesOthers.Add(game);
-                }
             }
+
             OnPropertyChanged(nameof(PagedGamesAvailableTonight));
             OnPropertyChanged(nameof(PagedGamesOthers));
             OnPropertyChanged(nameof(HasPagedAvailableTonight));
@@ -235,9 +248,7 @@ namespace SearchAndBook.ViewModels
         public void Search(FilterCriteria criteria)
         {
             if (!HasValidDateRange())
-            {
                 return;
-            }
 
             Filter.Name = criteria.Name;
             Filter.City = criteria.City;
@@ -264,7 +275,6 @@ namespace SearchAndBook.ViewModels
                 {
                     _citySearchText = value;
                     OnPropertyChanged(nameof(CitySearchText));
-
                     Filter.City = value;
                     UpdateCitySuggestions(value);
                 }
@@ -279,9 +289,7 @@ namespace SearchAndBook.ViewModels
             {
                 var matches = _geoService.GetCitySuggestions(input);
                 foreach (var match in matches)
-                {
                     CitySuggestions.Add(match);
-                }
             }
         }
 
@@ -298,8 +306,7 @@ namespace SearchAndBook.ViewModels
             {
                 Filter.AvailabilityRange = new TimeRange(
                     SelectedStartDate.Value.Date,
-                    SelectedEndDate.Value.Date
-                );
+                    SelectedEndDate.Value.Date);
             }
             else
             {
@@ -310,16 +317,12 @@ namespace SearchAndBook.ViewModels
         public bool HasValidDateRange()
         {
             if (!SelectedStartDate.HasValue && !SelectedEndDate.HasValue)
-            {
                 return true;
-            }
 
             if (!SelectedStartDate.HasValue || !SelectedEndDate.HasValue)
-            {
                 return false;
-            }
 
-            return SelectedStartDate.Value < SelectedEndDate.Value;
+            return SelectedStartDate.Value <= SelectedEndDate.Value;
         }
     }
 }
