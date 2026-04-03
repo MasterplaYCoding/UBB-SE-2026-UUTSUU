@@ -32,38 +32,45 @@ namespace SearchAndBook.Services
         /// <returns>An array of <see cref="GameDTO"/> matching the criteria.</returns>
         public GameDTO[] Search(FilterCriteria filter)
         {
-            string? originalCity = filter.City;
-            if (filter.SortOption == SortOption.Location)
+            try
             {
-                filter.City = null;
-            }
-
-            var games = gamesRepository.GetByFilter(filter);
-            filter.City = originalCity;
-
-            GameDTO[] result = games.Select(g =>
-            {
-                var owner = usersRepository.Get(g.OwnerId);
-
-                return new GameDTO
+                string? originalCity = filter.City;
+                if (filter.SortOption == SortOption.Location)
                 {
-                    GameId = g.GameId,
-                    Name = g.Name,
-                    Image = g.Image,
-                    Price = g.Price,
-                    City = owner?.City ?? string.Empty,
-                    MaximumPlayerNumber = g.MaximumPlayerNumber,
-                    MinimumPlayerNumber = g.MinimumPlayerNumber
-                };
-            }).ToArray();
+                    filter.City = null;
+                }
 
-            //// sorting by distance
-            
-            //// this is if we decide to only use this methode and remove the ApplyFilters method
-            //// only runs this code if SortOption is set, so never from feed
+                var games = gamesRepository.GetByFilter(filter);
+                filter.City = originalCity;
+
+                GameDTO[] result = games.Select(g =>
+                {
+                    var owner = usersRepository.Get(g.OwnerId);
+
+                    return new GameDTO
+                    {
+                        GameId = g.GameId,
+                        Name = g.Name,
+                        Image = g.Image,
+                        Price = g.Price,
+                        City = owner?.City ?? string.Empty,
+                        MaximumPlayerNumber = g.MaximumPlayerNumber,
+                        MinimumPlayerNumber = g.MinimumPlayerNumber
+                    };
+                }).ToArray();
+
+                //// sorting by distance
+
+                //// this is if we decide to only use this methode and remove the ApplyFilters method
+                //// only runs this code if SortOption is set, so never from feed
 
 
-            return ApplyFilters(result, filter);
+                return ApplyFilters(result, filter);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to search for games.", ex);
+            }
         }
 
         /// <summary>
@@ -73,23 +80,30 @@ namespace SearchAndBook.Services
         /// <returns>An array of <see cref="GameDTO"/> available tonight.</returns>
         public GameDTO[] GetFeedAvailableTonight(int userId)
         {
-            var games = gamesRepository.GetForFeedAvailableTonight(userId);
-
-            return games.Select(g =>
+            try
             {
-                var owner = usersRepository.Get(g.OwnerId);
+                var games = gamesRepository.GetForFeedAvailableTonight(userId);
 
-                return new GameDTO
+                return games.Select(g =>
                 {
-                    GameId = g.GameId,
-                    Name = g.Name,
-                    Image = g.Image,
-                    Price = g.Price,
-                    City = owner?.City ?? string.Empty,
-                    MinimumPlayerNumber = g.MinimumPlayerNumber,
-                    MaximumPlayerNumber = g.MaximumPlayerNumber
-                };
-            }).ToArray();
+                    var owner = usersRepository.Get(g.OwnerId);
+
+                    return new GameDTO
+                    {
+                        GameId = g.GameId,
+                        Name = g.Name,
+                        Image = g.Image,
+                        Price = g.Price,
+                        City = owner?.City ?? string.Empty,
+                        MinimumPlayerNumber = g.MinimumPlayerNumber,
+                        MaximumPlayerNumber = g.MaximumPlayerNumber
+                    };
+                }).ToArray();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to retrieve <<Available tonight>> feed.", ex);
+            }
         }
 
         /// <summary>
@@ -99,102 +113,115 @@ namespace SearchAndBook.Services
         /// <returns>An array of <see cref="GameDTO"/> representing other games.</returns>
         public GameDTO[] GetFeedOthers(int userId)
         {
-            var games = gamesRepository.GetForFeedOthers(userId);
-
-            return games.Select(g =>
+            try
             {
-                var owner = usersRepository.Get(g.OwnerId);
+                var games = gamesRepository.GetForFeedOthers(userId);
 
-                return new GameDTO
+                return games.Select(g =>
                 {
-                    GameId = g.GameId,
-                    Name = g.Name,
-                    Image = g.Image,
-                    Price = g.Price,
-                    City = owner?.City ?? string.Empty,
-                    MinimumPlayerNumber = g.MinimumPlayerNumber,
-                    MaximumPlayerNumber = g.MaximumPlayerNumber
-                };
-            }).ToArray();
+                    var owner = usersRepository.Get(g.OwnerId);
+
+                    return new GameDTO
+                    {
+                        GameId = g.GameId,
+                        Name = g.Name,
+                        Image = g.Image,
+                        Price = g.Price,
+                        City = owner?.City ?? string.Empty,
+                        MinimumPlayerNumber = g.MinimumPlayerNumber,
+                        MaximumPlayerNumber = g.MaximumPlayerNumber
+                    };
+                }).ToArray();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to retrieve <<Others>> feed.", ex);
+            }
         }
 
         public GameDTO[] ApplyFilters(GameDTO[] sourceGames, FilterCriteria filter)
         {
-            IEnumerable<GameDTO> filteredGames = sourceGames;
-
-            if (!string.IsNullOrWhiteSpace(filter.Name))
+            try
             {
-                filteredGames = filteredGames.Where(game => game.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
-            }
+                IEnumerable<GameDTO> filteredGames = sourceGames;
 
-            if (filter.MaximumPrice.HasValue)
-            {
-                filteredGames = filteredGames.Where(game => game.Price <= filter.MaximumPrice.Value);
-            }
+                if (!string.IsNullOrWhiteSpace(filter.Name))
+                {
+                    filteredGames = filteredGames.Where(game => game.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
+                }
 
-            if (filter.PlayerCount.HasValue)
-            {
-                filteredGames = filteredGames.Where(game => game.MaximumPlayerNumber >= filter.PlayerCount.Value);
-            }
+                if (filter.MaximumPrice.HasValue)
+                {
+                    filteredGames = filteredGames.Where(game => game.Price <= filter.MaximumPrice.Value);
+                }
 
-            if (!string.IsNullOrWhiteSpace(filter.City) && filter.SortOption != SortOption.Location)
-            {
-                filteredGames = filteredGames.Where(game =>
-                    !string.IsNullOrWhiteSpace(game.City) &&
-                    game.City.Contains(filter.City, StringComparison.OrdinalIgnoreCase));
-            }
+                if (filter.PlayerCount.HasValue)
+                {
+                    filteredGames = filteredGames.Where(game => game.MaximumPlayerNumber >= filter.PlayerCount.Value);
+                }
+
+                if (!string.IsNullOrWhiteSpace(filter.City) && filter.SortOption != SortOption.Location)
+                {
+                    filteredGames = filteredGames.Where(game =>
+                        !string.IsNullOrWhiteSpace(game.City) &&
+                        game.City.Contains(filter.City, StringComparison.OrdinalIgnoreCase));
+                }
 
 
-            switch (filter.SortOption)
-            {
-                case SortOption.PriceAscending:
-                    filteredGames = filteredGames.OrderBy(game => game.Price);
-                    break;
+                switch (filter.SortOption)
+                {
+                    case SortOption.PriceAscending:
+                        filteredGames = filteredGames.OrderBy(game => game.Price);
+                        break;
 
-                case SortOption.PriceDescending:
-                    filteredGames = filteredGames.OrderByDescending(game => game.Price);
-                    break;
+                    case SortOption.PriceDescending:
+                        filteredGames = filteredGames.OrderByDescending(game => game.Price);
+                        break;
 
-                case SortOption.Location:
-                    if (!string.IsNullOrWhiteSpace(filter.City))
-                    {
-                        var userCity = _geoService.GetCityDetails(filter.City);
-                        if (userCity.found)
+                    case SortOption.Location:
+                        if (!string.IsNullOrWhiteSpace(filter.City))
                         {
-                            var distanceCache = new Dictionary<string, double?>();
-
-                            filteredGames = filteredGames.OrderBy(g =>
+                            var userCity = _geoService.GetCityDetails(filter.City);
+                            if (userCity.found)
                             {
-                                if (string.IsNullOrWhiteSpace(g.City)) return double.MaxValue;
+                                var distanceCache = new Dictionary<string, double?>();
 
-                                if (!distanceCache.TryGetValue(g.City, out double? distance))
+                                filteredGames = filteredGames.OrderBy(g =>
                                 {
-                                    var gameCity = _geoService.GetCityDetails(g.City);
-                                    distance = gameCity.found
-                                        ? GeographicDistance.CalculateDistance(userCity.lat, userCity.lon, gameCity.lat, gameCity.lon)
-                                        : null;
+                                    if (string.IsNullOrWhiteSpace(g.City)) return double.MaxValue;
 
-                                    distanceCache[g.City] = distance;
-                                }
+                                    if (!distanceCache.TryGetValue(g.City, out double? distance))
+                                    {
+                                        var gameCity = _geoService.GetCityDetails(g.City);
+                                        distance = gameCity.found
+                                            ? GeographicDistance.CalculateDistance(userCity.lat, userCity.lon, gameCity.lat, gameCity.lon)
+                                            : null;
 
-                                return distance ?? double.MaxValue;
-                            });
+                                        distanceCache[g.City] = distance;
+                                    }
+
+                                    return distance ?? double.MaxValue;
+                                });
+                            }
                         }
-                    }
-                    break;
+                        break;
 
-                case SortOption.None:
-                default:
-                    break;
+                    case SortOption.None:
+                    default:
+                        break;
+                }
+
+                if (filter.AvailabilityRange != null)
+                {
+                    filteredGames = filteredGames.Where(game =>
+                        rentalsRepository.CheckAvailability(filter.AvailabilityRange, game.GameId));
+                }
+                return filteredGames.ToArray();
             }
-
-            if (filter.AvailabilityRange != null)
+            catch (Exception ex)
             {
-                filteredGames = filteredGames.Where(game =>
-                    rentalsRepository.CheckAvailability(filter.AvailabilityRange, game.GameId));
+                throw new InvalidOperationException("Failed to apply filters.", ex);
             }
-
-            return filteredGames.ToArray();
         }
     }
 }
