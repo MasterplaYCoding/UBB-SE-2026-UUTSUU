@@ -110,6 +110,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private int TotalGamesCount => GamesAvailableTonight.Count + GamesOthers.Count;
+
         public int TotalPages
         {
             get
@@ -130,10 +131,8 @@ namespace SearchAndBook.ViewModels
 
         public event Action<int>? OnGameSelectedRequest;
         public event Action<FilterCriteria>? OnSearchRequest;
+        public event Action<string>? OnErrorOccurred;
         public event PropertyChangedEventHandler? PropertyChanged;
-
-        //public DateTimeOffset Today => DateTimeOffset.Now.Date;
-        //public DateTimeOffset Tomorrow => DateTimeOffset.Now.Date.AddDays(1);
 
         public DiscoveryViewModel(ISearchAndFilterService searchService, IGeoService geoService)
         {
@@ -147,120 +146,176 @@ namespace SearchAndBook.ViewModels
             PreviousPageCommand = new RelayCommand(_ => PreviousPage());
             SearchCommand = new RelayCommand(_ => Search(Filter));
 
-            LoadDiscoveryFeed();
+            try
+            {
+                LoadDiscoveryFeed();
+            }
+            catch (Exception ex)
+            {
+                OnErrorOccurred?.Invoke($"Could not load discovery feed. {ex.Message}");
+            }
         }
 
         public string NoResultsMessage => TotalGamesCount == 0 ? "No games available." : "";
 
         public async void LoadDiscoveryFeed()
         {
-            int userId = SessionContext.GetInstance().UserId;
+            try
+            {
+                int userId = SessionContext.GetInstance().UserId;
 
-            GamesAvailableTonight = _searchService.GetFeedAvailableTonight(userId).ToList();
-            GamesOthers = _searchService.GetFeedOthers(userId).ToList();
+                GamesAvailableTonight = _searchService.GetFeedAvailableTonight(userId).ToList();
+                GamesOthers = _searchService.GetFeedOthers(userId).ToList();
 
-            await LoadImagesForGames(GamesAvailableTonight);
-            await LoadImagesForGames(GamesOthers);
+                await LoadImagesForGames(GamesAvailableTonight);
+                await LoadImagesForGames(GamesOthers);
 
-            CurrentPage = 1;
-            RefreshPage();
-            OnPropertyChanged(nameof(TotalPages));
-            OnPropertyChanged(nameof(GamesAvailableTonight));
-            OnPropertyChanged(nameof(GamesOthers));
-            OnPropertyChanged(nameof(NoResultsMessage));
+                CurrentPage = 1;
+                RefreshPage();
+                OnPropertyChanged(nameof(TotalPages));
+                OnPropertyChanged(nameof(GamesAvailableTonight));
+                OnPropertyChanged(nameof(GamesOthers));
+                OnPropertyChanged(nameof(NoResultsMessage));
+            }
+            catch (Exception ex)
+            {
+                OnErrorOccurred?.Invoke($"Could not load discovery feed. {ex.Message}");
+            }
         }
 
         private async Task LoadImagesForGames(IEnumerable<GameDTO> games)
         {
-            foreach (var game in games)
+            try
             {
-                if (game.Image != null && game.GameImage == null)
+                foreach (var game in games)
                 {
-                    game.GameImage = await GameImage.ToBitmapImage(game.Image);
+                    if (game.Image != null && game.GameImage == null)
+                    {
+                        try
+                        {
+                            game.GameImage = await GameImage.ToBitmapImage(game.Image);
+                        }
+                        catch (Exception ex)
+                        {
+                            OnErrorOccurred?.Invoke($"Could not load an image for a game. {ex.Message}");
+                        }
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                OnErrorOccurred?.Invoke($"Could not load game images. {ex.Message}");
             }
         }
 
         public void NextPage()
         {
-            if (CurrentPage * PageSize < TotalGamesCount)
+            try
             {
-                CurrentPage++;
-                RefreshPage();
-                OnPageChanged?.Invoke();
+                if (CurrentPage * PageSize < TotalGamesCount)
+                {
+                    CurrentPage++;
+                    RefreshPage();
+                    OnPageChanged?.Invoke();
+                }
+            }
+            catch (Exception ex)
+            {
+                OnErrorOccurred?.Invoke($"Could not go to next page. {ex.Message}");
             }
         }
 
         public void PreviousPage()
         {
-            if (CurrentPage > 1)
+            try
             {
-                CurrentPage--;
-                RefreshPage();
-                OnPageChanged?.Invoke();
+                if (CurrentPage > 1)
+                {
+                    CurrentPage--;
+                    RefreshPage();
+                    OnPageChanged?.Invoke();
+                }
+            }
+            catch (Exception ex)
+            {
+                OnErrorOccurred?.Invoke($"Could not go to previous page. {ex.Message}");
             }
         }
 
         private void RefreshPage()
         {
-            PagedGamesAvailableTonight.Clear();
-            PagedGamesOthers.Clear();
-
-            int globalStart = (CurrentPage - 1) * PageSize;
-            int remaining = PageSize;
-
-            if (globalStart < GamesAvailableTonight.Count)
+            try
             {
-                var availableSlice = GamesAvailableTonight
-                    .Skip(globalStart)
-                    .Take(remaining)
-                    .ToList();
+                PagedGamesAvailableTonight.Clear();
+                PagedGamesOthers.Clear();
 
-                foreach (var game in availableSlice)
-                    PagedGamesAvailableTonight.Add(game);
+                int globalStart = (CurrentPage - 1) * PageSize;
+                int remaining = PageSize;
 
-                remaining -= availableSlice.Count;
-                globalStart = 0;
+                if (globalStart < GamesAvailableTonight.Count)
+                {
+                    var availableSlice = GamesAvailableTonight
+                        .Skip(globalStart)
+                        .Take(remaining)
+                        .ToList();
+
+                    foreach (var game in availableSlice)
+                        PagedGamesAvailableTonight.Add(game);
+
+                    remaining -= availableSlice.Count;
+                    globalStart = 0;
+                }
+                else
+                {
+                    globalStart -= GamesAvailableTonight.Count;
+                }
+
+                if (remaining > 0)
+                {
+                    var othersSlice = GamesOthers
+                        .Skip(globalStart)
+                        .Take(remaining)
+                        .ToList();
+
+                    foreach (var game in othersSlice)
+                        PagedGamesOthers.Add(game);
+                }
+
+                OnPropertyChanged(nameof(PagedGamesAvailableTonight));
+                OnPropertyChanged(nameof(PagedGamesOthers));
+                OnPropertyChanged(nameof(HasPagedAvailableTonight));
+                OnPropertyChanged(nameof(HasPagedOthers));
+                OnPropertyChanged(nameof(OthersTitle));
             }
-            else
+            catch (Exception ex)
             {
-                globalStart -= GamesAvailableTonight.Count;
+                OnErrorOccurred?.Invoke($"Could not refresh page results. {ex.Message}");
             }
-
-            if (remaining > 0)
-            {
-                var othersSlice = GamesOthers
-                    .Skip(globalStart)
-                    .Take(remaining)
-                    .ToList();
-
-                foreach (var game in othersSlice)
-                    PagedGamesOthers.Add(game);
-            }
-
-            OnPropertyChanged(nameof(PagedGamesAvailableTonight));
-            OnPropertyChanged(nameof(PagedGamesOthers));
-            OnPropertyChanged(nameof(HasPagedAvailableTonight));
-            OnPropertyChanged(nameof(HasPagedOthers));
-            OnPropertyChanged(nameof(OthersTitle));
         }
 
         public void Search(FilterCriteria criteria)
         {
-            if (!HasValidDateRange())
-                return;
+            try
+            {
+                if (!HasValidDateRange())
+                    return;
 
-            Filter.Name = criteria.Name;
-            Filter.City = criteria.City;
-            Filter.SortOption = criteria.SortOption;
-            Filter.MaximumPrice = criteria.MaximumPrice;
-            Filter.PlayerCount = criteria.PlayerCount;
-            Filter.UserId = SessionContext.GetInstance().UserId;
+                Filter.Name = criteria.Name;
+                Filter.City = criteria.City;
+                Filter.SortOption = criteria.SortOption;
+                Filter.MaximumPrice = criteria.MaximumPrice;
+                Filter.PlayerCount = criteria.PlayerCount;
+                Filter.UserId = SessionContext.GetInstance().UserId;
 
-            UpdateAvailabilityRange();
+                UpdateAvailabilityRange();
 
-            CurrentPage = 1;
-            OnSearchRequest?.Invoke(Filter);
+                CurrentPage = 1;
+                OnSearchRequest?.Invoke(Filter);
+            }
+            catch (Exception ex)
+            {
+                OnErrorOccurred?.Invoke($"Could not perform search. {ex.Message}");
+            }
         }
 
         public ObservableCollection<string> CitySuggestions { get; } = new();
@@ -283,13 +338,20 @@ namespace SearchAndBook.ViewModels
 
         private void UpdateCitySuggestions(string input)
         {
-            CitySuggestions.Clear();
-
-            if (!string.IsNullOrWhiteSpace(input) && input.Length >= 2)
+            try
             {
-                var matches = _geoService.GetCitySuggestions(input);
-                foreach (var match in matches)
-                    CitySuggestions.Add(match);
+                CitySuggestions.Clear();
+
+                if (!string.IsNullOrWhiteSpace(input) && input.Length >= 2)
+                {
+                    var matches = _geoService.GetCitySuggestions(input);
+                    foreach (var match in matches)
+                        CitySuggestions.Add(match);
+                }
+            }
+            catch (Exception ex)
+            {
+                OnErrorOccurred?.Invoke($"Could not load city suggestions. {ex.Message}");
             }
         }
 
@@ -300,29 +362,44 @@ namespace SearchAndBook.ViewModels
 
         private void UpdateAvailabilityRange()
         {
-            if (SelectedStartDate.HasValue &&
-                SelectedEndDate.HasValue &&
-                SelectedStartDate.Value <= SelectedEndDate.Value)
+            try
             {
-                Filter.AvailabilityRange = new TimeRange(
-                    SelectedStartDate.Value.Date,
-                    SelectedEndDate.Value.Date);
+                if (SelectedStartDate.HasValue &&
+                    SelectedEndDate.HasValue &&
+                    SelectedStartDate.Value <= SelectedEndDate.Value)
+                {
+                    Filter.AvailabilityRange = new TimeRange(
+                        SelectedStartDate.Value.Date,
+                        SelectedEndDate.Value.Date);
+                }
+                else
+                {
+                    Filter.AvailabilityRange = null;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Filter.AvailabilityRange = null;
+                OnErrorOccurred?.Invoke($"Could not update availability range. {ex.Message}");
             }
         }
 
         public bool HasValidDateRange()
         {
-            if (!SelectedStartDate.HasValue && !SelectedEndDate.HasValue)
-                return true;
+            try
+            {
+                if (!SelectedStartDate.HasValue && !SelectedEndDate.HasValue)
+                    return true;
 
-            if (!SelectedStartDate.HasValue || !SelectedEndDate.HasValue)
+                if (!SelectedStartDate.HasValue || !SelectedEndDate.HasValue)
+                    return false;
+
+                return SelectedStartDate.Value <= SelectedEndDate.Value;
+            }
+            catch (Exception ex)
+            {
+                OnErrorOccurred?.Invoke($"Could not validate date range. {ex.Message}");
                 return false;
-
-            return SelectedStartDate.Value <= SelectedEndDate.Value;
+            }
         }
     }
 }

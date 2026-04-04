@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -27,7 +26,9 @@ namespace SearchAndBook.ViewModels
         public GameDTO[] BaseResults { get; private set; }
         public GameDTO[] DisplayedResults { get; private set; }
         public bool HasNoResults { get; private set; }
-        public string NoResultsMessage => HasNoResults == true ? "No games found matching your criteria. Try adjusting your filters or search terms." : "";
+        public string NoResultsMessage => HasNoResults
+            ? "No games found matching your criteria. Try adjusting your filters or search terms."
+            : "";
 
         public List<GameDTO> Games { get; set; } = new();
 
@@ -44,9 +45,19 @@ namespace SearchAndBook.ViewModels
 
                     if (_selectedGame != null)
                     {
-                        SelectGame(_selectedGame.GameId);
-                        _selectedGame = null;
-                        OnPropertyChanged(nameof(SelectedGame));
+                        try
+                        {
+                            SelectGame(_selectedGame.GameId);
+                        }
+                        catch (Exception ex)
+                        {
+                            RaiseError($"Could not select the game. {ex.Message}");
+                        }
+                        finally
+                        {
+                            _selectedGame = null;
+                            OnPropertyChanged(nameof(SelectedGame));
+                        }
                     }
                 }
             }
@@ -78,6 +89,7 @@ namespace SearchAndBook.ViewModels
                 OnPropertyChanged(nameof(CurrentPage));
             }
         }
+
         public int TotalPages
         {
             get
@@ -113,7 +125,8 @@ namespace SearchAndBook.ViewModels
         }
 
         public DateTimeOffset MinEndDate => SelectedStartDate.HasValue
-            ? SelectedStartDate.Value.AddDays(1) : Today;
+            ? SelectedStartDate.Value.AddDays(1)
+            : Today;
 
         private DateTimeOffset? _selectedStartDate;
         public DateTimeOffset? SelectedStartDate
@@ -171,37 +184,6 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public void ApplySortOnly()
-        {
-            if (SelectedSortOption == "Closest to me" && string.IsNullOrWhiteSpace(CitySearchText))
-            {
-                LocationError = "Please enter a city to measure from.";
-
-                _selectedSortOption = null;
-                OnPropertyChanged(nameof(SelectedSortOption));
-                return;
-            }
-
-            LocationError = string.Empty;
-
-            CurrentFilter.SortOption = SelectedSortOption switch
-            {
-                "Price: lowest to highest" => SortOption.PriceAscending,
-                "Price: highest to lowest" => SortOption.PriceDescending,
-                "Closest to me" => SortOption.Location,
-                _ => SortOption.None
-            };
-
-            if (CurrentFilter.SortOption == SortOption.Location)
-            {
-                Search(CurrentFilter);
-            }
-            else
-            {
-                ApplyFilters();
-            }
-        }
-
         public ICommand SearchCommand { get; }
         public ICommand NextPageCommand { get; }
         public ICommand PreviousPageCommand { get; }
@@ -217,8 +199,8 @@ namespace SearchAndBook.ViewModels
 
         public FilteredSearchViewModel(ISearchAndFilterService searchService, IGeoService geoService)
         {
-            _geoService = geoService;
-            _searchService = searchService;
+            _geoService = geoService ?? throw new ArgumentNullException(nameof(geoService));
+            _searchService = searchService ?? throw new ArgumentNullException(nameof(searchService));
 
             CurrentFilter = new FilterCriteria();
             BaseResults = Array.Empty<GameDTO>();
@@ -236,18 +218,25 @@ namespace SearchAndBook.ViewModels
 
             SelectGameCommand = new RelayCommand(obj =>
             {
-                if (obj is GameDTO game)
+                try
                 {
-                    if (GameImages.TryGetValue(game.GameId, out var image))
+                    if (obj is GameDTO game)
                     {
-                        SelectedGameImage = image;
-                    }
-                    else
-                    {
-                        SelectedGameImage = null;
-                    }
+                        if (GameImages.TryGetValue(game.GameId, out var image))
+                        {
+                            SelectedGameImage = image;
+                        }
+                        else
+                        {
+                            SelectedGameImage = null;
+                        }
 
-                    SelectGame(game.GameId);
+                        SelectGame(game.GameId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    RaiseError($"Could not open game details. {ex.Message}");
                 }
             });
 
@@ -257,94 +246,150 @@ namespace SearchAndBook.ViewModels
 
         public void Initialize(FilterCriteria initialFilter)
         {
-            CurrentFilter = initialFilter;
-
-            CitySearchText = CurrentFilter.City ?? string.Empty; 
-
-            if (CurrentFilter.AvailabilityRange != null)
+            try
             {
-                SelectedStartDate = new DateTimeOffset(CurrentFilter.AvailabilityRange.StartTime);
-                SelectedEndDate = new DateTimeOffset(CurrentFilter.AvailabilityRange.EndTime);
-            }
-            else
-            {
-                SelectedStartDate = null;
-                SelectedEndDate = null;
-            }
+                if (initialFilter == null)
+                    throw new ArgumentNullException(nameof(initialFilter));
 
-            Search(CurrentFilter);
+                CurrentFilter = initialFilter;
+                CitySearchText = CurrentFilter.City ?? string.Empty;
+
+                if (CurrentFilter.AvailabilityRange != null)
+                {
+                    SelectedStartDate = new DateTimeOffset(CurrentFilter.AvailabilityRange.StartTime);
+                    SelectedEndDate = new DateTimeOffset(CurrentFilter.AvailabilityRange.EndTime);
+                }
+                else
+                {
+                    SelectedStartDate = null;
+                    SelectedEndDate = null;
+                }
+
+                Search(CurrentFilter);
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not initialize search results. {ex.Message}");
+            }
         }
 
         private void UpdateAvailabilityRange()
         {
-            if (SelectedStartDate.HasValue && SelectedEndDate.HasValue && SelectedStartDate.Value <= SelectedEndDate.Value)
+            try
             {
-                CurrentFilter.AvailabilityRange = new TimeRange(
-                    SelectedStartDate.Value.Date,
-                    SelectedEndDate.Value.Date
-                );
+                if (SelectedStartDate.HasValue && SelectedEndDate.HasValue && SelectedStartDate.Value <= SelectedEndDate.Value)
+                {
+                    CurrentFilter.AvailabilityRange = new TimeRange(
+                        SelectedStartDate.Value.Date,
+                        SelectedEndDate.Value.Date
+                    );
+                }
+                else
+                {
+                    CurrentFilter.AvailabilityRange = null;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                CurrentFilter.AvailabilityRange = null;
+                RaiseError($"Could not update date range. {ex.Message}");
             }
         }
 
         public void LoadSearchResults(FilterCriteria searchCriteria)
         {
-            BaseResults = _searchService.Search(searchCriteria);
-            DisplayedResults = BaseResults;
-            Games = DisplayedResults.ToList();
-            CurrentPage = 1;
-            OnPropertyChanged(nameof(TotalPages));
-            RefreshPage();
-            UpdateNoResultsState();
+            try
+            {
+                BaseResults = _searchService.Search(searchCriteria) ?? Array.Empty<GameDTO>();
+                DisplayedResults = BaseResults;
+                Games = DisplayedResults.ToList();
+                CurrentPage = 1;
+                OnPropertyChanged(nameof(TotalPages));
+                RefreshPage();
+                UpdateNoResultsState();
+            }
+            catch (Exception ex)
+            {
+                BaseResults = Array.Empty<GameDTO>();
+                DisplayedResults = Array.Empty<GameDTO>();
+                Games = new List<GameDTO>();
+                RefreshPage();
+                UpdateNoResultsState();
+                RaiseError($"Could not load search results. {ex.Message}");
+            }
         }
 
         public void LoadDiscoveryResutls(GameDTO[] discoveryResults)
         {
-            BaseResults = discoveryResults;
-            DisplayedResults = BaseResults;
-            Games = DisplayedResults.ToList();
-            CurrentPage = 1;
-            OnPropertyChanged(nameof(TotalPages));
-            RefreshPage();
-            UpdateNoResultsState();
+            try
+            {
+                BaseResults = discoveryResults ?? Array.Empty<GameDTO>();
+                DisplayedResults = BaseResults;
+                Games = DisplayedResults.ToList();
+                CurrentPage = 1;
+                OnPropertyChanged(nameof(TotalPages));
+                RefreshPage();
+                UpdateNoResultsState();
+            }
+            catch (Exception ex)
+            {
+                BaseResults = Array.Empty<GameDTO>();
+                DisplayedResults = Array.Empty<GameDTO>();
+                Games = new List<GameDTO>();
+                RefreshPage();
+                UpdateNoResultsState();
+                RaiseError($"Could not load discovery results. {ex.Message}");
+            }
         }
 
         public void ApplyFilters()
         {
-            if (!CurrentFilter.HasValidAvailabilityRange())
+            try
             {
-                return;
-            }
+                if (!CurrentFilter.HasValidAvailabilityRange())
+                {
+                    RaiseError("The selected availability range is invalid.");
+                    return;
+                }
 
-            DisplayedResults = _searchService.ApplyFilters(BaseResults, CurrentFilter);
-            Games = DisplayedResults.ToList();
-            CurrentPage = 1;
-            OnPropertyChanged(nameof(TotalPages));
-            RefreshPage();
-            UpdateNoResultsState();
+                DisplayedResults = _searchService.ApplyFilters(BaseResults, CurrentFilter) ?? Array.Empty<GameDTO>();
+                Games = DisplayedResults.ToList();
+                CurrentPage = 1;
+                OnPropertyChanged(nameof(TotalPages));
+                RefreshPage();
+                UpdateNoResultsState();
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not apply filters. {ex.Message}");
+            }
         }
 
         public void ApplySelectedUiFilters()
         {
-            if (!HasValidPlayersValue() || !HasValidDateRange())
+            try
             {
-                return;
+                if (!HasValidPlayersValue() || !HasValidDateRange())
+                {
+                    RaiseError("Please enter valid filter values.");
+                    return;
+                }
+
+                UpdateAvailabilityRange();
+
+                CurrentFilter.MaximumPrice = SelectedMaximumPrice > 0
+                    ? (decimal?)SelectedMaximumPrice
+                    : null;
+
+                CurrentFilter.PlayerCount = SelectedMinimumPlayers > 0
+                    ? (int?)SelectedMinimumPlayers
+                    : null;
+
+                ApplyFilters();
             }
-
-            UpdateAvailabilityRange();
-
-            CurrentFilter.MaximumPrice = SelectedMaximumPrice > 0
-                ? (decimal?)SelectedMaximumPrice
-                : null;
-
-            CurrentFilter.PlayerCount = SelectedMinimumPlayers > 0
-                ? (int?)SelectedMinimumPlayers
-                : null;
-
-            ApplyFilters();
+            catch (Exception ex)
+            {
+                RaiseError($"Could not apply selected filters. {ex.Message}");
+            }
         }
 
         public bool HasValidPlayersValue()
@@ -355,78 +400,180 @@ namespace SearchAndBook.ViewModels
         public bool HasValidDateRange()
         {
             if (!SelectedStartDate.HasValue && !SelectedEndDate.HasValue)
-            {
                 return true;
-            }
 
             if (!SelectedStartDate.HasValue || !SelectedEndDate.HasValue)
-            {
                 return false;
-            }
 
             return SelectedStartDate.Value < SelectedEndDate.Value;
         }
 
         public void RemoveNameFilter()
         {
-            CurrentFilter.Name = null;
-            ApplyFilters();
+            try
+            {
+                CurrentFilter.Name = null;
+                ApplyFilters();
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not remove name filter. {ex.Message}");
+            }
         }
 
         public void RemoveCityFilter()
         {
-            CurrentFilter.City = null;
-            ApplyFilters();
+            try
+            {
+                CurrentFilter.City = null;
+                ApplyFilters();
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not remove city filter. {ex.Message}");
+            }
         }
 
         public void RemovePriceFilter()
         {
-            CurrentFilter.MaximumPrice = null;
-            ApplyFilters();
+            try
+            {
+                CurrentFilter.MaximumPrice = null;
+                ApplyFilters();
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not remove price filter. {ex.Message}");
+            }
         }
 
         public void RemovePlayersFilter()
         {
-            CurrentFilter.PlayerCount = null;
-            ApplyFilters();
+            try
+            {
+                CurrentFilter.PlayerCount = null;
+                ApplyFilters();
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not remove players filter. {ex.Message}");
+            }
         }
 
         public void RemoveDateFilter()
         {
-            CurrentFilter.AvailabilityRange = null;
-            ApplyFilters();
+            try
+            {
+                CurrentFilter.AvailabilityRange = null;
+                ApplyFilters();
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not remove date filter. {ex.Message}");
+            }
         }
 
         public void SetPriceAscendingSort()
         {
-            CurrentFilter.SortOption = SortOption.PriceAscending;
-            ApplyFilters();
+            try
+            {
+                CurrentFilter.SortOption = SortOption.PriceAscending;
+                ApplyFilters();
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not sort by ascending price. {ex.Message}");
+            }
         }
 
         public void SetPriceDescendingSort()
         {
-            CurrentFilter.SortOption = SortOption.PriceDescending;
-            ApplyFilters();
+            try
+            {
+                CurrentFilter.SortOption = SortOption.PriceDescending;
+                ApplyFilters();
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not sort by descending price. {ex.Message}");
+            }
         }
 
         public void ClearSorting()
         {
-            CurrentFilter.SortOption = SortOption.None;
-            ApplyFilters();
+            try
+            {
+                CurrentFilter.SortOption = SortOption.None;
+                ApplyFilters();
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not clear sorting. {ex.Message}");
+            }
         }
 
         public void ClearAllFilters()
         {
-            CurrentFilter.Reset();
-            SelectedMaximumPrice = 0;
-            SelectedMinimumPlayers = 0;
-            SelectedSortOption = null;
-            DisplayedResults = BaseResults;
-            Games = DisplayedResults.ToList();
-            CurrentPage = 1;
-            OnPropertyChanged(nameof(TotalPages));
-            RefreshPage();
-            UpdateNoResultsState();
+            try
+            {
+                CurrentFilter.Reset();
+                SelectedMaximumPrice = 0;
+                SelectedMinimumPlayers = 0;
+                SelectedSortOption = null;
+                SelectedStartDate = null;
+                SelectedEndDate = null;
+                CitySearchText = string.Empty;
+                LocationError = string.Empty;
+
+                DisplayedResults = BaseResults;
+                Games = DisplayedResults.ToList();
+                CurrentPage = 1;
+                OnPropertyChanged(nameof(TotalPages));
+                RefreshPage();
+                UpdateNoResultsState();
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not clear filters. {ex.Message}");
+            }
+        }
+
+        public void ApplySortOnly()
+        {
+            try
+            {
+                if (SelectedSortOption == "Closest to me" && string.IsNullOrWhiteSpace(CitySearchText))
+                {
+                    LocationError = "Please enter a city to measure from.";
+
+                    _selectedSortOption = null;
+                    OnPropertyChanged(nameof(SelectedSortOption));
+                    return;
+                }
+
+                LocationError = string.Empty;
+
+                CurrentFilter.SortOption = SelectedSortOption switch
+                {
+                    "Price: lowest to highest" => SortOption.PriceAscending,
+                    "Price: highest to lowest" => SortOption.PriceDescending,
+                    "Closest to me" => SortOption.Location,
+                    _ => SortOption.None
+                };
+
+                if (CurrentFilter.SortOption == SortOption.Location)
+                {
+                    Search(CurrentFilter);
+                }
+                else
+                {
+                    ApplyFilters();
+                }
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not apply sorting. {ex.Message}");
+            }
         }
 
         private void UpdateNoResultsState()
@@ -438,74 +585,137 @@ namespace SearchAndBook.ViewModels
 
         public void SelectGame(int gameId)
         {
-            OnGameSelectedRequest?.Invoke(gameId);
+            try
+            {
+                OnGameSelectedRequest?.Invoke(gameId);
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not navigate to game details. {ex.Message}");
+            }
         }
 
         public void Search(FilterCriteria criteria)
         {
-            if (!HasValidDateRange())
+            try
             {
-                return;
-            }
+                if (criteria == null)
+                    throw new ArgumentNullException(nameof(criteria));
 
-            UpdateAvailabilityRange();
-            Games = _searchService.Search(criteria).ToList();
-            DisplayedResults = Games.ToArray();
-            BaseResults = DisplayedResults;
-            CurrentPage = 1;
-            OnPropertyChanged(nameof(TotalPages));
-            RefreshPage();
-            UpdateNoResultsState();
+                if (!HasValidDateRange())
+                {
+                    RaiseError("Please select a valid date range.");
+                    return;
+                }
+
+                UpdateAvailabilityRange();
+                Games = _searchService.Search(criteria)?.ToList() ?? new List<GameDTO>();
+                DisplayedResults = Games.ToArray();
+                BaseResults = DisplayedResults;
+                CurrentPage = 1;
+                OnPropertyChanged(nameof(TotalPages));
+                RefreshPage();
+                UpdateNoResultsState();
+            }
+            catch (Exception ex)
+            {
+                Games = new List<GameDTO>();
+                DisplayedResults = Array.Empty<GameDTO>();
+                BaseResults = Array.Empty<GameDTO>();
+                RefreshPage();
+                UpdateNoResultsState();
+                RaiseError($"Search failed. {ex.Message}");
+            }
         }
 
         public void NextPage()
         {
-            if (CurrentPage * PageSize < Games.Count)
+            try
             {
-                CurrentPage++;
-                RefreshPage();
+                if (CurrentPage * PageSize < Games.Count)
+                {
+                    CurrentPage++;
+                    RefreshPage();
+                }
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not go to next page. {ex.Message}");
             }
         }
 
         public void PreviousPage()
         {
-            if (CurrentPage > 1)
+            try
             {
-                CurrentPage--;
-                RefreshPage();
+                if (CurrentPage > 1)
+                {
+                    CurrentPage--;
+                    RefreshPage();
+                }
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not go to previous page. {ex.Message}");
             }
         }
 
         private async void RefreshPage()
         {
-            GamesShown.Clear();
-
-            var pageListings = Games
-                .Skip((CurrentPage - 1) * PageSize)
-                .Take(PageSize);
-
-            foreach (var game in pageListings)
+            try
             {
-                GamesShown.Add(game);
-            }
-            foreach (var game in pageListings)
-            {
-                if (game.Image != null && game.GameImage == null)
+                GamesShown.Clear();
+
+                var pageListings = Games
+                    .Skip((CurrentPage - 1) * PageSize)
+                    .Take(PageSize)
+                    .ToList();
+
+                foreach (var game in pageListings)
                 {
-                    await LoadGameImage(game);
+                    GamesShown.Add(game);
                 }
-            }
 
-            OnPropertyChanged(nameof(GamesShown));
+                foreach (var game in pageListings)
+                {
+                    if (game.Image != null && game.GameImage == null)
+                    {
+                        await LoadGameImage(game);
+                    }
+                }
+
+                OnPropertyChanged(nameof(GamesShown));
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not refresh the page. {ex.Message}");
+            }
         }
+
         private void GoBack()
         {
-            OnGoBackRequest?.Invoke();
+            try
+            {
+                OnGoBackRequest?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                RaiseError($"Could not go back. {ex.Message}");
+            }
         }
 
         private async Task LoadGameImage(GameDTO game)
         {
-            game.GameImage = await GameImage.ToBitmapImage(game.Image);
+            try
+            {
+                game.GameImage = await GameImage.ToBitmapImage(game.Image);
+                _gameImages[game.GameId] = game.GameImage;
+            }
+            catch
+            {
+                game.GameImage = null;
+                _gameImages[game.GameId] = null;
+            }
         }
 
         protected void OnPropertyChanged(string? propertyName = null)
@@ -542,16 +752,29 @@ namespace SearchAndBook.ViewModels
         // 3. The method that talks to your dictionary
         private void UpdateCitySuggestions(string input)
         {
-            CitySuggestions.Clear();
-
-            if (!string.IsNullOrWhiteSpace(input) && input.Length >= 2) // Wait until they type 2 letters
+            try
             {
-                var matches = _geoService.GetCitySuggestions(input);
-                foreach (var match in matches)
+                CitySuggestions.Clear();
+
+                if (!string.IsNullOrWhiteSpace(input) && input.Length >= 2) // Wait until they type 2 letters
                 {
-                    CitySuggestions.Add(match);
+                    var matches = _geoService.GetCitySuggestions(input);
+                    foreach (var match in matches)
+                    {
+                        CitySuggestions.Add(match);
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                CitySuggestions.Clear();
+                RaiseError($"Could not load city suggestions. {ex.Message}");
+            }
+        }
+
+        private void RaiseError(string message)
+        {
+            OnErrorOccurred?.Invoke(message);
         }
     }
 }
