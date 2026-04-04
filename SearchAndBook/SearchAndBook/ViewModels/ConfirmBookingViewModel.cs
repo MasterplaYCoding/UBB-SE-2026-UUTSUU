@@ -5,8 +5,6 @@ using SearchAndBook.Shared;
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Storage.Streams;
 
 namespace SearchAndBook.ViewModels
 {
@@ -62,22 +60,17 @@ namespace SearchAndBook.ViewModels
             get => _gameImage;
             private set { _gameImage = value; OnPropertyChanged(); }
         }
-
         private async void LoadImages()
         {
-            if (GameAndUserDetails.Image != null && GameAndUserDetails.Image.Length > 0)
-            {
-                using var stream = new InMemoryRandomAccessStream();
-                await stream.WriteAsync(GameAndUserDetails.Image.AsBuffer());
-                stream.Seek(0);
-                var bitmap = new BitmapImage();
-                await bitmap.SetSourceAsync(stream);
-                GameImage = bitmap;
-            }
+            GameImage = await SearchAndBook.Utils.GameImage.ToBitmapImage(GameAndUserDetails.Image);
 
             if (!string.IsNullOrEmpty(GameAndUserDetails.AvatarUrl))
             {
                 OwnerImage = new BitmapImage(new Uri(GameAndUserDetails.AvatarUrl));
+            }
+            else
+            {
+                OwnerImage = null;
             }
         }
 

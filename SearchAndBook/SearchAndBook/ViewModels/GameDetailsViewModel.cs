@@ -1,14 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Windows.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using SearchAndBook.CommandHandler;
 using SearchAndBook.Domain;
 using SearchAndBook.Services;
 using SearchAndBook.Shared;
-using Windows.Storage.Streams;
 
 namespace SearchAndBook.ViewModels
 {
@@ -105,30 +103,14 @@ namespace SearchAndBook.ViewModels
 
         private async void LoadGameImage()
         {
-            if (GameAndUserDetails.Image == null || GameAndUserDetails.Image.Length == 0)
-            {
-                GameImage = null;
-                return;
-            }
-
-            using var stream = new InMemoryRandomAccessStream();
-            await stream.WriteAsync(GameAndUserDetails.Image.AsBuffer());
-            stream.Seek(0);
-
-            var bitmap = new BitmapImage();
-            await bitmap.SetSourceAsync(stream);
-            GameImage = bitmap;
+            GameImage = await SearchAndBook.Utils.GameImage.ToBitmapImage(GameAndUserDetails.Image);
         }
 
         private void LoadOwnerImage()
         {
-            if (string.IsNullOrWhiteSpace(GameAndUserDetails.AvatarUrl))
-            {
-                OwnerImageUrl = null;
-                return;
-            }
-
-            OwnerImageUrl = GameAndUserDetails.AvatarUrl;
+            OwnerImageUrl = string.IsNullOrWhiteSpace(GameAndUserDetails.AvatarUrl)
+                ? null
+                : GameAndUserDetails.AvatarUrl;
         }
 
         public void StartBooking(TimeRange range)

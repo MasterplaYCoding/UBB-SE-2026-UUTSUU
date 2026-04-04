@@ -6,8 +6,17 @@ using Windows.Storage.Streams;
 
 namespace SearchAndBook.Utils
 {
+    /// <summary>
+    /// Helper class for converting image data from a byte array (e.g. from database)
+    /// into a BitmapImage that can be displayed in the WinUI interface.
+    /// </summary>
     class GameImage
     {
+        /// <summary>
+        /// Converts a byte array into a BitmapImage for UI display.
+        /// </summary>
+        /// <param name="imageBytes">Raw image data (e.g. from database)</param>
+        /// <returns>A BitmapImage usable in XAML, or null if input is empty</returns>
         public static async Task<BitmapImage?> ToBitmapImage(byte[]? imageBytes)
         {
             if (imageBytes == null || imageBytes.Length == 0)
