@@ -7,6 +7,16 @@ using SearchAndBook.Shared;
 
 namespace SearchAndBook.Repositories;
 
+/// How ADO.NET handles connections : 
+/// - When you write using var connection = new SqlConnection(...) and call .Open(), Microsoft 
+/// checks the pool, so the pool of connections is handled by .net
+/// - If there is a free connection, it gives it to you.
+/// - When your "using" block finishes, it calls .Close().
+/// - Microsoft intercepts your .Close() command. It doesn't actually destroy the connection 
+/// to the database. It just wipes the data clean and parks it back in the hidden pool for 
+/// the next person to use.
+
+
 public class UsersRepository : IUsersRepository
 {
     // Get User by id

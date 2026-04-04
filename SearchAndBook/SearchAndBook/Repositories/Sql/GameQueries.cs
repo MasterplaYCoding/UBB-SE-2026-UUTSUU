@@ -211,4 +211,28 @@ public static class GameQueries
             g.owner_id
         FROM dbo.Games g
         WHERE g.owner_id = @OwnerId;";
+
+    public const string GetFeedOthers = @"
+        SELECT
+            g.game_id,
+            g.name,
+            g.price,
+            g.minimum_player_number,
+            g.maximum_player_number,
+            g.description,
+            g.image,
+            g.is_active,
+            g.owner_id
+        FROM dbo.Games g
+        WHERE g.is_active = 1
+          AND g.owner_id <> @UserId
+          AND EXISTS 
+          (
+              SELECT 1
+              FROM dbo.Rentals r
+              WHERE r.game_id = g.game_id
+                AND r.start_date < @RequestedEndDate
+                AND r.end_date > @RequestedStartDate
+          );";
 }
+
