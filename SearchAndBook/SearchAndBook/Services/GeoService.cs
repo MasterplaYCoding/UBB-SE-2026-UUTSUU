@@ -10,7 +10,7 @@ using Windows.Storage;
 
 namespace SearchAndBook.Services
 {
-    public class GeoService : IGeoService
+    public class GeoService : InterfaceGeographicalService
     {
         private readonly Dictionary<string, City> _lookup = new();
 

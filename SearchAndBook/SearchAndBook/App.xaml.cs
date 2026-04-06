@@ -33,7 +33,7 @@ namespace SearchAndBook
     {
         private Window? _window;
 
-        public static IGeoService? GlobalGeoService { get; private set; }
+        public static InterfaceGeographicalService? GlobalGeoService { get; private set; }
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code

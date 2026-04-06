@@ -25,15 +25,15 @@ namespace SearchAndBook.Views
             var gamesRepository = new GamesRepository();
             var usersRepository = new UsersRepository();
             var rentalsRepository = new RentalsRepository();
-            var geoService = App.GlobalGeoService!;
+            var geographicalService = App.GlobalGeoService!;
 
             var service = new SearchAndFilterService(
                 gamesRepository,
                 usersRepository,
                 rentalsRepository,
-                geoService);
+                geographicalService);
 
-            ViewModel = new DiscoveryViewModel(service, geoService);
+            ViewModel = new DiscoveryViewModel(service, geographicalService);
 
             ViewModel.OnSearchRequest += HandleSearchRequest;
             ViewModel.OnGameSelectedRequest += gameId =>

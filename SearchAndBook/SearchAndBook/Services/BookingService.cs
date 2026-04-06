@@ -11,9 +11,9 @@ namespace SearchAndBook.Services;
 /// </summary>
 public class BookingService : IBookingService
 {
-    private readonly IGamesRepository gamesRepo;
-    private readonly IRentalsRepository rentalsRepo;
-    private readonly IUsersRepository usersRepo;
+    private readonly InterfaceGamesRepository gamesRepo;
+    private readonly InterfaceRentalsRepository rentalsRepo;
+    private readonly InterfaceUsersRepository usersRepo;
 
     /// <summary>
     /// Initializes a new instance of the BookingService class.
@@ -22,9 +22,9 @@ public class BookingService : IBookingService
     /// <param name="rentalsRepo">The rentals repository.</param>
     /// <param name="usersRepo">The users repository.</param>
     public BookingService(
-        IGamesRepository gamesRepo,
-        IRentalsRepository rentalsRepo,
-        IUsersRepository usersRepo)
+        InterfaceGamesRepository gamesRepo,
+        InterfaceRentalsRepository rentalsRepo,
+        InterfaceUsersRepository usersRepo)
     {
         this.gamesRepo = gamesRepo;
         this.rentalsRepo = rentalsRepo;

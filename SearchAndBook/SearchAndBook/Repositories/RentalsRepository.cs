@@ -21,7 +21,7 @@ namespace SearchAndBook.Repositories;
 /// to the database. It just wipes the data clean and parks it back in the hidden pool for 
 /// the next person to use.
 
-public class RentalsRepository : IRentalsRepository
+public class RentalsRepository : InterfaceRentalsRepository
 {
     /// <summary>
     /// Retrieves a rental time range by its unique identifier.

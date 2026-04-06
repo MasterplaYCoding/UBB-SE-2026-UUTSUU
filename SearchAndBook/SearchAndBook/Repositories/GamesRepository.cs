@@ -24,7 +24,7 @@ namespace SearchAndBook.Repositories;
 /// to the database. It just wipes the data clean and parks it back in the hidden pool for 
 /// the next person to use.
 
-public class GamesRepository : IGamesRepository
+public class GamesRepository : InterfaceGamesRepository
 {
     /// Gets a single game by its database id.
     /// <param name="id">The unique id of the game.</param>
@@ -86,7 +86,7 @@ public class GamesRepository : IGamesRepository
     /// - user's own games are excluded if UserId is provided
     /// - if an availability range is provided, only games available in that range are returned
     /// </remarks>
-    public List<Game> GetByFilter(FilterCriteria filter)
+    public List<Game> GetGamesByFilter(FilterCriteria filter)
     {
         try
         {
@@ -127,7 +127,7 @@ public class GamesRepository : IGamesRepository
     /// Used to exclude the user's own games from the feed.
     /// </param>
     /// <returns>A list of games for the "Available Tonight" section.</returns>
-    public List<Game> GetForFeedAvailableTonight(int userId)
+    public List<Game> GetGamesForFeedAvailableTonight(int userId)
     {
         try
         {
@@ -164,7 +164,7 @@ public class GamesRepository : IGamesRepository
     /// Current authenticated user id.
     /// Used to exclude the user's own games from the feed.
     /// </param>
-    public List<Game> GetForFeedOthers(int userId)
+    public List<Game> GetGamesForFeedOthers(int userId)
     {
         try
         {
@@ -176,7 +176,7 @@ public class GamesRepository : IGamesRepository
             using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
             connection.Open();
 
-            using var command = new SqlCommand(GameQueries.GetFeedOthers, connection);
+            using var command = new SqlCommand(GameQueries.GetOtherGamesFeedByUser, connection);
             command.Parameters.AddWithValue("@UserId", userId);
             command.Parameters.AddWithValue("@RequestedStartDate", today);
             command.Parameters.AddWithValue("@RequestedEndDate", tomorrow);

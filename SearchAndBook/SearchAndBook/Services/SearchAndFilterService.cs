@@ -10,19 +10,19 @@ namespace SearchAndBook.Services
     /// <summary>
     /// Service responsible for searching, filtering, and retrieving game feeds.
     /// </summary>
-    internal class SearchAndFilterService : ISearchAndFilterService
+    internal class SearchAndFilterService : InterfaceSearchAndFilterService
     {
-        private readonly IGamesRepository gamesRepository;
-        private readonly IUsersRepository usersRepository;
-        private readonly IRentalsRepository rentalsRepository;
-        private readonly IGeoService _geoService;
+        private readonly InterfaceGamesRepository gamesRepository;
+        private readonly InterfaceUsersRepository usersRepository;
+        private readonly InterfaceRentalsRepository rentalsRepository;
+        private readonly InterfaceGeographicalService _geographicalService;
 
-        public SearchAndFilterService(IGamesRepository gamesRepository, IUsersRepository usersRepository, IRentalsRepository rentalsRepository, IGeoService geoService)
+        public SearchAndFilterService(InterfaceGamesRepository gamesRepository, InterfaceUsersRepository usersRepository, InterfaceRentalsRepository rentalsRepository, InterfaceGeographicalService geographicalService)
         {
             this.gamesRepository = gamesRepository;
             this.usersRepository = usersRepository;
             this.rentalsRepository = rentalsRepository;
-            this._geoService = geoService;
+            this._geographicalService = geographicalService;
         }
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace SearchAndBook.Services
         /// </summary>
         /// <param name="filter">The criteria to filter games.</param>
         /// <returns>An array of <see cref="GameDTO"/> matching the criteria.</returns>
-        public GameDTO[] Search(FilterCriteria filter)
+        public GameDTO[] SearchGamesByFilter(FilterCriteria filter)
         {
             try
             {
@@ -40,22 +40,22 @@ namespace SearchAndBook.Services
                     filter.City = null;
                 }
 
-                var games = gamesRepository.GetByFilter(filter);
+                var games = gamesRepository.GetGamesByFilter(filter);
                 filter.City = originalCity;
 
-                GameDTO[] result = games.Select(g =>
+                GameDTO[] result = games.Select(game =>
                 {
-                    var owner = usersRepository.Get(g.OwnerId);
+                    var owner = usersRepository.Get(game.OwnerId);
 
                     return new GameDTO
                     {
-                        GameId = g.GameId,
-                        Name = g.Name,
-                        Image = g.Image,
-                        Price = g.Price,
+                        GameId = game.GameId,
+                        Name = game.Name,
+                        Image = game.Image,
+                        Price = game.Price,
                         City = owner?.City ?? string.Empty,
-                        MaximumPlayerNumber = g.MaximumPlayerNumber,
-                        MinimumPlayerNumber = g.MinimumPlayerNumber
+                        MaximumPlayerNumber = game.MaximumPlayerNumber,
+                        MinimumPlayerNumber = game.MinimumPlayerNumber
                     };
                 }).ToArray();
 
@@ -78,25 +78,25 @@ namespace SearchAndBook.Services
         /// </summary>
         /// <param name="userId">The ID of the user requesting the feed or null.</param>
         /// <returns>An array of <see cref="GameDTO"/> available tonight.</returns>
-        public GameDTO[] GetFeedAvailableTonight(int userId)
+        public GameDTO[] GetGamesFeedAvailableTonightByUser(int userId)
         {
             try
             {
-                var games = gamesRepository.GetForFeedAvailableTonight(userId);
+                var games = gamesRepository.GetGamesForFeedAvailableTonight(userId);
 
-                return games.Select(g =>
+                return games.Select(game =>
                 {
-                    var owner = usersRepository.Get(g.OwnerId);
+                    var owner = usersRepository.Get(game.OwnerId);
 
                     return new GameDTO
                     {
-                        GameId = g.GameId,
-                        Name = g.Name,
-                        Image = g.Image,
-                        Price = g.Price,
+                        GameId = game.GameId,
+                        Name = game.Name,
+                        Image = game.Image,
+                        Price = game.Price,
                         City = owner?.City ?? string.Empty,
-                        MinimumPlayerNumber = g.MinimumPlayerNumber,
-                        MaximumPlayerNumber = g.MaximumPlayerNumber
+                        MinimumPlayerNumber = game.MinimumPlayerNumber,
+                        MaximumPlayerNumber = game.MaximumPlayerNumber
                     };
                 }).ToArray();
             }
@@ -111,11 +111,11 @@ namespace SearchAndBook.Services
         /// </summary>
         /// <param name="userId">The ID of the user requesting the feed or null.</param>
         /// <returns>An array of <see cref="GameDTO"/> representing other games.</returns>
-        public GameDTO[] GetFeedOthers(int userId)
+        public GameDTO[] GetOtherGamesFeedByUser(int userId)
         {
             try
             {
-                var games = gamesRepository.GetForFeedOthers(userId);
+                var games = gamesRepository.GetGamesForFeedOthers(userId);
 
                 return games.Select(g =>
                 {
@@ -181,7 +181,7 @@ namespace SearchAndBook.Services
                     case SortOption.Location:
                         if (!string.IsNullOrWhiteSpace(filter.City))
                         {
-                            var userCity = _geoService.GetCityDetails(filter.City);
+                            var userCity = _geographicalService.GetCityDetails(filter.City);
                             if (userCity.found)
                             {
                                 var distanceCache = new Dictionary<string, double?>();
@@ -192,7 +192,7 @@ namespace SearchAndBook.Services
 
                                     if (!distanceCache.TryGetValue(g.City, out double? distance))
                                     {
-                                        var gameCity = _geoService.GetCityDetails(g.City);
+                                        var gameCity = _geographicalService.GetCityDetails(g.City);
                                         distance = gameCity.found
                                             ? GeographicDistance.CalculateDistance(userCity.lat, userCity.lon, gameCity.lat, gameCity.lon)
                                             : null;

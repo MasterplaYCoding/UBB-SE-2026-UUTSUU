@@ -16,8 +16,8 @@ namespace SearchAndBook.ViewModels
 {
     public class FilteredSearchViewModel : INotifyPropertyChanged
     {
-        private readonly ISearchAndFilterService _searchService;
-        private readonly IGeoService _geoService;
+        private readonly InterfaceSearchAndFilterService _searchService;
+        private readonly InterfaceGeographicalService _geographicalService;
 
         public DateTimeOffset Today => DateTimeOffset.Now.Date;
         public DateTimeOffset Tomorrow => DateTimeOffset.Now.Date.AddDays(1);
@@ -197,9 +197,9 @@ namespace SearchAndBook.ViewModels
         public event Action? OnGoBackRequest;
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public FilteredSearchViewModel(ISearchAndFilterService searchService, IGeoService geoService)
+        public FilteredSearchViewModel(InterfaceSearchAndFilterService searchService, InterfaceGeographicalService geographicalService)
         {
-            _geoService = geoService ?? throw new ArgumentNullException(nameof(geoService));
+            _geographicalService = geographicalService ?? throw new ArgumentNullException(nameof(geographicalService));
             _searchService = searchService ?? throw new ArgumentNullException(nameof(searchService));
 
             CurrentFilter = new FilterCriteria();
@@ -211,7 +211,7 @@ namespace SearchAndBook.ViewModels
             SelectedStartDate = null;
             SelectedEndDate = null;
 
-            SearchCommand = new RelayCommand(_ => Search(CurrentFilter));
+            SearchCommand = new RelayCommand(_ => SearchGamesByFilter(CurrentFilter));
             NextPageCommand = new RelayCommand(_ => NextPage());
             PreviousPageCommand = new RelayCommand(_ => PreviousPage());
             GoBackCommand = new RelayCommand(_ => GoBack());
@@ -265,7 +265,7 @@ namespace SearchAndBook.ViewModels
                     SelectedEndDate = null;
                 }
 
-                Search(CurrentFilter);
+                SearchGamesByFilter(CurrentFilter);
             }
             catch (Exception ex)
             {
@@ -299,7 +299,7 @@ namespace SearchAndBook.ViewModels
         {
             try
             {
-                BaseResults = _searchService.Search(searchCriteria) ?? Array.Empty<GameDTO>();
+                BaseResults = _searchService.SearchGamesByFilter(searchCriteria) ?? Array.Empty<GameDTO>();
                 DisplayedResults = BaseResults;
                 Games = DisplayedResults.ToList();
                 CurrentPage = 1;
@@ -563,7 +563,7 @@ namespace SearchAndBook.ViewModels
 
                 if (CurrentFilter.SortOption == SortOption.Location)
                 {
-                    Search(CurrentFilter);
+                    SearchGamesByFilter(CurrentFilter);
                 }
                 else
                 {
@@ -595,7 +595,7 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public void Search(FilterCriteria criteria)
+        public void SearchGamesByFilter(FilterCriteria criteria)
         {
             try
             {
@@ -609,7 +609,7 @@ namespace SearchAndBook.ViewModels
                 }
 
                 UpdateAvailabilityRange();
-                Games = _searchService.Search(criteria)?.ToList() ?? new List<GameDTO>();
+                Games = _searchService.SearchGamesByFilter(criteria)?.ToList() ?? new List<GameDTO>();
                 DisplayedResults = Games.ToArray();
                 BaseResults = DisplayedResults;
                 CurrentPage = 1;
@@ -758,7 +758,7 @@ namespace SearchAndBook.ViewModels
 
                 if (!string.IsNullOrWhiteSpace(input) && input.Length >= 2) // Wait until they type 2 letters
                 {
-                    var matches = _geoService.GetCitySuggestions(input);
+                    var matches = _geographicalService.GetCitySuggestions(input);
                     foreach (var match in matches)
                     {
                         CitySuggestions.Add(match);

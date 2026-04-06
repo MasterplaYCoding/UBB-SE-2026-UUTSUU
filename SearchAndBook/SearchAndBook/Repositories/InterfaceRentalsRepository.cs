@@ -3,7 +3,7 @@ using SearchAndBook.Domain;
 
 namespace SearchAndBook.Repositories
 {
-    public interface IRentalsRepository : IRepository<TimeRange>
+    public interface InterfaceRentalsRepository : IRepository<TimeRange>
     {
         /// <summary>
         /// Retrieves unavailable rental time ranges for a specific game.

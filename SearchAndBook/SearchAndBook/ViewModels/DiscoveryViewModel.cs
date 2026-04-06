@@ -15,8 +15,8 @@ namespace SearchAndBook.ViewModels
 {
     public class DiscoveryViewModel : INotifyPropertyChanged
     {
-        private readonly ISearchAndFilterService _searchService;
-        private readonly IGeoService _geoService;
+        private readonly InterfaceSearchAndFilterService _searchService;
+        private readonly InterfaceGeographicalService _geographicalService;
 
         private const int PageSize = 10;
 
@@ -134,17 +134,17 @@ namespace SearchAndBook.ViewModels
         public event Action<string>? OnErrorOccurred;
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public DiscoveryViewModel(ISearchAndFilterService searchService, IGeoService geoService)
+        public DiscoveryViewModel(InterfaceSearchAndFilterService searchService, InterfaceGeographicalService geographicalService)
         {
             _searchService = searchService;
-            _geoService = geoService;
+            _geographicalService = geographicalService;
 
             _selectedStartDate = null;
             _selectedEndDate = null;
 
             NextPageCommand = new RelayCommand(_ => NextPage());
             PreviousPageCommand = new RelayCommand(_ => PreviousPage());
-            SearchCommand = new RelayCommand(_ => Search(Filter));
+            SearchCommand = new RelayCommand(_ => SearchGamesByFilter(Filter));
 
             try
             {
@@ -164,8 +164,8 @@ namespace SearchAndBook.ViewModels
             {
                 int userId = SessionContext.GetInstance().UserId;
 
-                GamesAvailableTonight = _searchService.GetFeedAvailableTonight(userId).ToList();
-                GamesOthers = _searchService.GetFeedOthers(userId).ToList();
+                GamesAvailableTonight = _searchService.GetGamesFeedAvailableTonightByUser(userId).ToList();
+                GamesOthers = _searchService.GetOtherGamesFeedByUser(userId).ToList();
 
                 await LoadImagesForGames(GamesAvailableTonight);
                 await LoadImagesForGames(GamesOthers);
@@ -293,7 +293,7 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public void Search(FilterCriteria criteria)
+        public void SearchGamesByFilter(FilterCriteria criteria)
         {
             try
             {
@@ -344,7 +344,7 @@ namespace SearchAndBook.ViewModels
 
                 if (!string.IsNullOrWhiteSpace(input) && input.Length >= 2)
                 {
-                    var matches = _geoService.GetCitySuggestions(input);
+                    var matches = _geographicalService.GetCitySuggestions(input);
                     foreach (var match in matches)
                         CitySuggestions.Add(match);
                 }

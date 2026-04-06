@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SearchAndBook.Services
 {
-    public interface IGeoService
+    public interface InterfaceGeographicalService
     {
         // Initializes the service by reading the text file
         Task InitializeAsync();
