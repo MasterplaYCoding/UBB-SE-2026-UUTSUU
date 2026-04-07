@@ -41,5 +41,9 @@ namespace SearchAndBook.Services
 
         /// <exception cref="InvalidOperationException">Thrown when filtering fails.</exception>
         GameDTO[] ApplyFilters(GameDTO[] games, FilterCriteria filter);
+
+
+        (List<GameDTO> availableTonight, List<GameDTO> others, int totalCount)
+        GetDiscoveryFeedPaged(int userId, int page, int pageSize);
     }
 }

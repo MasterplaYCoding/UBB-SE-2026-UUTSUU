@@ -750,13 +750,14 @@ namespace SearchAndBook.ViewModels
         }
 
         // 3. The method that talks to your dictionary
+        private const int MinimumCitySearchLength = 2;
         private void UpdateCitySuggestions(string input)
         {
             try
             {
                 CitySuggestions.Clear();
 
-                if (!string.IsNullOrWhiteSpace(input) && input.Length >= 2) // Wait until they type 2 letters
+                if (!string.IsNullOrWhiteSpace(input) && input.Length >= MinimumCitySearchLength) // Wait until they type 2 letters
                 {
                     var matches = _geographicalService.GetCitySuggestions(input);
                     foreach (var match in matches)

@@ -1,4 +1,5 @@
-﻿using SearchAndBook.Repositories;
+﻿using SearchAndBook.Domain;
+using SearchAndBook.Repositories;
 using SearchAndBook.Shared;
 using SearchAndBook.Utils;
 using System;
@@ -73,6 +74,23 @@ namespace SearchAndBook.Services
             }
         }
 
+
+        //pentru ca in codul curent avem in functiile GetGamesFeedAvailableTonightByUser si GetOtherGamesFeedByUser cu cod duplicat 
+
+
+        private GameDTO MapToGameDTO(Game game, User? owner)
+        {
+            return new GameDTO
+            {
+                GameId = game.GameId,
+                Name = game.Name,
+                Image = game.Image,
+                Price = game.Price,
+                City = owner?.City ?? string.Empty,
+                MaximumPlayerNumber = game.MaximumPlayerNumber,
+                MinimumPlayerNumber = game.MinimumPlayerNumber
+            };
+        }
         /// <summary>
         /// Retrieves a feed of games available tonight for the specified user.
         /// </summary>
@@ -83,23 +101,10 @@ namespace SearchAndBook.Services
             try
             {
                 var games = gamesRepository.GetGamesForFeedAvailableTonight(userId);
-
-                return games.Select(game =>
-                {
-                    var owner = usersRepository.Get(game.OwnerId);
-
-                    return new GameDTO
-                    {
-                        GameId = game.GameId,
-                        Name = game.Name,
-                        Image = game.Image,
-                        Price = game.Price,
-                        City = owner?.City ?? string.Empty,
-                        MinimumPlayerNumber = game.MinimumPlayerNumber,
-                        MaximumPlayerNumber = game.MaximumPlayerNumber
-                    };
-                }).ToArray();
+                //aici am moficat, nu am mai duplicat codul din functia MapToGameDTO
+                return games.Select(game => MapToGameDTO(game, usersRepository.Get(game.OwnerId))).ToArray();
             }
+
             catch (Exception ex)
             {
                 throw new InvalidOperationException("Failed to retrieve <<Available tonight>> feed.", ex);
@@ -116,22 +121,8 @@ namespace SearchAndBook.Services
             try
             {
                 var games = gamesRepository.GetGamesForFeedOthers(userId);
+                return games.Select(game => MapToGameDTO(game, usersRepository.Get(game.OwnerId))).ToArray();
 
-                return games.Select(g =>
-                {
-                    var owner = usersRepository.Get(g.OwnerId);
-
-                    return new GameDTO
-                    {
-                        GameId = g.GameId,
-                        Name = g.Name,
-                        Image = g.Image,
-                        Price = g.Price,
-                        City = owner?.City ?? string.Empty,
-                        MinimumPlayerNumber = g.MinimumPlayerNumber,
-                        MaximumPlayerNumber = g.MaximumPlayerNumber
-                    };
-                }).ToArray();
             }
             catch (Exception ex)
             {
@@ -222,6 +213,32 @@ namespace SearchAndBook.Services
             {
                 throw new InvalidOperationException("Failed to apply filters.", ex);
             }
+        }
+
+
+        public (List<GameDTO> availableTonight, List<GameDTO> others, int totalCount)
+     GetDiscoveryFeedPaged(int userId, int page, int pageSize)
+        {
+            var availableTonight = GetGamesFeedAvailableTonightByUser(userId).ToList();
+            var others = GetOtherGamesFeedByUser(userId).ToList();
+
+            var combined = availableTonight.Concat(others).ToList();
+            var totalCount = combined.Count;
+
+            var paged = combined
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var pagedAvailable = paged
+                .Where(g => availableTonight.Any(a => a.GameId == g.GameId))
+                .ToList();
+
+            var pagedOthers = paged
+                .Where(g => others.Any(o => o.GameId == g.GameId))
+                .ToList();
+
+            return (pagedAvailable, pagedOthers, totalCount);
         }
     }
 }

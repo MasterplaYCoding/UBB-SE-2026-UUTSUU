@@ -6,6 +6,7 @@ namespace SearchAndBook.Shared
     {
         private static SessionContext? _instance;
 
+        public const int AnonimousUserId = -1;
         public int UserId { get; set; }
         public bool IsLoggedIn { get; set; }
 
@@ -35,7 +36,7 @@ namespace SearchAndBook.Shared
 
         public void Clear()
         {
-            UserId = -1;
+            UserId =AnonimousUserId;
             IsLoggedIn = false;
         }
     }

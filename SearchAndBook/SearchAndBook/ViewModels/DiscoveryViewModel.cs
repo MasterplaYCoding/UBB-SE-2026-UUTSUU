@@ -23,9 +23,6 @@ namespace SearchAndBook.ViewModels
         public List<GameDTO> GamesAvailableTonight { get; set; } = new();
         public List<GameDTO> GamesOthers { get; set; } = new();
 
-        public ObservableCollection<GameDTO> PagedGamesAvailableTonight { get; } = new();
-        public ObservableCollection<GameDTO> PagedGamesOthers { get; } = new();
-
         public bool IsEndDateEnabled => SelectedStartDate.HasValue;
 
         public event Action? OnPageChanged;
@@ -109,7 +106,8 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        private int TotalGamesCount => GamesAvailableTonight.Count + GamesOthers.Count;
+        private int _totalGamesCount;
+        private int TotalGamesCount => _totalGamesCount;
 
         public int TotalPages
         {
@@ -121,9 +119,6 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public bool HasPagedAvailableTonight => PagedGamesAvailableTonight.Any();
-        public bool HasPagedOthers => PagedGamesOthers.Any();
-        public string OthersTitle => HasPagedOthers ? "Others" : " ";
 
         public ICommand NextPageCommand { get; }
         public ICommand PreviousPageCommand { get; }
@@ -164,18 +159,21 @@ namespace SearchAndBook.ViewModels
             {
                 int userId = SessionContext.GetInstance().UserId;
 
-                GamesAvailableTonight = _searchService.GetGamesFeedAvailableTonightByUser(userId).ToList();
-                GamesOthers = _searchService.GetOtherGamesFeedByUser(userId).ToList();
+                var result = _searchService.GetDiscoveryFeedPaged(userId, CurrentPage, PageSize);
+
+                GamesAvailableTonight = result.availableTonight;
+                GamesOthers = result.others;
+                _totalGamesCount = result.totalCount;
 
                 await LoadImagesForGames(GamesAvailableTonight);
                 await LoadImagesForGames(GamesOthers);
 
-                CurrentPage = 1;
-                RefreshPage();
                 OnPropertyChanged(nameof(TotalPages));
                 OnPropertyChanged(nameof(GamesAvailableTonight));
                 OnPropertyChanged(nameof(GamesOthers));
                 OnPropertyChanged(nameof(NoResultsMessage));
+
+               
             }
             catch (Exception ex)
             {
@@ -215,7 +213,7 @@ namespace SearchAndBook.ViewModels
                 if (CurrentPage * PageSize < TotalGamesCount)
                 {
                     CurrentPage++;
-                    RefreshPage();
+                    LoadDiscoveryFeed();
                     OnPageChanged?.Invoke();
                 }
             }
@@ -232,7 +230,7 @@ namespace SearchAndBook.ViewModels
                 if (CurrentPage > 1)
                 {
                     CurrentPage--;
-                    RefreshPage();
+                    LoadDiscoveryFeed();
                     OnPageChanged?.Invoke();
                 }
             }
@@ -242,56 +240,7 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        private void RefreshPage()
-        {
-            try
-            {
-                PagedGamesAvailableTonight.Clear();
-                PagedGamesOthers.Clear();
-
-                int globalStart = (CurrentPage - 1) * PageSize;
-                int remaining = PageSize;
-
-                if (globalStart < GamesAvailableTonight.Count)
-                {
-                    var availableSlice = GamesAvailableTonight
-                        .Skip(globalStart)
-                        .Take(remaining)
-                        .ToList();
-
-                    foreach (var game in availableSlice)
-                        PagedGamesAvailableTonight.Add(game);
-
-                    remaining -= availableSlice.Count;
-                    globalStart = 0;
-                }
-                else
-                {
-                    globalStart -= GamesAvailableTonight.Count;
-                }
-
-                if (remaining > 0)
-                {
-                    var othersSlice = GamesOthers
-                        .Skip(globalStart)
-                        .Take(remaining)
-                        .ToList();
-
-                    foreach (var game in othersSlice)
-                        PagedGamesOthers.Add(game);
-                }
-
-                OnPropertyChanged(nameof(PagedGamesAvailableTonight));
-                OnPropertyChanged(nameof(PagedGamesOthers));
-                OnPropertyChanged(nameof(HasPagedAvailableTonight));
-                OnPropertyChanged(nameof(HasPagedOthers));
-                OnPropertyChanged(nameof(OthersTitle));
-            }
-            catch (Exception ex)
-            {
-                OnErrorOccurred?.Invoke($"Could not refresh page results. {ex.Message}");
-            }
-        }
+        
 
         public void SearchGamesByFilter(FilterCriteria criteria)
         {
@@ -318,8 +267,7 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public ObservableCollection<string> CitySuggestions { get; } = new();
-
+        
         private string _citySearchText = string.Empty;
         public string CitySearchText
         {
@@ -335,14 +283,15 @@ namespace SearchAndBook.ViewModels
                 }
             }
         }
-
+        private const int MinimumCitySearchLength = 2;
+        public ObservableCollection<string> CitySuggestions { get; } = new();
         private void UpdateCitySuggestions(string input)
         {
             try
             {
                 CitySuggestions.Clear();
 
-                if (!string.IsNullOrWhiteSpace(input) && input.Length >= 2)
+                if (!string.IsNullOrWhiteSpace(input) && input.Length >= MinimumCitySearchLength)
                 {
                     var matches = _geographicalService.GetCitySuggestions(input);
                     foreach (var match in matches)

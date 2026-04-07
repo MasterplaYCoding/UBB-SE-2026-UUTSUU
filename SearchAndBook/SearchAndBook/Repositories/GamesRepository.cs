@@ -26,6 +26,8 @@ namespace SearchAndBook.Repositories;
 
 public class GamesRepository : InterfaceGamesRepository
 {
+    public const int AnonimousUserId = -1;
+
     /// Gets a single game by its database id.
     /// <param name="id">The unique id of the game.</param>
     /// <remarks>
@@ -60,7 +62,7 @@ public class GamesRepository : InterfaceGamesRepository
     {
         try
         {
-            return GetAllActiveGames(-1);
+            return GetAllActiveGames(AnonimousUserId);
         }
         catch (Exception)
         {
