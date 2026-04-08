@@ -96,11 +96,11 @@ namespace SearchAndBook.ViewModels
             {
                 if (Games == null || Games.Count == 0)
                     return 1;
-                return (int)Math.Ceiling((double)Games.Count / PageSize);
+                return (int)Math.Ceiling((double)Games.Count / ItemsPerPage);
             }
         }
 
-        private const int PageSize = 10;
+        private const int ItemsPerPage = 10;
 
         private double _selectedMaximumPrice;
         public double SelectedMaximumPrice
@@ -273,27 +273,7 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        private void UpdateAvailabilityRange()
-        {
-            try
-            {
-                if (SelectedStartDate.HasValue && SelectedEndDate.HasValue && SelectedStartDate.Value <= SelectedEndDate.Value)
-                {
-                    CurrentFilter.AvailabilityRange = new TimeRange(
-                        SelectedStartDate.Value.Date,
-                        SelectedEndDate.Value.Date
-                    );
-                }
-                else
-                {
-                    CurrentFilter.AvailabilityRange = null;
-                }
-            }
-            catch (Exception ex)
-            {
-                RaiseError($"Could not update date range. {ex.Message}");
-            }
-        }
+     
 
         public void LoadSearchResults(FilterCriteria searchCriteria)
         {
@@ -345,13 +325,11 @@ namespace SearchAndBook.ViewModels
         {
             try
             {
-                if (!CurrentFilter.HasValidAvailabilityRange())
-                {
-                    RaiseError("The selected availability range is invalid.");
-                    return;
-                }
+                if (!_searchService.IsValidDateRange(
+                    CurrentFilter.AvailabilityRange?.StartTime,
+                    CurrentFilter.AvailabilityRange?.EndTime))
 
-                DisplayedResults = _searchService.ApplyFilters(BaseResults, CurrentFilter) ?? Array.Empty<GameDTO>();
+                    DisplayedResults = _searchService.ApplyFilters(BaseResults, CurrentFilter) ?? Array.Empty<GameDTO>();
                 Games = DisplayedResults.ToList();
                 CurrentPage = 1;
                 OnPropertyChanged(nameof(TotalPages));
@@ -368,21 +346,22 @@ namespace SearchAndBook.ViewModels
         {
             try
             {
-                if (!HasValidPlayersValue() || !HasValidDateRange())
+                if (!_searchService.IsValidPlayersCount((int?)SelectedMinimumPlayers) ||
+                    !_searchService.IsValidDateRange(
+                        SelectedStartDate?.DateTime,
+                        SelectedEndDate?.DateTime))
                 {
                     RaiseError("Please enter valid filter values.");
                     return;
                 }
 
-                UpdateAvailabilityRange();
-
-                CurrentFilter.MaximumPrice = SelectedMaximumPrice > 0
-                    ? (decimal?)SelectedMaximumPrice
-                    : null;
-
-                CurrentFilter.PlayerCount = SelectedMinimumPlayers > 0
-                    ? (int?)SelectedMinimumPlayers
-                    : null;
+                _searchService.UpdateFilterFromUI(
+                    CurrentFilter,
+                    SelectedMaximumPrice,
+                    SelectedMinimumPlayers,
+                    SelectedStartDate?.DateTime,
+                    SelectedEndDate?.DateTime
+                );
 
                 ApplyFilters();
             }
@@ -392,21 +371,7 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public bool HasValidPlayersValue()
-        {
-            return SelectedMinimumPlayers >= 0;
-        }
-
-        public bool HasValidDateRange()
-        {
-            if (!SelectedStartDate.HasValue && !SelectedEndDate.HasValue)
-                return true;
-
-            if (!SelectedStartDate.HasValue || !SelectedEndDate.HasValue)
-                return false;
-
-            return SelectedStartDate.Value < SelectedEndDate.Value;
-        }
+        
 
         public void RemoveNameFilter()
         {
@@ -602,13 +567,14 @@ namespace SearchAndBook.ViewModels
                 if (criteria == null)
                     throw new ArgumentNullException(nameof(criteria));
 
-                if (!HasValidDateRange())
+                if (!_searchService.IsValidDateRange(
+                    SelectedStartDate?.DateTime,
+                    SelectedEndDate?.DateTime))
                 {
                     RaiseError("Please select a valid date range.");
                     return;
                 }
 
-                UpdateAvailabilityRange();
                 Games = _searchService.SearchGamesByFilter(criteria)?.ToList() ?? new List<GameDTO>();
                 DisplayedResults = Games.ToArray();
                 BaseResults = DisplayedResults;
@@ -632,7 +598,7 @@ namespace SearchAndBook.ViewModels
         {
             try
             {
-                if (CurrentPage * PageSize < Games.Count)
+                if (CurrentPage * ItemsPerPage < Games.Count)
                 {
                     CurrentPage++;
                     RefreshPage();
@@ -667,8 +633,8 @@ namespace SearchAndBook.ViewModels
                 GamesShown.Clear();
 
                 var pageListings = Games
-                    .Skip((CurrentPage - 1) * PageSize)
-                    .Take(PageSize)
+                    .Skip((CurrentPage - 1) * ItemsPerPage)
+                    .Take(ItemsPerPage)
                     .ToList();
 
                 foreach (var game in pageListings)
@@ -750,14 +716,14 @@ namespace SearchAndBook.ViewModels
         }
 
         // 3. The method that talks to your dictionary
-        private const int MinimumCitySearchLength = 2;
+        private const int MinimumCharactersForCitySearch = 2;
         private void UpdateCitySuggestions(string input)
         {
             try
             {
                 CitySuggestions.Clear();
 
-                if (!string.IsNullOrWhiteSpace(input) && input.Length >= MinimumCitySearchLength) // Wait until they type 2 letters
+                if (!string.IsNullOrWhiteSpace(input) && input.Length >= MinimumCharactersForCitySearch) // Wait until they type 2 letters
                 {
                     var matches = _geographicalService.GetCitySuggestions(input);
                     foreach (var match in matches)
