@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SearchAndBook\SearchAndBook.csproj"
-                      AdditionalProperties="DisableWindowsAppSdkAutoInitialize=true" />
+                      AdditionalProperties="WindowsAppSdkBootstrapInitialize=false;WindowsAppSdkDeploymentManagerInitialize=false;WindowsAppSdkUndockedRegFreeWinRTInitialize=false;WindowsAppSdkCompatibilityInitialize=false" />
   </ItemGroup>
 
   <ItemGroup>

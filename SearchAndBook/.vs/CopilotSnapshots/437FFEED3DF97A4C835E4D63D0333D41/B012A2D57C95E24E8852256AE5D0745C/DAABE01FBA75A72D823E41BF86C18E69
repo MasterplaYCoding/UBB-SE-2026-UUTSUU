@@ -328,12 +328,8 @@ namespace SearchAndBook.ViewModels
                 if (!_searchService.IsValidDateRange(
                     CurrentFilter.AvailabilityRange?.StartTime,
                     CurrentFilter.AvailabilityRange?.EndTime))
-                {
-                    RaiseError("Please select a valid date range.");
-                    return;
-                }
 
-                DisplayedResults = _searchService.ApplyFilters(BaseResults, CurrentFilter) ?? Array.Empty<GameDTO>();
+                    DisplayedResults = _searchService.ApplyFilters(BaseResults, CurrentFilter) ?? Array.Empty<GameDTO>();
                 Games = DisplayedResults.ToList();
                 CurrentPage = 1;
                 OnPropertyChanged(nameof(TotalPages));

@@ -4,10 +4,6 @@
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <WindowsAppSdkBootstrapInitialize>false</WindowsAppSdkBootstrapInitialize>
-    <WindowsAppSdkDeploymentManagerInitialize>false</WindowsAppSdkDeploymentManagerInitialize>
-    <WindowsAppSdkUndockedRegFreeWinRTInitialize>false</WindowsAppSdkUndockedRegFreeWinRTInitialize>
-    <WindowsAppSdkCompatibilityInitialize>false</WindowsAppSdkCompatibilityInitialize>
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
@@ -23,8 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SearchAndBook\SearchAndBook.csproj"
-                      AdditionalProperties="DisableWindowsAppSdkAutoInitialize=true" />
+    <ProjectReference Include="..\SearchAndBook\SearchAndBook.csproj" />
   </ItemGroup>
 
   <ItemGroup>

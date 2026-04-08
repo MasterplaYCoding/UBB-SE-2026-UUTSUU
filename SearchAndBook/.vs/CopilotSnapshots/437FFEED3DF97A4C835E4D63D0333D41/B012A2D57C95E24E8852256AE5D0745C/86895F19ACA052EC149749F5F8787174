@@ -19,9 +19,6 @@ public class FilterCriteria
 
     public void Reset()
     {
-        Name = null;
-        City = null;
-        AvailabilityRange = null;
         MaximumPrice = null;
         PlayerCount = null;
         SortOption = SortOption.None;

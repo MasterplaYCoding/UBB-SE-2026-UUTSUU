@@ -23,8 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SearchAndBook\SearchAndBook.csproj"
-                      AdditionalProperties="DisableWindowsAppSdkAutoInitialize=true" />
+    <ProjectReference Include="..\SearchAndBook\SearchAndBook.csproj" />
   </ItemGroup>
 
   <ItemGroup>
