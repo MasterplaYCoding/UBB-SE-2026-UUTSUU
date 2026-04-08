@@ -42,5 +42,7 @@ namespace SearchAndBook.Services
         /// Thrown when the availability check fails.
         /// </exception>
         bool CheckAvailability(int gameId, TimeRange range);
+        decimal CalculateTotalPrice(decimal price, TimeRange timeRange);
+        int CalculateNumberOfDays(TimeRange selectedTimeRange);
     }
 }

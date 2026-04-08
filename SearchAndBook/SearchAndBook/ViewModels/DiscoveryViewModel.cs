@@ -18,7 +18,7 @@ namespace SearchAndBook.ViewModels
         private readonly InterfaceSearchAndFilterService _searchService;
         private readonly InterfaceGeographicalService _geographicalService;
 
-        private const int PageSize = 10;
+        private const int ItemsPerPage = 10;
 
         public List<GameDTO> GamesAvailableTonight { get; set; } = new();
         public List<GameDTO> GamesOthers { get; set; } = new();
@@ -115,7 +115,7 @@ namespace SearchAndBook.ViewModels
             {
                 if (TotalGamesCount == 0)
                     return 1;
-                return (int)Math.Ceiling((double)TotalGamesCount / PageSize);
+                return (int)Math.Ceiling((double)TotalGamesCount / ItemsPerPage);
             }
         }
 
@@ -159,7 +159,7 @@ namespace SearchAndBook.ViewModels
             {
                 int userId = SessionContext.GetInstance().UserId;
 
-                var result = _searchService.GetDiscoveryFeedPaged(userId, CurrentPage, PageSize);
+                var result = _searchService.GetDiscoveryFeedPaged(userId, CurrentPage, ItemsPerPage);
 
                 GamesAvailableTonight = result.availableTonight;
                 GamesOthers = result.others;
@@ -210,7 +210,7 @@ namespace SearchAndBook.ViewModels
         {
             try
             {
-                if (CurrentPage * PageSize < TotalGamesCount)
+                if (CurrentPage * ItemsPerPage < TotalGamesCount)
                 {
                     CurrentPage++;
                     LoadDiscoveryFeed();
@@ -246,8 +246,12 @@ namespace SearchAndBook.ViewModels
         {
             try
             {
-                if (!HasValidDateRange())
+                if (!_searchService.IsValidDateRange(
+                    SelectedStartDate?.DateTime,
+                    SelectedEndDate?.DateTime))
+                {
                     return;
+                }
 
                 Filter.Name = criteria.Name;
                 Filter.City = criteria.City;
@@ -332,23 +336,6 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public bool HasValidDateRange()
-        {
-            try
-            {
-                if (!SelectedStartDate.HasValue && !SelectedEndDate.HasValue)
-                    return true;
-
-                if (!SelectedStartDate.HasValue || !SelectedEndDate.HasValue)
-                    return false;
-
-                return SelectedStartDate.Value <= SelectedEndDate.Value;
-            }
-            catch (Exception ex)
-            {
-                OnErrorOccurred?.Invoke($"Could not validate date range. {ex.Message}");
-                return false;
-            }
-        }
+       
     }
 }

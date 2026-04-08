@@ -44,21 +44,33 @@ namespace SearchAndBook.Services
                 var games = gamesRepository.GetGamesByFilter(filter);
                 filter.City = originalCity;
 
-                GameDTO[] result = games.Select(game =>
-                {
-                    var owner = usersRepository.Get(game.OwnerId);
+                var resultList = new List<GameDTO>();
+var usersCache = new Dictionary<int, User>();
 
-                    return new GameDTO
-                    {
-                        GameId = game.GameId,
-                        Name = game.Name,
-                        Image = game.Image,
-                        Price = game.Price,
-                        City = owner?.City ?? string.Empty,
-                        MaximumPlayerNumber = game.MaximumPlayerNumber,
-                        MinimumPlayerNumber = game.MinimumPlayerNumber
-                    };
-                }).ToArray();
+foreach (var game in games)
+{
+    if (!usersCache.ContainsKey(game.OwnerId))
+    {
+        usersCache[game.OwnerId] = usersRepository.Get(game.OwnerId);
+    }
+
+    var owner = usersCache[game.OwnerId];
+
+    var gameDto = new GameDTO
+    {
+        GameId = game.GameId,
+        Name = game.Name,
+        Image = game.Image,
+        Price = game.Price,
+        City = owner != null ? owner.City : string.Empty,
+        MaximumPlayerNumber = game.MaximumPlayerNumber,
+        MinimumPlayerNumber = game.MinimumPlayerNumber
+    };
+
+    resultList.Add(gameDto);
+}
+
+GameDTO[] result = resultList.ToArray();
 
                 //// sorting by distance
 
@@ -239,6 +251,59 @@ namespace SearchAndBook.Services
                 .ToList();
 
             return (pagedAvailable, pagedOthers, totalCount);
+        }
+
+
+        public bool IsValidDateRange(DateTime? start, DateTime? end)
+        {
+            if (!start.HasValue && !end.HasValue)
+                return true;
+
+            if (!start.HasValue || !end.HasValue)
+                return false;
+
+            return start.Value <= end.Value;
+        }
+
+        public bool IsValidPlayersCount(int? players)
+        {
+            if (!players.HasValue)
+                return true;
+
+            return players.Value >= 0;
+        }
+
+
+        public void UpdateFilterFromUI(FilterCriteria filter,double selectedMaxPrice,double selectedMinPlayers,DateTime? startDate,DateTime? endDate)
+        {
+            // price
+            filter.MaximumPrice = selectedMaxPrice > 0
+                ? (decimal?)selectedMaxPrice
+                : null;
+
+            // players
+            filter.PlayerCount = selectedMinPlayers > 0
+                ? (int?)selectedMinPlayers
+                : null;
+
+            // date
+            if (IsValidDateRange(startDate, endDate))
+            {
+                if (startDate.HasValue && endDate.HasValue)
+                {
+                    filter.AvailabilityRange = new TimeRange(
+                        startDate.Value,
+                        endDate.Value);
+                }
+                else
+                {
+                    filter.AvailabilityRange = null;
+                }
+            }
+            else
+            {
+                filter.AvailabilityRange = null;
+            }
         }
     }
 }

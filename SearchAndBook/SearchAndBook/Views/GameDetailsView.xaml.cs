@@ -14,34 +14,38 @@ namespace SearchAndBook.Views
 {
     public sealed partial class GameDetailsView : Page
     {
+
+        private DateTime? _selectedDateStart;
+        private DateTime? _selectedDateEnd;
+
         public GameDetailsView()
         {
             InitializeComponent();
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override void OnNavigatedTo(NavigationEventArgs eventArgs)
         {
-            base.OnNavigatedTo(e);
-            if (e.Parameter is not int gameId) { return; }
+            base.OnNavigatedTo(eventArgs);
+            if (eventArgs.Parameter is not int gameId) { return; }
 
-            var gameRepo = new GamesRepository();
-            var rentalRepo = new RentalsRepository();
-            var userRepo = new UsersRepository();
-            var service = new BookingService(gameRepo, rentalRepo, userRepo);
-            var vm = new GameDetailsViewModel(service, gameId);
+            var gameRepository = new GamesRepository();
+            var rentalRepository = new RentalsRepository();
+            var userRepository = new UsersRepository();
+            var service = new BookingService(gameRepository, rentalRepository, userRepository);
+            var viewModel = new GameDetailsViewModel(service, gameId);
 
-            vm.OnGoBackRequested += () =>
+            viewModel.OnGoBackRequested += () =>
             {
                 if (Frame.CanGoBack)
                     Frame.GoBack();
             };
 
-            vm.OnStartBookingRequested += (bookingDto, range) =>
+            viewModel.OnStartBookingRequested += (bookingDto, range) =>
             {
                 Frame.Navigate(typeof(ConfirmBookingView), (bookingDto, range));
             };
 
-            vm.OnMessageRequested += async message =>
+            viewModel.OnMessageRequested += async message =>
             {
                 var dialog = new ContentDialog
                 {
@@ -54,16 +58,16 @@ namespace SearchAndBook.Views
                 await dialog.ShowAsync();
             };
 
-            this.DataContext = vm;
+            this.DataContext = viewModel;
         }
 
-        private void OnBackClicked(object sender, RoutedEventArgs e)
+        private void OnBackClicked(object sender, RoutedEventArgs eventArgs)
         {
-            var vm = (GameDetailsViewModel)this.DataContext;
-            vm.GoBack();
+            var viewModel = (GameDetailsViewModel) this.DataContext;
+            viewModel.GoBack();
         }
 
-        private async void OnBookClicked(object sender, RoutedEventArgs e)
+        private async void OnBookClicked(object sender, RoutedEventArgs eventArgs)
         {
             var selectedDates = RentalCalendar.SelectedDates;
             if (selectedDates.Count == 0)
@@ -79,43 +83,40 @@ namespace SearchAndBook.Views
                 return;
             }
 
-            var vm = (GameDetailsViewModel)this.DataContext;
-            var sorted = selectedDates
-               .Select(d => d.DateTime)
-               .OrderBy(d => d)
+            var viewModel = (GameDetailsViewModel)this.DataContext;
+            var sortedDates = selectedDates
+               .Select(date => date.DateTime)
+               .OrderBy(date => date)
                .ToList();
-            var range = new TimeRange(sorted[0], sorted[selectedDates.Count - 1]);
-            vm.StartBooking(range);
+            var dateRange = new TimeRange(sortedDates[0], sortedDates[selectedDates.Count - 1]);
+            viewModel.StartBooking(dateRange);
         }
 
-        private DateTime? _selectedStart;
-        private DateTime? _selectedEnd;
-
-        private void OnDatesChanged(CalendarView sender, CalendarViewSelectedDatesChangedEventArgs e)
+        private void OnDatesChanged(CalendarView sender, CalendarViewSelectedDatesChangedEventArgs eventArgs)
         {
-            if (this.DataContext is not GameDetailsViewModel vm)
+            if (this.DataContext is not GameDetailsViewModel viewModel)
                 return;
 
             var selectedDates = RentalCalendar.SelectedDates;
 
             if (selectedDates.Count > 2)
             {
-                var toKeep = new List<DateTimeOffset>
-        {
-            selectedDates[selectedDates.Count - 2],
-            selectedDates[selectedDates.Count - 1]
-        };
+                var datesToKeep = new List<DateTimeOffset>
+                    {
+                        selectedDates[selectedDates.Count - 2],
+                        selectedDates[selectedDates.Count - 1]
+                    };
                 RentalCalendar.SelectedDates.Clear();
-                foreach (var date in toKeep)
+                foreach (var date in datesToKeep)
                     RentalCalendar.SelectedDates.Add(date);
                 return;
             }
 
             if (selectedDates.Count < 1)
             {
-                _selectedStart = null;
-                _selectedEnd = null;
-                ForceRedraw();
+                _selectedDateStart = null;
+                _selectedDateEnd = null;
+                ForceRedrawCalendar();
                 return;
             }
 
@@ -124,40 +125,40 @@ namespace SearchAndBook.Views
                 .OrderBy(d => d)
                 .ToList();
 
-            _selectedStart = sorted[0];
-            _selectedEnd = sorted[sorted.Count - 1];
+            _selectedDateStart = sorted[0];
+            _selectedDateEnd = sorted[sorted.Count - 1];
 
-            var range = new TimeRange(_selectedStart.Value, _selectedEnd.Value);
-            vm.CalculatePrice(range);
+            var range = new TimeRange(_selectedDateStart.Value, _selectedDateEnd.Value);
+            viewModel.CalculatePrice(range);
 
-            ForceRedraw();
+            ForceRedrawCalendar();
         }
 
-        private void ForceRedraw()
+        private void ForceRedrawCalendar()
         {
-            var current = RentalCalendar.MinDate;
-            RentalCalendar.MinDate = current.AddDays(1);
-            RentalCalendar.MinDate = current;
+            var currentDate = RentalCalendar.MinDate;
+            RentalCalendar.MinDate = currentDate.AddDays(1);
+            RentalCalendar.MinDate = currentDate;
         }
 
-        private void OnDayItemChanging(CalendarView sender, CalendarViewDayItemChangingEventArgs e)
+        private void OnDayItemChanging(CalendarView sender, CalendarViewDayItemChangingEventArgs eventArgs)
         {
-            if (this.DataContext is not GameDetailsViewModel vm)
+            if (this.DataContext is not GameDetailsViewModel viewModel)
                 return;
 
-            var date = e.Item.Date.Date;
+            var date = eventArgs.Item.Date.Date;
             var today = DateTimeOffset.Now.Date;
 
             if (date < today)
             {
-                e.Item.IsBlackout = true;
+                eventArgs.Item.IsBlackout = true;
                 return;
             }
 
             bool isUnavailable = false;
-            if (vm.UnavailableTimeRanges != null)
+            if (viewModel.UnavailableTimeRanges != null)
             {
-                foreach (var range in vm.UnavailableTimeRanges)
+                foreach (var range in viewModel.UnavailableTimeRanges)
                 {
                     if (date >= range.StartTime.Date && date <= range.EndTime.Date)
                     {
@@ -169,21 +170,20 @@ namespace SearchAndBook.Views
 
             if (isUnavailable)
             {
-                e.Item.IsBlackout = true;
-                e.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkRed);
+                eventArgs.Item.IsBlackout = true;
+                eventArgs.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkRed);
                 return;
             }
 
-            if (_selectedStart.HasValue && _selectedEnd.HasValue &&
-                date >= _selectedStart.Value.Date && date <= _selectedEnd.Value.Date)
+            if (_selectedDateStart.HasValue && _selectedDateEnd.HasValue &&
+                date >= _selectedDateStart.Value.Date && date <= _selectedDateEnd.Value.Date)
             {
-                e.Item.IsBlackout = false;
-                e.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Goldenrod);
+                eventArgs.Item.IsBlackout = false;
+                eventArgs.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Goldenrod);
                 return;
             }
 
-            e.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkGreen);
+            eventArgs.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkGreen);
         }
-
     }
 }
