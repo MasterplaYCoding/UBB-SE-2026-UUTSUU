@@ -43,7 +43,7 @@ namespace SearchAndBook.Services
         GameDTO[] ApplyFilters(GameDTO[] games, FilterCriteria filter);
 
 
-        (List<GameDTO> availableTonight, List<GameDTO> others, int totalCount)
+        (List<GameDTO> availableTonight, List<GameDTO> others, int totalAvailableGamesCount)
         GetDiscoveryFeedPaged(int userId, int page, int pageSize);
 
         bool IsValidDateRange(DateTime? start, DateTime? end);

@@ -20,8 +20,9 @@ namespace SearchAndBook.ViewModels
 
         private const int ItemsPerPage = 10;
 
-        public List<GameDTO> GamesAvailableTonight { get; set; } = new();
-        public List<GameDTO> GamesOthers { get; set; } = new();
+        public List<GameDTO> AvailableTonightGames { get; set; } = new();
+        public List<GameDTO> OtherAvailableGames { get; set; } = new();
+
 
         public bool IsEndDateEnabled => SelectedStartDate.HasValue;
 
@@ -106,8 +107,8 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        private int _totalGamesCount;
-        private int TotalGamesCount => _totalGamesCount;
+        private int _totalAvailableGamesCount;
+        private int TotalGamesCount => _totalAvailableGamesCount;
 
         public int TotalPages
         {
@@ -121,12 +122,17 @@ namespace SearchAndBook.ViewModels
 
 
         public ICommand NextPageCommand { get; }
+
         public ICommand PreviousPageCommand { get; }
+
         public ICommand SearchCommand { get; }
 
         public event Action<int>? OnGameSelectedRequest;
+
         public event Action<FilterCriteria>? OnSearchRequest;
+
         public event Action<string>? OnErrorOccurred;
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         public DiscoveryViewModel(InterfaceSearchAndFilterService searchService, InterfaceGeographicalService geographicalService)
@@ -137,55 +143,55 @@ namespace SearchAndBook.ViewModels
             _selectedStartDate = null;
             _selectedEndDate = null;
 
-            NextPageCommand = new RelayCommand(_ => NextPage());
-            PreviousPageCommand = new RelayCommand(_ => PreviousPage());
+            NextPageCommand = new RelayCommand(_ => GoToNextPage());
+            PreviousPageCommand = new RelayCommand(_ => GoToPreviousPage());
             SearchCommand = new RelayCommand(_ => SearchGamesByFilter(Filter));
 
             try
             {
-                LoadDiscoveryFeed();
+                LoadPaginatedDiscoveryFeed();
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                OnErrorOccurred?.Invoke($"Could not load discovery feed. {ex.Message}");
+                OnErrorOccurred?.Invoke($"Could not load discovery feed. {exception.Message}");
             }
         }
 
         public string NoResultsMessage => TotalGamesCount == 0 ? "No games available." : "";
 
-        public async void LoadDiscoveryFeed()
+        public async void LoadPaginatedDiscoveryFeed()
         {
             try
             {
-                int userId = SessionContext.GetInstance().UserId;
+                int currentUserId = SessionContext.GetInstance().UserId;
 
-                var result = _searchService.GetDiscoveryFeedPaged(userId, CurrentPage, ItemsPerPage);
+                var discoveryFeedResult = _searchService.GetDiscoveryFeedPaged(currentUserId, CurrentPage, ItemsPerPage);
 
-                GamesAvailableTonight = result.availableTonight;
-                GamesOthers = result.others;
-                _totalGamesCount = result.totalCount;
+                AvailableTonightGames = discoveryFeedResult.availableTonight;
+                OtherAvailableGames = discoveryFeedResult.others;
+                _totalAvailableGamesCount = discoveryFeedResult.totalAvailableGamesCount;
 
-                await LoadImagesForGames(GamesAvailableTonight);
-                await LoadImagesForGames(GamesOthers);
+                await LoadImagesForGames(AvailableTonightGames);
+                await LoadImagesForGames(OtherAvailableGames);
 
                 OnPropertyChanged(nameof(TotalPages));
-                OnPropertyChanged(nameof(GamesAvailableTonight));
-                OnPropertyChanged(nameof(GamesOthers));
+                OnPropertyChanged(nameof(AvailableTonightGames));
+                OnPropertyChanged(nameof(OtherAvailableGames));
                 OnPropertyChanged(nameof(NoResultsMessage));
 
                
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                OnErrorOccurred?.Invoke($"Could not load discovery feed. {ex.Message}");
+                OnErrorOccurred?.Invoke($"Could not load discovery feed. {exception.Message}");
             }
         }
 
-        private async Task LoadImagesForGames(IEnumerable<GameDTO> games)
+        private async Task LoadImagesForGames(IEnumerable<GameDTO> gamesToLoadImagesFor)
         {
             try
             {
-                foreach (var game in games)
+                foreach (var game in gamesToLoadImagesFor)
                 {
                     if (game.Image != null && game.GameImage == null)
                     {
@@ -206,14 +212,14 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public void NextPage()
+        public void GoToNextPage()
         {
             try
             {
                 if (CurrentPage * ItemsPerPage < TotalGamesCount)
                 {
                     CurrentPage++;
-                    LoadDiscoveryFeed();
+                    LoadPaginatedDiscoveryFeed();
                     OnPageChanged?.Invoke();
                 }
             }
@@ -223,14 +229,14 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public void PreviousPage()
+        public void GoToPreviousPage()
         {
             try
             {
                 if (CurrentPage > 1)
                 {
                     CurrentPage--;
-                    LoadDiscoveryFeed();
+                    LoadPaginatedDiscoveryFeed();
                     OnPageChanged?.Invoke();
                 }
             }

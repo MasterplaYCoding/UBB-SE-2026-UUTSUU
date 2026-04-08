@@ -99,7 +99,7 @@
                                 Margin="0,4,0,10"/>
 
                     <!-- AVAILABLE TONIGHT -->
-                    <ListView ItemsSource="{Binding GamesAvailableTonight}"
+                    <ListView ItemsSource="{Binding AvailableTonightGames}"
                               SelectionMode="Single"
                               IsItemClickEnabled="True"
                               ItemClick="Game_Click">
@@ -164,7 +164,7 @@
                                 Margin="0,4,0,10"/>
 
                     <!-- OTHERS -->
-                    <ListView ItemsSource="{Binding GamesOthers}"
+                    <ListView ItemsSource="{Binding OtherAvailableGames}"
                               SelectionMode="Single"
                               IsItemClickEnabled="True"
                               ItemClick="Game_Click">

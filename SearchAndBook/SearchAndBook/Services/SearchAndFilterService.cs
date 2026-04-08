@@ -44,33 +44,33 @@ namespace SearchAndBook.Services
                 var games = gamesRepository.GetGamesByFilter(filter);
                 filter.City = originalCity;
 
-                var resultList = new List<GameDTO>();
-var usersCache = new Dictionary<int, User>();
+                var gameResults = new List<GameDTO>();
+                var ownerCacheById = new Dictionary<int, User>();
 
-foreach (var game in games)
-{
-    if (!usersCache.ContainsKey(game.OwnerId))
-    {
-        usersCache[game.OwnerId] = usersRepository.Get(game.OwnerId);
-    }
+                foreach (var game in games)
+                {
+                    if (!ownerCacheById.ContainsKey(game.OwnerId))
+                    {
+                        ownerCacheById[game.OwnerId] = usersRepository.Get(game.OwnerId);
+                    }
 
-    var owner = usersCache[game.OwnerId];
+                    var gameowner = ownerCacheById[game.OwnerId];
 
-    var gameDto = new GameDTO
-    {
-        GameId = game.GameId,
-        Name = game.Name,
-        Image = game.Image,
-        Price = game.Price,
-        City = owner != null ? owner.City : string.Empty,
-        MaximumPlayerNumber = game.MaximumPlayerNumber,
-        MinimumPlayerNumber = game.MinimumPlayerNumber
-    };
+                    var gameDto = new GameDTO
+                    {
+                        GameId = game.GameId,
+                        Name = game.Name,
+                        Image = game.Image,
+                        Price = game.Price,
+                        City = gameowner != null ? gameowner.City : string.Empty,
+                        MaximumPlayerNumber = game.MaximumPlayerNumber,
+                        MinimumPlayerNumber = game.MinimumPlayerNumber
+                    };
 
-    resultList.Add(gameDto);
-}
+                    gameResults.Add(gameDto);
+                }
 
-GameDTO[] result = resultList.ToArray();
+                GameDTO[] gameResultsAray = gameResults.ToArray();
 
                 //// sorting by distance
 
@@ -78,13 +78,13 @@ GameDTO[] result = resultList.ToArray();
                 //// only runs this code if SortOption is set, so never from feed
 
 
-                return ApplyFilters(result, filter);
+                return ApplyFilters(gameResultsAray, filter);
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException("Failed to search for games.", ex);
+                 throw new InvalidOperationException("Failed to search for games.", ex);
             }
-        }
+}
 
 
         //pentru ca in codul curent avem in functiile GetGamesFeedAvailableTonightByUser si GetOtherGamesFeedByUser cu cod duplicat 
@@ -228,29 +228,82 @@ GameDTO[] result = resultList.ToArray();
         }
 
 
-        public (List<GameDTO> availableTonight, List<GameDTO> others, int totalCount)
-     GetDiscoveryFeedPaged(int userId, int page, int pageSize)
+        public (List<GameDTO> availableTonight, List<GameDTO> others, int totalAvailableGamesCount)
+         GetDiscoveryFeedPaged(int userId, int page, int pageSize)
+         {
+                var availableTonightGames = GetGamesFeedAvailableTonightByUser(userId).ToList();
+                var otherAvailableGames = GetOtherGamesFeedByUser(userId).ToList();
+
+                var allDescoveryFeedGames = availableTonightGames.Concat(otherAvailableGames).ToList();
+                var totalAvailableGamesCount = allDescoveryFeedGames.Count;
+
+                var paginatedGames = allDescoveryFeedGames
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                var pagedAvailableTonightGames = paginatedGames
+                    .Where(g => availableTonightGames.Any(a => a.GameId == g.GameId))
+                    .ToList();
+
+                var pagedOtherGames = paginatedGames
+                    .Where(g => otherAvailableGames.Any(o => o.GameId == g.GameId))
+                    .ToList();
+
+                return (pagedAvailableTonightGames, pagedOtherGames, totalAvailableGamesCount);
+         }
+
+
+        public bool IsValidDateRange(DateTime? start, DateTime? end)
         {
-            var availableTonight = GetGamesFeedAvailableTonightByUser(userId).ToList();
-            var others = GetOtherGamesFeedByUser(userId).ToList();
+            if (!start.HasValue && !end.HasValue)
+                return true;
 
-            var combined = availableTonight.Concat(others).ToList();
-            var totalCount = combined.Count;
+            if (!start.HasValue || !end.HasValue)
+                return false;
 
-            var paged = combined
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+            return start.Value <= end.Value;
+        }
 
-            var pagedAvailable = paged
-                .Where(g => availableTonight.Any(a => a.GameId == g.GameId))
-                .ToList();
+        public bool IsValidPlayersCount(int? players)
+        {
+            if (!players.HasValue)
+                return true;
 
-            var pagedOthers = paged
-                .Where(g => others.Any(o => o.GameId == g.GameId))
-                .ToList();
+            return players.Value >= 0;
+        }
 
-            return (pagedAvailable, pagedOthers, totalCount);
+
+        public void UpdateFilterFromUI(FilterCriteria filter,double selectedMaxPrice,double selectedMinPlayers,DateTime? startDate,DateTime? endDate)
+        {
+            // price
+            filter.MaximumPrice = selectedMaxPrice > 0
+                ? (decimal?)selectedMaxPrice
+                : null;
+
+            // players
+            filter.PlayerCount = selectedMinPlayers > 0
+                ? (int?)selectedMinPlayers
+                : null;
+
+            // date
+            if (IsValidDateRange(startDate, endDate))
+            {
+                if (startDate.HasValue && endDate.HasValue)
+                {
+                    filter.AvailabilityRange = new TimeRange(
+                        startDate.Value,
+                        endDate.Value);
+                }
+                else
+                {
+                    filter.AvailabilityRange = null;
+                }
+            }
+            else
+            {
+                filter.AvailabilityRange = null;
+            }
         }
 
 
