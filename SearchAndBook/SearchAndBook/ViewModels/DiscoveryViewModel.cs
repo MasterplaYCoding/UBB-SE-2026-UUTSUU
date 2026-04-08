@@ -165,11 +165,11 @@ namespace SearchAndBook.ViewModels
             {
                 int currentUserId = SessionContext.GetInstance().UserId;
 
-                var DiscoveryFeedResult = _searchService.GetDiscoveryFeedPaged(currentUserId, CurrentPage, ItemsPerPage);
+                var discoveryFeedResult = _searchService.GetDiscoveryFeedPaged(currentUserId, CurrentPage, ItemsPerPage);
 
-                AvailableTonightGames = DiscoveryFeedResult.availableTonight;
-                OtherAvailableGames = DiscoveryFeedResult.others;
-                _totalAvailableGamesCount = DiscoveryFeedResult.totalAvailableGamesCount;
+                AvailableTonightGames = discoveryFeedResult.availableTonight;
+                OtherAvailableGames = discoveryFeedResult.others;
+                _totalAvailableGamesCount = discoveryFeedResult.totalAvailableGamesCount;
 
                 await LoadImagesForGames(AvailableTonightGames);
                 await LoadImagesForGames(OtherAvailableGames);

@@ -305,5 +305,58 @@ namespace SearchAndBook.Services
                 filter.AvailabilityRange = null;
             }
         }
+
+
+        public bool IsValidDateRange(DateTime? start, DateTime? end)
+        {
+            if (!start.HasValue && !end.HasValue)
+                return true;
+
+            if (!start.HasValue || !end.HasValue)
+                return false;
+
+            return start.Value <= end.Value;
+        }
+
+        public bool IsValidPlayersCount(int? players)
+        {
+            if (!players.HasValue)
+                return true;
+
+            return players.Value >= 0;
+        }
+
+
+        public void UpdateFilterFromUI(FilterCriteria filter,double selectedMaxPrice,double selectedMinPlayers,DateTime? startDate,DateTime? endDate)
+        {
+            // price
+            filter.MaximumPrice = selectedMaxPrice > 0
+                ? (decimal?)selectedMaxPrice
+                : null;
+
+            // players
+            filter.PlayerCount = selectedMinPlayers > 0
+                ? (int?)selectedMinPlayers
+                : null;
+
+            // date
+            if (IsValidDateRange(startDate, endDate))
+            {
+                if (startDate.HasValue && endDate.HasValue)
+                {
+                    filter.AvailabilityRange = new TimeRange(
+                        startDate.Value,
+                        endDate.Value);
+                }
+                else
+                {
+                    filter.AvailabilityRange = null;
+                }
+            }
+            else
+            {
+                filter.AvailabilityRange = null;
+            }
+        }
     }
 }
