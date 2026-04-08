@@ -135,16 +135,16 @@ public class GamesRepository : InterfaceGamesRepository
         {
             var games = new List<Game>();
 
-            var today = DateTime.Today;
-            var tomorrow = today.AddDays(1);
+            var todayDate = DateTime.Today;
+            var tomorrowDate = todayDate.AddDays(1);
 
             using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
             connection.Open();
 
             using var command = new SqlCommand(GameQueries.GetAvailableGamesForDateRange, connection);
             command.Parameters.AddWithValue("@UserId", userId);
-            command.Parameters.AddWithValue("@RequestedStartDate", today);
-            command.Parameters.AddWithValue("@RequestedEndDate", tomorrow);
+            command.Parameters.AddWithValue("@RequestedStartDate", todayDate);
+            command.Parameters.AddWithValue("@RequestedEndDate", tomorrowDate);
 
             using var reader = command.ExecuteReader();
 
@@ -172,16 +172,16 @@ public class GamesRepository : InterfaceGamesRepository
         {
             var games = new List<Game>();
 
-            var today = DateTime.Today;
-            var tomorrow = today.AddDays(1);
+            var todayDate = DateTime.Today;
+            var tomorrowDate = todayDate.AddDays(1);
 
             using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
             connection.Open();
 
             using var command = new SqlCommand(GameQueries.GetOtherGamesFeedByUser, connection);
             command.Parameters.AddWithValue("@UserId", userId);
-            command.Parameters.AddWithValue("@RequestedStartDate", today);
-            command.Parameters.AddWithValue("@RequestedEndDate", tomorrow);
+            command.Parameters.AddWithValue("@RequestedStartDate", todayDate);
+            command.Parameters.AddWithValue("@RequestedEndDate", tomorrowDate);
 
             using var reader = command.ExecuteReader();
 

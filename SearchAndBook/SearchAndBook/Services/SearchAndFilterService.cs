@@ -44,33 +44,33 @@ namespace SearchAndBook.Services
                 var games = gamesRepository.GetGamesByFilter(filter);
                 filter.City = originalCity;
 
-                var resultList = new List<GameDTO>();
-var usersCache = new Dictionary<int, User>();
+                var gameResults = new List<GameDTO>();
+                var ownerCacheById = new Dictionary<int, User>();
 
-foreach (var game in games)
-{
-    if (!usersCache.ContainsKey(game.OwnerId))
-    {
-        usersCache[game.OwnerId] = usersRepository.Get(game.OwnerId);
-    }
+                foreach (var game in games)
+                {
+                    if (!ownerCacheById.ContainsKey(game.OwnerId))
+                    {
+                        ownerCacheById[game.OwnerId] = usersRepository.Get(game.OwnerId);
+                    }
 
-    var owner = usersCache[game.OwnerId];
+                    var gameowner = ownerCacheById[game.OwnerId];
 
-    var gameDto = new GameDTO
-    {
-        GameId = game.GameId,
-        Name = game.Name,
-        Image = game.Image,
-        Price = game.Price,
-        City = owner != null ? owner.City : string.Empty,
-        MaximumPlayerNumber = game.MaximumPlayerNumber,
-        MinimumPlayerNumber = game.MinimumPlayerNumber
-    };
+                    var gameDto = new GameDTO
+                    {
+                        GameId = game.GameId,
+                        Name = game.Name,
+                        Image = game.Image,
+                        Price = game.Price,
+                        City = gameowner != null ? gameowner.City : string.Empty,
+                        MaximumPlayerNumber = game.MaximumPlayerNumber,
+                        MinimumPlayerNumber = game.MinimumPlayerNumber
+                    };
 
-    resultList.Add(gameDto);
-}
+                    gameResults.Add(gameDto);
+                }
 
-GameDTO[] result = resultList.ToArray();
+                GameDTO[] gameResultsAray = gameResults.ToArray();
 
                 //// sorting by distance
 
@@ -78,13 +78,13 @@ GameDTO[] result = resultList.ToArray();
                 //// only runs this code if SortOption is set, so never from feed
 
 
-                return ApplyFilters(result, filter);
+                return ApplyFilters(gameResultsAray, filter);
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException("Failed to search for games.", ex);
+                 throw new InvalidOperationException("Failed to search for games.", ex);
             }
-        }
+}
 
 
         //pentru ca in codul curent avem in functiile GetGamesFeedAvailableTonightByUser si GetOtherGamesFeedByUser cu cod duplicat 
@@ -228,30 +228,30 @@ GameDTO[] result = resultList.ToArray();
         }
 
 
-        public (List<GameDTO> availableTonight, List<GameDTO> others, int totalCount)
-     GetDiscoveryFeedPaged(int userId, int page, int pageSize)
-        {
-            var availableTonight = GetGamesFeedAvailableTonightByUser(userId).ToList();
-            var others = GetOtherGamesFeedByUser(userId).ToList();
+        public (List<GameDTO> availableTonight, List<GameDTO> others, int totalAvailableGamesCount)
+         GetDiscoveryFeedPaged(int userId, int page, int pageSize)
+         {
+                var availableTonightGames = GetGamesFeedAvailableTonightByUser(userId).ToList();
+                var otherAvailableGames = GetOtherGamesFeedByUser(userId).ToList();
 
-            var combined = availableTonight.Concat(others).ToList();
-            var totalCount = combined.Count;
+                var allDescoveryFeedGames = availableTonightGames.Concat(otherAvailableGames).ToList();
+                var totalAvailableGamesCount = allDescoveryFeedGames.Count;
 
-            var paged = combined
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
+                var paginatedGames = allDescoveryFeedGames
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
 
-            var pagedAvailable = paged
-                .Where(g => availableTonight.Any(a => a.GameId == g.GameId))
-                .ToList();
+                var pagedAvailableTonightGames = paginatedGames
+                    .Where(g => availableTonightGames.Any(a => a.GameId == g.GameId))
+                    .ToList();
 
-            var pagedOthers = paged
-                .Where(g => others.Any(o => o.GameId == g.GameId))
-                .ToList();
+                var pagedOtherGames = paginatedGames
+                    .Where(g => otherAvailableGames.Any(o => o.GameId == g.GameId))
+                    .ToList();
 
-            return (pagedAvailable, pagedOthers, totalCount);
-        }
+                return (pagedAvailableTonightGames, pagedOtherGames, totalAvailableGamesCount);
+         }
 
 
         public bool IsValidDateRange(DateTime? start, DateTime? end)
