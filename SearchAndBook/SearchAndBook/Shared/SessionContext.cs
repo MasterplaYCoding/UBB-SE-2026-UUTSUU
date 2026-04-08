@@ -4,15 +4,15 @@ namespace SearchAndBook.Shared
 {
     public class SessionContext
     {
+        private const int UNREGISTERED_USER_ID = -1;
         private static SessionContext? _instance;
 
-        public const int AnonimousUserId = -1;
         public int UserId { get; set; }
         public bool IsLoggedIn { get; set; }
 
         private SessionContext()
         {
-            UserId = -1;
+            UserId = UNREGISTERED_USER_ID;
             IsLoggedIn = false;
         }
 
@@ -36,7 +36,7 @@ namespace SearchAndBook.Shared
 
         public void Clear()
         {
-            UserId =AnonimousUserId;
+            UserId = UNREGISTERED_USER_ID;
             IsLoggedIn = false;
         }
     }

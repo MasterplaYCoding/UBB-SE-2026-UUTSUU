@@ -14,31 +14,33 @@ namespace SearchAndBook.Views;
 
 public sealed partial class ConfirmBookingView : Page
 {
+    private const int MINIMUM_SELECTED_DATES = 1;
+
     public ConfirmBookingView()
     {
         InitializeComponent();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnNavigatedTo(NavigationEventArgs eventArgs)
     {
-        base.OnNavigatedTo(e);
+        base.OnNavigatedTo(eventArgs);
 
-        if (e.Parameter is not (BookingDTO bookingDTO, TimeRange range))
+        if (eventArgs.Parameter is not (BookingDTO bookingDTO, TimeRange range))
             return;
 
-        var gameRepo = new GamesRepository();
-        var rentalRepo = new RentalsRepository();
-        var userRepo = new UsersRepository();
-        var service = new BookingService(gameRepo, rentalRepo, userRepo);
-        var vm = new ConfirmBookingViewModel(service, bookingDTO, range);
+        var gameRepository = new GamesRepository();
+        var rentalRepository = new RentalsRepository();
+        var userRepository = new UsersRepository();
+        var service = new BookingService(gameRepository, rentalRepository, userRepository);
+        var viewModel = new ConfirmBookingViewModel(service, bookingDTO, range);
 
-        vm.OnGoBackRequested += () =>
+        viewModel.OnGoBackRequested += () =>
         {
             if (Frame.CanGoBack)
                 Frame.GoBack();
         };
 
-        vm.OnConfirmBookingRequested += async () =>
+        viewModel.OnConfirmBookingRequested += async () =>
         {
             var dialog = new ContentDialog
             {
@@ -51,21 +53,21 @@ public sealed partial class ConfirmBookingView : Page
             Frame.Navigate(typeof(DiscoveryView));
         };
 
-        this.DataContext = vm;
+        this.DataContext = viewModel;
     }
 
-    private void OnBackClicked(object sender, RoutedEventArgs e)
+    private void OnBackClicked(object sender, RoutedEventArgs eventArgs)
     {
-        var vm = (ConfirmBookingViewModel)this.DataContext;
-        vm.GoBack();
+        var viewModel = (ConfirmBookingViewModel)this.DataContext;
+        viewModel.GoBack();
     }
 
     private DateTime? _modifySelectedStart;
     private DateTime? _modifySelectedEnd;
 
-    private async void OnModifyClicked(object sender, RoutedEventArgs e)
+    private async void OnModifyClicked(object sender, RoutedEventArgs eventArgs)
     {
-        var vm = (ConfirmBookingViewModel)this.DataContext;
+        var viewModel = (ConfirmBookingViewModel)this.DataContext;
 
         var calendar = new CalendarView
         {
@@ -77,57 +79,47 @@ public sealed partial class ConfirmBookingView : Page
             SelectedPressedBorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Goldenrod),
         };
 
-        calendar.CalendarViewDayItemChanging += (calSender, args) =>
+        calendar.CalendarViewDayItemChanging += (calendarSender, calendarArgumets) =>
         {
-            var date = args.Item.Date.DateTime;
+            var date = calendarArgumets.Item.Date.DateTime;
 
-            bool isUnavailable = false;
-            if (vm.UnavailableTimeRanges != null)
-            {
-                foreach (var range in vm.UnavailableTimeRanges)
-                {
-                    if (date >= range.StartTime.Date && date <= range.EndTime.Date)
-                    {
-                        isUnavailable = true;
-                        break;
-                    }
-                }
-            }
+            bool isUnavailable = viewModel.IsTimeRangeUnavailable(date);
+
 
             if (isUnavailable)
             {
-                args.Item.IsBlackout = true;
-                args.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkRed);
+                calendarArgumets.Item.IsBlackout = true;
+                calendarArgumets.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkRed);
                 return;
             }
 
             if (_modifySelectedStart.HasValue && _modifySelectedEnd.HasValue &&
                 date.Date >= _modifySelectedStart.Value.Date && date.Date <= _modifySelectedEnd.Value.Date)
             {
-                args.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Goldenrod);
+                calendarArgumets.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Goldenrod);
                 return;
             }
 
-            args.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkGreen);
+            calendarArgumets.Item.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DarkGreen);
         };
 
-        calendar.SelectedDatesChanged += (calSender, args) =>
+        calendar.SelectedDatesChanged += (calendarSender, calendarArguments) =>
         {
-            var selectedDates = calSender.SelectedDates;
-            if (selectedDates.Count > 2)
+            var selectedDates = calendarSender.SelectedDates;
+            if (selectedDates.Count > MINIMUM_SELECTED_DATES + 1)
             {
                 var toKeep = new List<DateTimeOffset>
-        {
-            selectedDates[selectedDates.Count - 2],
-            selectedDates[selectedDates.Count - 1]
-        };
-                calSender.SelectedDates.Clear();
+                    {
+                        selectedDates[selectedDates.Count - 2],
+                        selectedDates[selectedDates.Count - 1]
+                    };
+                calendarSender.SelectedDates.Clear();
                 foreach (var date in toKeep)
-                    calSender.SelectedDates.Add(date);
+                    calendarSender.SelectedDates.Add(date);
                 return;
             }
 
-            if (selectedDates.Count < 1)
+            if (selectedDates.Count < MINIMUM_SELECTED_DATES)
             {
                 _modifySelectedStart = null;
                 _modifySelectedEnd = null;
@@ -135,22 +127,23 @@ public sealed partial class ConfirmBookingView : Page
             }
 
             var sorted = selectedDates
-                .Select(d => d.DateTime)
-                .OrderBy(d => d)
+                .Select(date => date.DateTime)
+                .OrderBy(date => date)
                 .ToList();
 
             _modifySelectedStart = sorted[0];
             _modifySelectedEnd = sorted[sorted.Count - 1];
 
             // force redraw
-            var minDate = calSender.MinDate;
-            calSender.MinDate = DateTimeOffset.Now.Date.AddDays(1);
-            calSender.MinDate = minDate;
+            var temporaryOffset = 1;
+            var minDate = calendarSender.MinDate;
+            calendarSender.MinDate = DateTimeOffset.Now.Date.AddDays(temporaryOffset);
+            calendarSender.MinDate = minDate;
         };
 
-        calendar.SelectedDates.Add(vm.SelectedTimeRange.StartTime);
-        if (vm.SelectedTimeRange.EndTime != vm.SelectedTimeRange.StartTime)
-            calendar.SelectedDates.Add(vm.SelectedTimeRange.EndTime);
+        calendar.SelectedDates.Add(viewModel.SelectedTimeRange.StartTime);
+        if (viewModel.SelectedTimeRange.EndTime != viewModel.SelectedTimeRange.StartTime)
+            calendar.SelectedDates.Add(viewModel.SelectedTimeRange.EndTime);
 
         var dialog = new ContentDialog
         {
@@ -166,26 +159,26 @@ public sealed partial class ConfirmBookingView : Page
         if (result == ContentDialogResult.Primary)
         {
             var selectedDates = calendar.SelectedDates;
-            if (selectedDates.Count < 1)
+            if (selectedDates.Count < MINIMUM_SELECTED_DATES)
                 return;
 
             var sorted = selectedDates
-                .Select(d => d.DateTime)
-                .OrderBy(d => d)
+                .Select(date => date.DateTime)
+                .OrderBy(date => date)
                 .ToList();
 
             var newRange = new TimeRange(sorted[0], sorted[sorted.Count - 1]);
-            vm.UpdateSelectedRange(newRange);
+            viewModel.UpdateSelectedRange(newRange);
         }
     }
 
-    private void OnConfirmClicked(object sender, RoutedEventArgs e)
+    private void OnConfirmClicked(object sender, RoutedEventArgs eventArgs)
     {
-        var vm = (ConfirmBookingViewModel)this.DataContext;
-        vm.ConfirmBooking();
+        var viewModel = (ConfirmBookingViewModel)this.DataContext;
+        viewModel.ConfirmBooking();
     }
 
-    private void OnMessageUserClicked(object sender, RoutedEventArgs e)
+    private void OnMessageUserClicked(object sender, RoutedEventArgs eventArgs)
     {
         // to be connected later
     }
