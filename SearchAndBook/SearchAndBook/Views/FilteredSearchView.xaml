@@ -18,14 +18,12 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- BACK BUTTON -->
         <Button Grid.Row="0"
                 Content="← Back"
                 Command="{Binding GoBackCommand}"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"/>
 
-        <!-- SEARCH BAR -->
         <Border Grid.Row="1"
                 Padding="16"
                 CornerRadius="8"
@@ -68,14 +66,13 @@
                 </StackPanel>
 
                 <Button Grid.Column="4"
-                        Content="Search"
+                        Content="Filter"
                         Height="40"
                         VerticalAlignment="Bottom"
                         Command="{Binding SearchCommand}"/>
             </Grid>
         </Border>
 
-        <!-- MAIN CONTENT -->
         <Grid Grid.Row="2" ColumnSpacing="20">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="280"/>

@@ -15,16 +15,13 @@ namespace SearchAndBook.ViewModels
 {
     public class DiscoveryViewModel : INotifyPropertyChanged
     {
-        private readonly ISearchAndFilterService _searchService;
-        private readonly IGeoService _geoService;
+        private readonly InterfaceSearchAndFilterService _searchService;
+        private readonly InterfaceGeographicalService _geographicalService;
 
-        private const int PageSize = 10;
+        private const int ItemsPerPage = 10;
 
         public List<GameDTO> GamesAvailableTonight { get; set; } = new();
         public List<GameDTO> GamesOthers { get; set; } = new();
-
-        public ObservableCollection<GameDTO> PagedGamesAvailableTonight { get; } = new();
-        public ObservableCollection<GameDTO> PagedGamesOthers { get; } = new();
 
         public bool IsEndDateEnabled => SelectedStartDate.HasValue;
 
@@ -109,7 +106,8 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        private int TotalGamesCount => GamesAvailableTonight.Count + GamesOthers.Count;
+        private int _totalGamesCount;
+        private int TotalGamesCount => _totalGamesCount;
 
         public int TotalPages
         {
@@ -117,13 +115,10 @@ namespace SearchAndBook.ViewModels
             {
                 if (TotalGamesCount == 0)
                     return 1;
-                return (int)Math.Ceiling((double)TotalGamesCount / PageSize);
+                return (int)Math.Ceiling((double)TotalGamesCount / ItemsPerPage);
             }
         }
 
-        public bool HasPagedAvailableTonight => PagedGamesAvailableTonight.Any();
-        public bool HasPagedOthers => PagedGamesOthers.Any();
-        public string OthersTitle => HasPagedOthers ? "Others" : " ";
 
         public ICommand NextPageCommand { get; }
         public ICommand PreviousPageCommand { get; }
@@ -134,17 +129,17 @@ namespace SearchAndBook.ViewModels
         public event Action<string>? OnErrorOccurred;
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        public DiscoveryViewModel(ISearchAndFilterService searchService, IGeoService geoService)
+        public DiscoveryViewModel(InterfaceSearchAndFilterService searchService, InterfaceGeographicalService geographicalService)
         {
             _searchService = searchService;
-            _geoService = geoService;
+            _geographicalService = geographicalService;
 
             _selectedStartDate = null;
             _selectedEndDate = null;
 
             NextPageCommand = new RelayCommand(_ => NextPage());
             PreviousPageCommand = new RelayCommand(_ => PreviousPage());
-            SearchCommand = new RelayCommand(_ => Search(Filter));
+            SearchCommand = new RelayCommand(_ => SearchGamesByFilter(Filter));
 
             try
             {
@@ -164,18 +159,21 @@ namespace SearchAndBook.ViewModels
             {
                 int userId = SessionContext.GetInstance().UserId;
 
-                GamesAvailableTonight = _searchService.GetFeedAvailableTonight(userId).ToList();
-                GamesOthers = _searchService.GetFeedOthers(userId).ToList();
+                var result = _searchService.GetDiscoveryFeedPaged(userId, CurrentPage, ItemsPerPage);
+
+                GamesAvailableTonight = result.availableTonight;
+                GamesOthers = result.others;
+                _totalGamesCount = result.totalCount;
 
                 await LoadImagesForGames(GamesAvailableTonight);
                 await LoadImagesForGames(GamesOthers);
 
-                CurrentPage = 1;
-                RefreshPage();
                 OnPropertyChanged(nameof(TotalPages));
                 OnPropertyChanged(nameof(GamesAvailableTonight));
                 OnPropertyChanged(nameof(GamesOthers));
                 OnPropertyChanged(nameof(NoResultsMessage));
+
+               
             }
             catch (Exception ex)
             {
@@ -212,10 +210,10 @@ namespace SearchAndBook.ViewModels
         {
             try
             {
-                if (CurrentPage * PageSize < TotalGamesCount)
+                if (CurrentPage * ItemsPerPage < TotalGamesCount)
                 {
                     CurrentPage++;
-                    RefreshPage();
+                    LoadDiscoveryFeed();
                     OnPageChanged?.Invoke();
                 }
             }
@@ -232,7 +230,7 @@ namespace SearchAndBook.ViewModels
                 if (CurrentPage > 1)
                 {
                     CurrentPage--;
-                    RefreshPage();
+                    LoadDiscoveryFeed();
                     OnPageChanged?.Invoke();
                 }
             }
@@ -242,63 +240,18 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        private void RefreshPage()
+        
+
+        public void SearchGamesByFilter(FilterCriteria criteria)
         {
             try
             {
-                PagedGamesAvailableTonight.Clear();
-                PagedGamesOthers.Clear();
-
-                int globalStart = (CurrentPage - 1) * PageSize;
-                int remaining = PageSize;
-
-                if (globalStart < GamesAvailableTonight.Count)
+                if (!_searchService.IsValidDateRange(
+                    SelectedStartDate?.DateTime,
+                    SelectedEndDate?.DateTime))
                 {
-                    var availableSlice = GamesAvailableTonight
-                        .Skip(globalStart)
-                        .Take(remaining)
-                        .ToList();
-
-                    foreach (var game in availableSlice)
-                        PagedGamesAvailableTonight.Add(game);
-
-                    remaining -= availableSlice.Count;
-                    globalStart = 0;
-                }
-                else
-                {
-                    globalStart -= GamesAvailableTonight.Count;
-                }
-
-                if (remaining > 0)
-                {
-                    var othersSlice = GamesOthers
-                        .Skip(globalStart)
-                        .Take(remaining)
-                        .ToList();
-
-                    foreach (var game in othersSlice)
-                        PagedGamesOthers.Add(game);
-                }
-
-                OnPropertyChanged(nameof(PagedGamesAvailableTonight));
-                OnPropertyChanged(nameof(PagedGamesOthers));
-                OnPropertyChanged(nameof(HasPagedAvailableTonight));
-                OnPropertyChanged(nameof(HasPagedOthers));
-                OnPropertyChanged(nameof(OthersTitle));
-            }
-            catch (Exception ex)
-            {
-                OnErrorOccurred?.Invoke($"Could not refresh page results. {ex.Message}");
-            }
-        }
-
-        public void Search(FilterCriteria criteria)
-        {
-            try
-            {
-                if (!HasValidDateRange())
                     return;
+                }
 
                 Filter.Name = criteria.Name;
                 Filter.City = criteria.City;
@@ -318,8 +271,7 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public ObservableCollection<string> CitySuggestions { get; } = new();
-
+        
         private string _citySearchText = string.Empty;
         public string CitySearchText
         {
@@ -335,16 +287,17 @@ namespace SearchAndBook.ViewModels
                 }
             }
         }
-
+        private const int MinimumCitySearchLength = 2;
+        public ObservableCollection<string> CitySuggestions { get; } = new();
         private void UpdateCitySuggestions(string input)
         {
             try
             {
                 CitySuggestions.Clear();
 
-                if (!string.IsNullOrWhiteSpace(input) && input.Length >= 2)
+                if (!string.IsNullOrWhiteSpace(input) && input.Length >= MinimumCitySearchLength)
                 {
-                    var matches = _geoService.GetCitySuggestions(input);
+                    var matches = _geographicalService.GetCitySuggestions(input);
                     foreach (var match in matches)
                         CitySuggestions.Add(match);
                 }
@@ -383,23 +336,6 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public bool HasValidDateRange()
-        {
-            try
-            {
-                if (!SelectedStartDate.HasValue && !SelectedEndDate.HasValue)
-                    return true;
-
-                if (!SelectedStartDate.HasValue || !SelectedEndDate.HasValue)
-                    return false;
-
-                return SelectedStartDate.Value <= SelectedEndDate.Value;
-            }
-            catch (Exception ex)
-            {
-                OnErrorOccurred?.Invoke($"Could not validate date range. {ex.Message}");
-                return false;
-            }
-        }
+       
     }
 }
