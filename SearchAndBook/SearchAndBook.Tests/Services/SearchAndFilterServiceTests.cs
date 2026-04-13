@@ -486,6 +486,29 @@ public class SearchAndFilterServiceTests
         Assert.Single(result);
     }
 
+    [Fact]
+    public void SearchGamesByFilter_ResultContainsRequiredFields()
+    {
+        var sut = CreateSut(out var gamesRepo, out var usersRepo, out _, out _);
+
+        gamesRepo.Setup(r => r.GetGamesByFilter(It.IsAny<FilterCriteria>()))
+            .Returns(new List<Game>
+            {
+            CreateGame(1, 1, "Catan", 20m, 4, 2)
+            });
+
+        usersRepo.Setup(r => r.Get(1)).Returns(CreateUser(1, "Cluj"));
+
+        var result = sut.SearchGamesByFilter(new FilterCriteria());
+
+        var game = result.First();
+
+        Assert.NotNull(game.Name);
+        Assert.True(game.Price > 0);
+        Assert.NotNull(game.City);
+        Assert.True(game.MaximumPlayerNumber > 0);
+    }
+
 
 
 

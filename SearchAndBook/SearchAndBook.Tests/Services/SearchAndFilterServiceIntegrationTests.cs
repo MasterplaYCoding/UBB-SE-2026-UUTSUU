@@ -306,5 +306,78 @@ public class SearchAndFilterServiceIntegrationTests
             Assert.Empty(others);
             Assert.Equal(20, total);
         }
+
+        [Fact]
+        public void GetDiscoveryFeedPaged_SplitsResultsIntoAvailableTonightAndOthers()
+        {
+            var gamesRepository = new InMemoryGamesRepository(
+                Enumerable.Range(1, 10)
+                    .Select(i => CreateGame(i, 1, "Game", 10m, 4, 2)));
+
+            var usersRepository = new InMemoryUsersRepository(
+                new[] { CreateUser(1, "Cluj") });
+
+            var service = new SearchAndFilterService(
+                gamesRepository,
+                usersRepository,
+                new InMemoryRentalsRepository(),
+                new InMemoryGeographicalService());
+
+            var (availableTonight, others, total) =
+                service.GetDiscoveryFeedPaged(1, 1, 10);
+
+            Assert.Equal(total, availableTonight.Count + others.Count);
+        }
+
+        [Fact]
+        public void GetDiscoveryFeedPaged_NoGames_ReturnsEmpty()
+        {
+            var service = new SearchAndFilterService(
+                new InMemoryGamesRepository(Array.Empty<Game>()),
+                new InMemoryUsersRepository(Array.Empty<User>()),
+                new InMemoryRentalsRepository(),
+                new InMemoryGeographicalService());
+
+            var (available, others, total) = service.GetDiscoveryFeedPaged(1, 1, 10);
+
+            Assert.Empty(available);
+            Assert.Empty(others);
+            Assert.Equal(0, total);
+        }
+
+        [Fact]
+        public void GetDiscoveryFeedPaged_DifferentPages_ReturnDifferentResults()
+        {
+            var games = Enumerable.Range(1, 20)
+                .Select(i => CreateGame(i, 1, $"Game{i}", 10m, 4, 2));
+
+            var service = new SearchAndFilterService(
+                new InMemoryGamesRepository(games),
+                new InMemoryUsersRepository(new[] { CreateUser(1, "Cluj") }),
+                new InMemoryRentalsRepository(),
+                new InMemoryGeographicalService());
+
+            var page1 = service.GetDiscoveryFeedPaged(1, 1, 10);
+            var page2 = service.GetDiscoveryFeedPaged(1, 2, 10);
+
+            var ids1 = page1.availableTonight.Concat(page1.others).Select(g => g.GameId);
+            var ids2 = page2.availableTonight.Concat(page2.others).Select(g => g.GameId);
+
+            Assert.NotEqual(ids1.First(), ids2.First());
+        }
+
+        [Fact]
+        public void GetDiscoveryFeedPaged_DoesNotRequireAuthentication()
+        {
+            var service = new SearchAndFilterService(
+                new InMemoryGamesRepository(Array.Empty<Game>()),
+                new InMemoryUsersRepository(Array.Empty<User>()),
+                new InMemoryRentalsRepository(),
+                new InMemoryGeographicalService());
+
+            var result = service.GetDiscoveryFeedPaged(-1, 1, 10);
+
+            Assert.NotNull(result);
+        }
     }
 }

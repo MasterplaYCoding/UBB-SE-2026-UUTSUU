@@ -499,4 +499,33 @@ public class FilteredSearchViewModelTests
         Assert.Empty(errors);
         Assert.NotNull(sut.GamesShown);
     }
+
+    [Fact]
+    public void SelectGame_RaisesNavigationEvent()
+    {
+        var (sut, _, _, errors) = CreateSut();
+
+        int? selectedId = null;
+        sut.OnGameSelectedRequest += id => selectedId = id;
+
+        var game = CreateGameDto(1, "Catan", 20m, "Cluj", 4, 2);
+
+        sut.GamesShown.Add(game);
+
+        sut.SelectGame(game.GameId);
+
+        Assert.Empty(errors);
+        Assert.Equal(1, selectedId);
+    }
+
+    [Fact]
+    public void NoResultsMessage_WhenNoGames_ShowsMessage()
+    {
+        var (sut, _, _, _) = CreateSut();
+
+        sut.LoadDiscoveryResutls(Array.Empty<GameDTO>());
+
+        Assert.True(sut.HasNoResults);
+        Assert.NotEmpty(sut.NoResultsMessage);
+    }
 }
