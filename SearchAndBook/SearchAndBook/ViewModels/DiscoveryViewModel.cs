@@ -169,6 +169,7 @@ namespace SearchAndBook.ViewModels
 
                 AvailableTonightGames = discoveryFeedResult.availableTonight;
                 OtherAvailableGames = discoveryFeedResult.others;
+                ShowOthersHeader = OtherAvailableGames.Any();
                 _totalAvailableGamesCount = discoveryFeedResult.totalAvailableGamesCount;
 
                 await LoadImagesForGames(AvailableTonightGames);
