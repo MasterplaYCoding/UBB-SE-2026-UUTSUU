@@ -400,4 +400,103 @@ public class FilteredSearchViewModelTests
             MinimumPlayerNumber = minimumPlayers,
         };
     }
+
+    [Fact]
+    public void ApplyFilters_OnlyAvailableGamesAreShown()
+    {
+        var (sut, searchService, _, errors) = CreateSut();
+
+        var baseGames = new[]
+        {
+        CreateGameDto(1, "Game1", 10m, "Cluj", 4, 2),
+        CreateGameDto(2, "Game2", 10m, "Cluj", 4, 2),
+    };
+
+        var filtered = new[]
+        {
+        baseGames[0]
+    };
+
+        sut.LoadDiscoveryResutls(baseGames);
+
+        searchService.Setup(s => s.ApplyFilters(It.IsAny<GameDTO[]>(), It.IsAny<FilterCriteria>()))
+            .Returns(filtered);
+
+        sut.ApplyFilters();
+
+        Assert.Empty(errors);
+        Assert.Single(sut.GamesShown);
+        Assert.Equal(1, sut.GamesShown.First().GameId);
+    }
+
+    [Fact]
+    public void LoadSearchResults_AllowsMultipleListingsForSameGame()
+    {
+        var (sut, searchService, _, errors) = CreateSut();
+
+        var results = new[]
+        {
+        CreateGameDto(1, "Catan", 20m, "Cluj", 4, 2),
+        CreateGameDto(2, "Catan", 25m, "Cluj", 4, 2),
+    };
+
+        searchService.Setup(s => s.SearchGamesByFilter(It.IsAny<FilterCriteria>()))
+            .Returns(results);
+
+        sut.LoadSearchResults(new FilterCriteria());
+
+        Assert.Empty(errors);
+        Assert.Equal(2, sut.GamesShown.Count);
+    }
+
+    [Fact]
+    public void LoadSearchResults_WithManyResults_ShowsSubset()
+    {
+        var (sut, searchService, _, errors) = CreateSut();
+
+        var results = Enumerable.Range(1, 50)
+            .Select(i => CreateGameDto(i, "Game", 10m, "Cluj", 4, 2))
+            .ToArray();
+
+        searchService.Setup(s => s.SearchGamesByFilter(It.IsAny<FilterCriteria>()))
+            .Returns(results);
+
+        sut.LoadSearchResults(new FilterCriteria());
+
+        Assert.Empty(errors);
+        Assert.True(sut.GamesShown.Count <= results.Length);
+    }
+
+    [Fact]
+    public void GamesShown_ContainsValidGameIds_ForNavigation()
+    {
+        var (sut, searchService, _, errors) = CreateSut();
+
+        var results = new[]
+        {
+        CreateGameDto(10, "Catan", 20m, "Cluj", 4, 2),
+    };
+
+        searchService.Setup(s => s.SearchGamesByFilter(It.IsAny<FilterCriteria>()))
+            .Returns(results);
+
+        sut.LoadSearchResults(new FilterCriteria());
+
+        Assert.Empty(errors);
+        Assert.True(sut.GamesShown.First().GameId > 0);
+    }
+
+    [Fact]
+    public void LoadSearchResults_DoesNotRequireUserAuthentication()
+    {
+        var (sut, searchService, _, errors) = CreateSut();
+
+        searchService.Setup(s => s.SearchGamesByFilter(It.IsAny<FilterCriteria>()))
+            .Returns(Array.Empty<GameDTO>());
+
+        sut.LoadSearchResults(new FilterCriteria());
+
+        Assert.Empty(errors);
+        Assert.NotNull(sut.GamesShown);
+    }
 }

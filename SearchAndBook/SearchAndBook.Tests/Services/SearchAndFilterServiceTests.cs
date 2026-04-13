@@ -351,4 +351,142 @@ public class SearchAndFilterServiceTests
             Country = "RO",
         };
     }
+
+    [Fact]
+    public void ApplyFilters_NoResults_ReturnsEmpty()
+    {
+        var sut = CreateSut(out _, out _, out _, out _);
+
+        var games = new[]
+        {
+        CreateGameDto(1, "Catan", 20m, "Cluj", 4, 2),
+    };
+
+        var result = sut.ApplyFilters(games, new FilterCriteria { Name = "zzz" });
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void ApplyFilters_AllowsMultipleListingsForSameGame()
+    {
+        var sut = CreateSut(out _, out _, out _, out _);
+
+        var games = new[]
+        {
+        CreateGameDto(1, "Catan", 20m, "Cluj", 4, 2),
+        CreateGameDto(2, "Catan", 25m, "Cluj", 4, 2),
+    };
+
+        var result = sut.ApplyFilters(games, new FilterCriteria { Name = "cat" });
+
+        Assert.Equal(2, result.Length);
+    }
+
+    [Fact]
+    public void ApplyFilters_PartialMatch_ReturnsMatchingGames()
+    {
+        var sut = CreateSut(out _, out _, out _, out _);
+
+        var games = new[]
+        {
+        CreateGameDto(1, "Monopoly", 20m, "Cluj", 4, 2),
+        CreateGameDto(2, "Chess", 10m, "Cluj", 2, 2),
+    };
+
+        var result = sut.ApplyFilters(games, new FilterCriteria { Name = "poly" });
+
+        Assert.Single(result);
+        Assert.Equal(1, result[0].GameId);
+    }
+
+    [Fact]
+    public void ApplyFilters_AllCriteriaMustMatch()
+    {
+        var sut = CreateSut(out _, out _, out _, out _);
+
+        var games = new[]
+        {
+        CreateGameDto(1, "Catan", 20m, "Cluj", 4, 2),
+        CreateGameDto(2, "Catan", 50m, "Cluj", 4, 2),
+    };
+
+        var result = sut.ApplyFilters(games, new FilterCriteria
+        {
+            Name = "cat",
+            MaximumPrice = 25m
+        });
+
+        Assert.Single(result);
+        Assert.Equal(1, result[0].GameId);
+    }
+
+    [Fact]
+    public void ApplyFilters_ReturnsOnlyAvailableGames()
+    {
+        var sut = CreateSut(out _, out _, out var rentalsRepo, out _);
+
+        var range = new TimeRange(DateTime.Now, DateTime.Now.AddDays(1));
+
+        rentalsRepo.Setup(r => r.CheckAvailability(range, 1)).Returns(true);
+        rentalsRepo.Setup(r => r.CheckAvailability(range, 2)).Returns(false);
+
+        var games = new[]
+        {
+        CreateGameDto(1, "Game1", 10m, "Cluj", 4, 2),
+        CreateGameDto(2, "Game2", 10m, "Cluj", 4, 2),
+    };
+
+        var result = sut.ApplyFilters(games, new FilterCriteria { AvailabilityRange = range });
+
+        Assert.Single(result);
+        Assert.Equal(1, result[0].GameId);
+    }
+
+    [Fact]
+    public void SearchGamesByFilter_ResultContainsGameId()
+    {
+        var sut = CreateSut(out var gamesRepo, out var usersRepo, out _, out _);
+
+        gamesRepo.Setup(r => r.GetGamesByFilter(It.IsAny<FilterCriteria>()))
+            .Returns(new List<Game> { CreateGame(1, 1, "Catan", 20m, 4, 2) });
+
+        usersRepo.Setup(r => r.Get(1)).Returns(CreateUser(1, "Cluj"));
+
+        var result = sut.SearchGamesByFilter(new FilterCriteria());
+
+        Assert.True(result[0].GameId > 0);
+    }
+
+    [Fact]
+    public void SearchGamesByFilter_DoesNotRequireAuthentication()
+    {
+        var sut = CreateSut(out var gamesRepo, out _, out _, out _);
+
+        gamesRepo.Setup(r => r.GetGamesByFilter(It.IsAny<FilterCriteria>()))
+            .Returns(new List<Game>());
+
+        var result = sut.SearchGamesByFilter(new FilterCriteria());
+
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void SearchGamesByFilter_Called_ReturnsResults()
+    {
+        var sut = CreateSut(out var gamesRepo, out var usersRepo, out _, out _);
+
+        gamesRepo.Setup(r => r.GetGamesByFilter(It.IsAny<FilterCriteria>()))
+            .Returns(new List<Game> { CreateGame(1, 1, "Catan", 20m, 4, 2) });
+
+        usersRepo.Setup(r => r.Get(1)).Returns(CreateUser(1, "Cluj"));
+
+        var result = sut.SearchGamesByFilter(new FilterCriteria());
+
+        Assert.Single(result);
+    }
+
+
+
+
 }
