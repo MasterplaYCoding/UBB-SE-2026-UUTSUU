@@ -51,7 +51,7 @@ namespace SearchAndBook.Services
                 {
                     if (!ownerCacheById.ContainsKey(game.OwnerId))
                     {
-                        ownerCacheById[game.OwnerId] = usersRepository.Get(game.OwnerId);
+                        ownerCacheById[game.OwnerId] = usersRepository.GetGameById(game.OwnerId);
                     }
 
                     var gameowner = ownerCacheById[game.OwnerId];
@@ -114,7 +114,7 @@ namespace SearchAndBook.Services
             {
                 var games = gamesRepository.GetGamesForFeedAvailableTonight(userId);
                 //aici am moficat, nu am mai duplicat codul din functia MapToGameDTO
-                return games.Select(game => MapToGameDTO(game, usersRepository.Get(game.OwnerId))).ToArray();
+                return games.Select(game => MapToGameDTO(game, usersRepository.GetGameById(game.OwnerId))).ToArray();
             }
 
             catch (Exception ex)
@@ -133,7 +133,7 @@ namespace SearchAndBook.Services
             try
             {
                 var games = gamesRepository.GetGamesForFeedOthers(userId);
-                return games.Select(game => MapToGameDTO(game, usersRepository.Get(game.OwnerId))).ToArray();
+                return games.Select(game => MapToGameDTO(game, usersRepository.GetGameById(game.OwnerId))).ToArray();
 
             }
             catch (Exception ex)

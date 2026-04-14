@@ -22,7 +22,7 @@ public class GameDetailsViewModelTests
     [Fact]
     public void Constructor_WhenServiceThrows_SetsErrorAndRaisesMessage()
     {
-        var bookingService = new Mock<IBookingService>();
+        var bookingService = new Mock<InterfaceBookingService>();
         bookingService.Setup(s => s.GetGameDetails(It.IsAny<int>()))
             .Throws(new Exception("boom"));
 
@@ -204,10 +204,10 @@ public class GameDetailsViewModelTests
     }
 
 
-    private static (GameDetailsViewModel Sut, Mock<IBookingService> BookingService, List<string> Messages)
+    private static (GameDetailsViewModel Sut, Mock<InterfaceBookingService> BookingService, List<string> Messages)
         CreateSut()
     {
-        var bookingService = new Mock<IBookingService>(MockBehavior.Loose);
+        var bookingService = new Mock<InterfaceBookingService>(MockBehavior.Loose);
 
         bookingService.Setup(s => s.GetGameDetails(It.IsAny<int>()))
             .Returns(CreateDto());

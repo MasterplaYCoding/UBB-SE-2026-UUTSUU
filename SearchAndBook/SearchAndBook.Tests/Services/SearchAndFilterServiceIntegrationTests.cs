@@ -155,12 +155,12 @@ public class SearchAndFilterServiceIntegrationTests
             return new List<Game>();
         }
 
-        public Game? Get(int id)
+        public Game? GetGameById(int id)
         {
             return _games.FirstOrDefault(game => game.GameId == id);
         }
 
-        public List<Game> GetAll()
+        public List<Game> GetAllGames()
         {
             return _games.ToList();
         }
@@ -175,12 +175,12 @@ public class SearchAndFilterServiceIntegrationTests
             _users = users.ToDictionary(user => user.UserId);
         }
 
-        public User? Get(int id)
+        public User? GetGameById(int id)
         {
             return _users.TryGetValue(id, out var user) ? user : null;
         }
 
-        public List<User> GetAll()
+        public List<User> GetAllGames()
         {
             return _users.Values.ToList();
         }
@@ -205,12 +205,12 @@ public class SearchAndFilterServiceIntegrationTests
             return new List<TimeRange>();
         }
 
-        public TimeRange? Get(int id)
+        public TimeRange? GetGameById(int id)
         {
             return null;
         }
 
-        public List<TimeRange> GetAll()
+        public List<TimeRange> GetAllGames()
         {
             return new List<TimeRange>();
         }

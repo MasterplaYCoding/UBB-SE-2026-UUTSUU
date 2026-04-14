@@ -9,7 +9,7 @@ namespace SearchAndBook.Services;
 /// Service responsible for handling booking operations, including retrieving game details,
 /// checking availability, and managing rental time ranges.
 /// </summary>
-public class BookingService : IBookingService
+public class BookingService : InterfaceBookingService
 {
     private readonly InterfaceGamesRepository gamesRepo;
     private readonly InterfaceRentalsRepository rentalsRepo;
@@ -41,13 +41,13 @@ public class BookingService : IBookingService
     {
         try
         {
-            var game = gamesRepo.Get(gameId);
+            var game = gamesRepo.GetGameById(gameId);
             if (game == null)
             {
                 throw new InvalidOperationException($"Game with id {gameId} was not found.");
             }
 
-            var owner = usersRepo.Get(game.OwnerId);
+            var owner = usersRepo.GetGameById(game.OwnerId);
             if (owner == null)
             {
                 throw new InvalidOperationException($"Owner for game id {gameId} was not found.");

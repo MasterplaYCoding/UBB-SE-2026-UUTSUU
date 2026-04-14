@@ -20,7 +20,7 @@ namespace SearchAndBook.Repositories;
 public class UsersRepository : InterfaceUsersRepository
 {
     // Get User by id
-    public User? Get(int id)
+    public User? GetGameById(int id)
     {
         try
         {
@@ -45,7 +45,7 @@ public class UsersRepository : InterfaceUsersRepository
         }
     }
 
-    public List<User> GetAll()
+    public List<User> GetAllGames()
     {
         try
         {

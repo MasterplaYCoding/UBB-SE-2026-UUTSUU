@@ -15,10 +15,17 @@ namespace SearchAndBook.ViewModels
 {
     public class DiscoveryViewModel : INotifyPropertyChanged
     {
+        
+
+        private const int MinimumCitySearchLength = 2;
+        private const int ItemsPerPage = 10;
+
         private readonly InterfaceSearchAndFilterService _searchService;
         private readonly InterfaceGeographicalService _geographicalService;
 
-        private const int ItemsPerPage = 10;
+
+        public event Action? OnPageChanged;
+
 
         public List<GameDTO> AvailableTonightGames { get; set; } = new();
         public List<GameDTO> OtherAvailableGames { get; set; } = new();
@@ -26,7 +33,7 @@ namespace SearchAndBook.ViewModels
 
         public bool IsEndDateEnabled => SelectedStartDate.HasValue;
 
-        public event Action? OnPageChanged;
+       
 
         private bool _showOthersHeader;
         public bool ShowOthersHeader
@@ -294,7 +301,7 @@ namespace SearchAndBook.ViewModels
                 }
             }
         }
-        private const int MinimumCitySearchLength = 2;
+        
         public ObservableCollection<string> CitySuggestions { get; } = new();
         private void UpdateCitySuggestions(string input)
         {

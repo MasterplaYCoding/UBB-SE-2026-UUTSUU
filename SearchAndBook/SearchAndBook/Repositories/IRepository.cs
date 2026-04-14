@@ -4,6 +4,6 @@ namespace SearchAndBook.Repositories;
 
 public interface IRepository<T>
 {
-    T? Get(int id);
-    List<T> GetAll();
+    T? GetGameById(int id);
+    List<T> GetAllGames();
 }

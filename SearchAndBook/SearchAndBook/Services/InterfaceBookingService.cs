@@ -6,7 +6,7 @@ namespace SearchAndBook.Services
     /// <summary>
     /// Defines the operations for managing and querying game bookings.
     /// </summary>
-    public interface IBookingService
+    public interface InterfaceBookingService
     {
         /// <summary>
         /// Retrieves the booking details for a specific game.

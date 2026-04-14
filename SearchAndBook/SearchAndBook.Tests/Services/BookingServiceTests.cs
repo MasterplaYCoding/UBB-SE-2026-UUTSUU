@@ -16,8 +16,8 @@ public class BookingServiceTests
         var game = CreateGame(1, 10, "Catan", 25m, 4, 2, "Classic board game");
         var owner = CreateUser(10, "Owner Name", "Cluj");
 
-        gamesRepository.Setup(repository => repository.Get(1)).Returns(game);
-        usersRepository.Setup(repository => repository.Get(10)).Returns(owner);
+        gamesRepository.Setup(repository => repository.GetGameById(1)).Returns(game);
+        usersRepository.Setup(repository => repository.GetGameById(10)).Returns(owner);
 
         var result = sut.GetGameDetails(1);
 
@@ -41,7 +41,7 @@ public class BookingServiceTests
     {
         var sut = CreateSut(out var gamesRepository, out _, out _);
 
-        gamesRepository.Setup(repository => repository.Get(1)).Returns((Game?)null);
+        gamesRepository.Setup(repository => repository.GetGameById(1)).Returns((Game?)null);
 
         var exception = Assert.Throws<InvalidOperationException>(() => sut.GetGameDetails(1));
 
@@ -56,8 +56,8 @@ public class BookingServiceTests
 
         var game = CreateGame(1, 10, "Catan", 25m, 4, 2, "Classic board game");
 
-        gamesRepository.Setup(repository => repository.Get(1)).Returns(game);
-        usersRepository.Setup(repository => repository.Get(10)).Returns((User?)null);
+        gamesRepository.Setup(repository => repository.GetGameById(1)).Returns(game);
+        usersRepository.Setup(repository => repository.GetGameById(10)).Returns((User?)null);
 
         var exception = Assert.Throws<InvalidOperationException>(() => sut.GetGameDetails(1));
 

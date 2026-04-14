@@ -82,7 +82,7 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        private readonly IBookingService _bookingService;
+        private readonly InterfaceBookingService _bookingService;
         public TimeRange[] UnavailableTimeRanges { get; private set; } = Array.Empty<TimeRange>();
 
         public ICommand GoBackCommand => new RelayCommand(_ => GoBack());
@@ -108,7 +108,7 @@ namespace SearchAndBook.ViewModels
 
         public ICommand ChatWithOwnerCommand => new RelayCommand(_ => { /* later */ });
 
-        public GameDetailsViewModel(IBookingService bookingService, int gameId)
+        public GameDetailsViewModel(InterfaceBookingService bookingService, int gameId)
         {
             _bookingService = bookingService ?? throw new ArgumentNullException(nameof(bookingService));
 
