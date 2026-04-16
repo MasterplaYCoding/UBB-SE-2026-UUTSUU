@@ -12,6 +12,18 @@ namespace SearchAndBook.Repositories;
 /// Important:
 /// - This repository only reads data.
 /// - It is used by the service layer, not directly by the UI.
+/// 
+
+
+/// How ADO.NET handles connections : 
+/// - When you write using var connection = new SqlConnection(...) and call .Open(), Microsoft 
+/// checks the pool, so the pool of connections is handled by .net
+/// - If there is a free connection, it gives it to you.
+/// - When your "using" block finishes, it calls .Close().
+/// - Microsoft intercepts your .Close() command. It doesn't actually destroy the connection 
+/// to the database. It just wipes the data clean and parks it back in the hidden pool for 
+/// the next person to use.
+
 public class GamesRepository : IGamesRepository
 {
     /// Gets a single game by its database id.
@@ -156,16 +168,27 @@ public class GamesRepository : IGamesRepository
     {
         try
         {
-            var allActiveGames = GetAllActiveGames(userId);
-            var availableTonightGames = GetForFeedAvailableTonight(userId);
+            var games = new List<Game>();
 
-            var availableTonightIds = availableTonightGames
-                .Select(game => game.GameId)
-                .ToHashSet();
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
 
-            return allActiveGames
-                .Where(game => !availableTonightIds.Contains(game.GameId))
-                .ToList();
+            using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
+            connection.Open();
+
+            using var command = new SqlCommand(GameQueries.GetFeedOthers, connection);
+            command.Parameters.AddWithValue("@UserId", userId);
+            command.Parameters.AddWithValue("@RequestedStartDate", today);
+            command.Parameters.AddWithValue("@RequestedEndDate", tomorrow);
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                games.Add(MapGame(reader));
+            }
+
+            return games;
         }
         catch (Exception)
         {
