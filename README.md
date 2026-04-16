@@ -1,4 +1,14 @@
 # UBB-SE-2026-UUTSUU
+## RuntimeTerrors Project Setup
+    - pull from main
+    - go to folder RuntimeTerrors -> Code (2 main parts: Core and WinUI) -> Database
+    - in Visual Studio: View -> SQL Server Object Explorer
+    - open SqlServer and right click op (localdb).. to open New Query
+    - paste the generate_tables.sql file and execute
+    - paste add_company.sql and execute
+    - run the project
+
+## BoardGamesRent Project
 This environment should take care of searching and renting items from the database as well as searching for users, the UI should enable the user to search boardgames using filters, interact with the results by seeing detail pages and going through the renting process.
 
 ## Database setup
