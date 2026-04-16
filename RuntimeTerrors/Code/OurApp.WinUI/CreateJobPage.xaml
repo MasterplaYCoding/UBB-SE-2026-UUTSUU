@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="OurApp.WinUI.CreateJobPage"
+    x:Name="PageRoot"
+    x:DataType="local:CreateJobPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:OurApp.WinUI"
+    xmlns:vm="using:OurApp.WinUI.ViewModels"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Padding="24" Spacing="16" MaxWidth="720">
+            <Button Content="Back" HorizontalAlignment="Left" Click="NavigateBack_Click" />
+            <TextBlock Text="Create job" FontSize="24" FontWeight="SemiBold"/>
+
+            <TextBlock Text="Fields marked * are required (see JobPosting model)." FontSize="12" Opacity="0.8" TextWrapping="Wrap"/>
+
+            <TextBox x:Name="JobTitleBox" Header="Job title *" PlaceholderText="Title"/>
+
+            <ComboBox x:Name="IndustryCombo" Header="Industry field *" PlaceholderText="Select">
+                <ComboBoxItem Content="IT"/>
+                <ComboBoxItem Content="Business"/>
+                <ComboBoxItem Content="Healthcare"/>
+                <ComboBoxItem Content="Education"/>
+                <ComboBoxItem Content="Engineering"/>
+                <ComboBoxItem Content="Other"/>
+            </ComboBox>
+
+            <ComboBox x:Name="JobTypeCombo" Header="Job type *" PlaceholderText="Select">
+                <ComboBoxItem Content="Full Time"/>
+                <ComboBoxItem Content="Part Time"/>
+                <ComboBoxItem Content="Volunteer"/>
+                <ComboBoxItem Content="Internship"/>
+                <ComboBoxItem Content="Remote"/>
+                <ComboBoxItem Content="Hybrid"/>
+                <ComboBoxItem Content="Contract"/>
+            </ComboBox>
+
+            <ComboBox x:Name="ExperienceCombo" Header="Experience level *" PlaceholderText="Select">
+                <ComboBoxItem Content="Internship"/>
+                <ComboBoxItem Content="Entry level"/>
+                <ComboBoxItem Content="Mid-Senior level"/>
+                <ComboBoxItem Content="Director"/>
+                <ComboBoxItem Content="Executive"/>
+            </ComboBox>
+
+            <StackPanel Orientation="Horizontal" Spacing="16">
+                <CalendarDatePicker x:Name="StartDatePicker" Header="Start date *" Width="200"/>
+                <CalendarDatePicker x:Name="EndDatePicker" Header="End date *" Width="200"/>
+            </StackPanel>
+
+            <TextBox x:Name="DescriptionBox" Header="Job description *" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="100" PlaceholderText="Description"/>
+
+            <TextBox x:Name="LocationBox" Header="Job location *" PlaceholderText="City / region"/>
+
+            <NumberBox x:Name="PositionsBox" Header="Available positions *" Value="1" Minimum="1" SpinButtonPlacementMode="Inline"/>
+
+            <TextBox x:Name="PhotoBox" Header="Photo (URL or path, optional)" PlaceholderText="Optional"/>
+
+            <StackPanel Orientation="Horizontal" Spacing="16">
+                <TextBox x:Name="SalaryBox" Header="Salary (optional)" PlaceholderText="Integer or leave empty" Width="200"/>
+                <!--NumberBox x:Name="AmountPayedBox" Header="Amount paid (optional, default 0)" Value="0" Minimum="0" SpinButtonPlacementMode="Inline" Width="220"/-->
+            </StackPanel>
+
+            <CalendarDatePicker x:Name="DeadlinePicker" Header="Application deadline (optional)" Width="280"/>
+
+            <TextBlock Text="Required skills * — check skills and set minimum knowledge % (1–100)" FontWeight="SemiBold" Margin="0,8,0,0"/>
+            <ItemsControl ItemsSource="{x:Bind ViewModel.SkillRows}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SkillPickItem">
+                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4">
+                            <CheckBox IsChecked="{x:Bind IsSelected, Mode=TwoWay}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{x:Bind Skill.SkillName}" Width="120" VerticalAlignment="Center"/>
+                            <TextBox Text="{x:Bind RequiredPercentText, Mode=TwoWay}" Width="72" PlaceholderText="%" Header=" % "/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,24,0,0">
+                <Button Content="Save job" Click="SaveJob_Click" Style="{ThemeResource AccentButtonStyle}"/>
+                <Button Content="Cancel" Click="Cancel_Click"/>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
