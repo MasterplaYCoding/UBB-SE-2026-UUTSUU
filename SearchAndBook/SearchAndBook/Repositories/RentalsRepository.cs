@@ -28,7 +28,7 @@ public class RentalsRepository : InterfaceRentalsRepository
     /// </summary>
     /// <param name="id">The rental identifier.</param>
     /// <returns>The rental time range if found; otherwise, null.</returns>
-    public TimeRange? Get(int id)
+    public TimeRange? GetGameById(int id)
     {
         try
         {
@@ -59,7 +59,7 @@ public class RentalsRepository : InterfaceRentalsRepository
     /// Retrieves all rental time ranges.
     /// </summary>
     /// <returns>A list of all rental time ranges.</returns>
-    public List<TimeRange> GetAll()
+    public List<TimeRange> GetAllGames()
     {
         try
         {

@@ -20,7 +20,7 @@ namespace SearchAndBook.ViewModels
         private void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-        private readonly IBookingService BookingService;
+        private readonly InterfaceBookingService BookingService;
 
         private BookingDTO _gameAndUserDetails;
         public BookingDTO GameAndUserDetails
@@ -88,7 +88,7 @@ namespace SearchAndBook.ViewModels
         public event Action? OnGoBackRequested;
         public event Action? OnConfirmBookingRequested;
 
-        public ConfirmBookingViewModel(IBookingService bookingService, BookingDTO gameAndUserDetails, TimeRange selectedTimeRange)
+        public ConfirmBookingViewModel(InterfaceBookingService bookingService, BookingDTO gameAndUserDetails, TimeRange selectedTimeRange)
         {
             try
             {

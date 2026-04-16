@@ -51,7 +51,7 @@ namespace SearchAndBook.Services
                 {
                     if (!ownerCacheById.ContainsKey(game.OwnerId))
                     {
-                        ownerCacheById[game.OwnerId] = usersRepository.Get(game.OwnerId);
+                        ownerCacheById[game.OwnerId] = usersRepository.GetGameById(game.OwnerId);
                     }
 
                     var gameowner = ownerCacheById[game.OwnerId];

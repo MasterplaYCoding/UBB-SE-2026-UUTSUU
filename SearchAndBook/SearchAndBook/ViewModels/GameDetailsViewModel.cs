@@ -117,7 +117,7 @@ namespace SearchAndBook.ViewModels
 
         public ICommand ChatWithOwnerCommand => new RelayCommand(_ => { /* later */ });
 
-        public GameDetailsViewModel(IBookingService bookingService, int gameId)
+        public GameDetailsViewModel(InterfaceBookingService bookingService, int gameId)
         {
             _bookingService = bookingService ?? throw new ArgumentNullException(nameof(bookingService));
 

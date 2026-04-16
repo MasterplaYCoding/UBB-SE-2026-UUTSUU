@@ -19,6 +19,13 @@ namespace SearchAndBook.ViewModels
         private readonly InterfaceSearchAndFilterService _searchService;
         private readonly InterfaceGeographicalService _geographicalService;
 
+        private const int ItemsPerPage = 10;
+        private const int MinimumCharactersForCitySearch = 2;
+        private const int FirstPage = 1;
+        private const int MinimumPlayers = 0;
+        private const double DefaultMaxPrice = 0;
+        private const int MinimumPageNumber = 1;
+
         public DateTimeOffset Today => DateTimeOffset.Now.Date;
         public DateTimeOffset Tomorrow => DateTimeOffset.Now.Date.AddDays(1);
 
@@ -79,7 +86,7 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        private int _currentPage = 1;
+        private int _currentPage = FirstPage;
         public int CurrentPage
         {
             get => _currentPage;
@@ -95,12 +102,10 @@ namespace SearchAndBook.ViewModels
             get
             {
                 if (Games == null || Games.Count == 0)
-                    return 1;
+                    return FirstPage;
                 return (int)Math.Ceiling((double)Games.Count / ItemsPerPage);
             }
         }
-
-        private const int ItemsPerPage = 10;
 
         private double _selectedMaximumPrice;
         public double SelectedMaximumPrice
@@ -207,7 +212,7 @@ namespace SearchAndBook.ViewModels
             DisplayedResults = Array.Empty<GameDTO>();
             HasNoResults = false;
 
-            SelectedMaximumPrice = 0;
+            SelectedMaximumPrice = DefaultMaxPrice;
             SelectedStartDate = null;
             SelectedEndDate = null;
 
@@ -273,8 +278,6 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-     
-
         public void LoadSearchResults(FilterCriteria searchCriteria)
         {
             try
@@ -282,7 +285,7 @@ namespace SearchAndBook.ViewModels
                 BaseResults = _searchService.SearchGamesByFilter(searchCriteria) ?? Array.Empty<GameDTO>();
                 DisplayedResults = BaseResults;
                 Games = DisplayedResults.ToList();
-                CurrentPage = 1;
+                CurrentPage = FirstPage;
                 OnPropertyChanged(nameof(TotalPages));
                 RefreshPage();
                 UpdateNoResultsState();
@@ -305,7 +308,7 @@ namespace SearchAndBook.ViewModels
                 BaseResults = discoveryResults ?? Array.Empty<GameDTO>();
                 DisplayedResults = BaseResults;
                 Games = DisplayedResults.ToList();
-                CurrentPage = 1;
+                CurrentPage = FirstPage;
                 OnPropertyChanged(nameof(TotalPages));
                 RefreshPage();
                 UpdateNoResultsState();
@@ -335,7 +338,7 @@ namespace SearchAndBook.ViewModels
 
                 DisplayedResults = _searchService.ApplyFilters(BaseResults, CurrentFilter) ?? Array.Empty<GameDTO>();
                 Games = DisplayedResults.ToList();
-                CurrentPage = 1;
+                CurrentPage = FirstPage;
                 OnPropertyChanged(nameof(TotalPages));
                 RefreshPage();
                 UpdateNoResultsState();
@@ -374,8 +377,6 @@ namespace SearchAndBook.ViewModels
                 RaiseError($"Could not apply selected filters. {ex.Message}");
             }
         }
-
-        
 
         public void RemoveNameFilter()
         {
@@ -486,8 +487,8 @@ namespace SearchAndBook.ViewModels
             try
             {
                 CurrentFilter.Reset();
-                SelectedMaximumPrice = 0;
-                SelectedMinimumPlayers = 0;
+                SelectedMaximumPrice = DefaultMaxPrice;
+                SelectedMinimumPlayers = MinimumPlayers;
                 SelectedSortOption = null;
                 SelectedStartDate = null;
                 SelectedEndDate = null;
@@ -496,7 +497,7 @@ namespace SearchAndBook.ViewModels
 
                 DisplayedResults = BaseResults;
                 Games = DisplayedResults.ToList();
-                CurrentPage = 1;
+                CurrentPage = FirstPage;
                 OnPropertyChanged(nameof(TotalPages));
                 RefreshPage();
                 UpdateNoResultsState();
@@ -514,7 +515,6 @@ namespace SearchAndBook.ViewModels
                 if (SelectedSortOption == "Closest to me" && string.IsNullOrWhiteSpace(CitySearchText))
                 {
                     LocationError = "Please enter a city to measure from.";
-
                     _selectedSortOption = null;
                     OnPropertyChanged(nameof(SelectedSortOption));
                     return;
@@ -582,7 +582,7 @@ namespace SearchAndBook.ViewModels
                 Games = _searchService.SearchGamesByFilter(criteria)?.ToList() ?? new List<GameDTO>();
                 DisplayedResults = Games.ToArray();
                 BaseResults = DisplayedResults;
-                CurrentPage = 1;
+                CurrentPage = FirstPage;
                 OnPropertyChanged(nameof(TotalPages));
                 RefreshPage();
                 UpdateNoResultsState();
@@ -618,7 +618,7 @@ namespace SearchAndBook.ViewModels
         {
             try
             {
-                if (CurrentPage > 1)
+                if (CurrentPage > MinimumPageNumber)
                 {
                     CurrentPage--;
                     RefreshPage();
@@ -693,11 +693,8 @@ namespace SearchAndBook.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        /////Location logic
-        ///
         public ObservableCollection<string> CitySuggestions { get; } = new();
 
-        // 2. The property that captures what the user is typing
         private string _citySearchText = string.Empty;
         public string CitySearchText
         {
@@ -708,26 +705,19 @@ namespace SearchAndBook.ViewModels
                 {
                     _citySearchText = value;
                     OnPropertyChanged(nameof(CitySearchText));
-
-                    // Sync the text box directly to the filter object!
-                    // (Use 'Filter.City' for Discovery, and 'CurrentFilter.City' for FilteredSearch)
                     CurrentFilter.City = value;
-
-                    // Fetch new suggestions every time a letter is typed
                     UpdateCitySuggestions(value);
                 }
             }
         }
 
-        // 3. The method that talks to your dictionary
-        private const int MinimumCharactersForCitySearch = 2;
         private void UpdateCitySuggestions(string input)
         {
             try
             {
                 CitySuggestions.Clear();
 
-                if (!string.IsNullOrWhiteSpace(input) && input.Length >= MinimumCharactersForCitySearch) // Wait until they type 2 letters
+                if (!string.IsNullOrWhiteSpace(input) && input.Length >= MinimumCharactersForCitySearch)
                 {
                     var matches = _geographicalService.GetCitySuggestions(input);
                     foreach (var match in matches)

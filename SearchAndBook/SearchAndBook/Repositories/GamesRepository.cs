@@ -49,7 +49,7 @@ public class GamesRepository : InterfaceGamesRepository
     /// <param name="id">The unique id of the game.</param>
     /// <remarks>
     /// Use this when you already know the exact game id and need full game details.
-    public Game? Get(int id)
+    public Game? GetGameById(int id)
     {
         try
         {
@@ -75,7 +75,7 @@ public class GamesRepository : InterfaceGamesRepository
     }
 
     /// Gets all active games that are visible in the system.
-    public List<Game> GetAll()
+    public List<Game> GetAllGames()
     {
         try
         {
@@ -155,7 +155,8 @@ public class GamesRepository : InterfaceGamesRepository
             var games = new List<Game>();
 
             var todayDate = DateTime.Today;
-            var tomorrowDate = todayDate.AddDays(1);
+            int daysAdded = 1;
+            var tomorrowDate = todayDate.AddDays(daysAdded);
 
             using var connection = new SqlConnection(DatabaseConfig.ConnectionString);
             connection.Open();
