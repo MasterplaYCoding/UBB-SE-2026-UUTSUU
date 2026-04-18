@@ -137,14 +137,14 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public bool CheckAvailability(TimeRange timeRange)
+        public bool IsTimeRangeAvailable(TimeRange timeRange)
         {
             try
             {
                 if (timeRange == null)
                     return false;
 
-                return _bookingService.CheckAvailability(GameAndUserDetails.GameId, timeRange);
+                return _bookingService.IsTimeRangeAvailable(GameAndUserDetails.GameId, timeRange);
             }
             catch (Exception exception)
             {

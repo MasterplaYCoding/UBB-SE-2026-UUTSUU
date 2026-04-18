@@ -101,7 +101,7 @@ public class BookingService : InterfaceBookingService
     /// <param name="gameId">The unique identifier of the game.</param>
     /// <param name="timeRange">The requested <see cref="TimeRange"/> for the booking.</param>
     /// <returns><c>true</c> if the game is available for the specified range; otherwise, <c>false</c>.</returns>
-    public bool CheckAvailability(int gameId, TimeRange timeRange)
+    public bool IsTimeRangeAvailable(int gameId, TimeRange timeRange)
     {
         try
         {

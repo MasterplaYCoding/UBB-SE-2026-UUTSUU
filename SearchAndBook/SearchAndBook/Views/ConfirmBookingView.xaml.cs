@@ -168,7 +168,7 @@ public sealed partial class ConfirmBookingView : Page
                 .ToList();
 
             var newRange = new TimeRange(sorted[0], sorted[sorted.Count - 1]);
-            viewModel.UpdateSelectedRange(newRange);
+            viewModel.UpdateSelectedTimeRange(newRange);
         }
     }
 

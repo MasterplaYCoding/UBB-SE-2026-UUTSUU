@@ -13,16 +13,18 @@ namespace SearchAndBook.ViewModels
     internal class ConfirmBookingViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
+
         public event Action<string>? OnErrorOccurred;
 
-        private const long START_OF_STREAM_POSTION = 0;
+        private const long StreamStartPosition = 0;
 
         private void OnPropertyChanged([CallerMemberName] string? name = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-        private readonly InterfaceBookingService BookingService;
+        private readonly InterfaceBookingService bookingservice;
 
         private BookingDTO _gameAndUserDetails;
+
         public BookingDTO GameAndUserDetails
         {
             get => _gameAndUserDetails;
@@ -36,6 +38,7 @@ namespace SearchAndBook.ViewModels
         public TimeRange[] UnavailableTimeRanges { get; private set; } = Array.Empty<TimeRange>();
 
         private TimeRange _selectedTimeRange;
+
         public TimeRange SelectedTimeRange
         {
             get => _selectedTimeRange;
@@ -43,13 +46,19 @@ namespace SearchAndBook.ViewModels
             {
                 _selectedTimeRange = value;
                 OnPropertyChanged();
-                OnPropertyChanged(nameof(NumberOfDays));
-                OnPropertyChanged(nameof(StartDate));
-                OnPropertyChanged(nameof(EndDate));
+                NotifyDependentProperties();
             }
         }
 
+        private void NotifyDependentProperties()
+        {
+            OnPropertyChanged(nameof(NumberOfDays));
+            OnPropertyChanged(nameof(StartDate));
+            OnPropertyChanged(nameof(EndDate));
+        }
+
         private decimal _totalPrice;
+
         public decimal TotalPrice
         {
             get => _totalPrice;
@@ -61,9 +70,11 @@ namespace SearchAndBook.ViewModels
         }
 
         public string StartDate => SelectedTimeRange?.StartTime.ToString("dd MMM yyyy") ?? "-";
+
         public string EndDate => SelectedTimeRange?.EndTime.ToString("dd MMM yyyy") ?? "-";
 
         private BitmapImage? _ownerImage;
+
         public BitmapImage? OwnerImage
         {
             get => _ownerImage;
@@ -75,6 +86,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private BitmapImage? _gameImage;
+
         public BitmapImage? GameImage
         {
             get => _gameImage;
@@ -86,23 +98,41 @@ namespace SearchAndBook.ViewModels
         }
 
         public event Action? OnGoBackRequested;
+
         public event Action? OnConfirmBookingRequested;
 
-        public ConfirmBookingViewModel(InterfaceBookingService bookingService, BookingDTO gameAndUserDetails, TimeRange selectedTimeRange)
+        public ConfirmBookingViewModel(InterfaceBookingService bookingservice, BookingDTO gameAndUserDetails, TimeRange selectedTimeRange)
         {
             try
             {
-                BookingService = bookingService ?? throw new ArgumentNullException(nameof(bookingService));
+                bookingservice = bookingservice ?? throw new ArgumentNullException(nameof(bookingservice));
                 GameAndUserDetails = gameAndUserDetails ?? throw new ArgumentNullException(nameof(gameAndUserDetails));
                 SelectedTimeRange = selectedTimeRange ?? throw new ArgumentNullException(nameof(selectedTimeRange));
 
-                UnavailableTimeRanges = BookingService.GetUnavailableRanges(GameAndUserDetails.GameId) ?? Array.Empty<TimeRange>();
-                TotalPrice = CalculatePrice();
-                LoadImages();
+                Initialize();
             }
             catch (Exception exception)
             {
                 RaiseError($"Could not initialize booking confirmation. {exception.Message}");
+                UnavailableTimeRanges = Array.Empty<TimeRange>();
+                TotalPrice = 0;
+            }
+        }
+
+        private void Initialize()
+        {
+            try
+            {
+                UnavailableTimeRanges = bookingservice.GetUnavailableRanges(GameAndUserDetails.GameId)
+                                        ?? Array.Empty<TimeRange>();
+
+                TotalPrice = CalculatePrice();
+
+                LoadImages();
+            }
+            catch (Exception exception)
+            {
+                RaiseError($"Could not initialize booking data. {exception.Message}");
                 UnavailableTimeRanges = Array.Empty<TimeRange>();
                 TotalPrice = 0;
             }
@@ -116,7 +146,7 @@ namespace SearchAndBook.ViewModels
                 {
                     using var stream = new InMemoryRandomAccessStream();
                     await stream.WriteAsync(GameAndUserDetails.Image.AsBuffer());
-                    stream.Seek(START_OF_STREAM_POSTION);
+                    stream.Seek(StreamStartPosition);
                     var bitmap = new BitmapImage();
                     await bitmap.SetSourceAsync(stream);
                     GameImage = bitmap;
@@ -152,7 +182,7 @@ namespace SearchAndBook.ViewModels
                     if (SelectedTimeRange == null)
                         return 1;
 
-                    return BookingService.CalculateNumberOfDays(SelectedTimeRange);
+                    return bookingservice.CalculateNumberOfDays(SelectedTimeRange);
                 }
                 catch
                 {
@@ -161,14 +191,14 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public bool CheckAvailability(TimeRange timeRange)
+        public bool IsTimeRangeAvailable(TimeRange timeRange)
         {
             try
             {
                 if (timeRange == null)
                     return false;
 
-                return BookingService.CheckAvailability(GameAndUserDetails.GameId, timeRange);
+                return bookingservice.IsTimeRangeAvailable(GameAndUserDetails.GameId, timeRange);
             }
             catch (Exception exception)
             {
@@ -205,7 +235,7 @@ namespace SearchAndBook.ViewModels
         {
             try
             {
-                return BookingService.CalculateTotalPrice(GameAndUserDetails.Price, SelectedTimeRange);
+                return bookingservice.CalculateTotalPrice(GameAndUserDetails.Price, SelectedTimeRange);
             }
             catch (Exception exception)
             {
@@ -215,7 +245,7 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        public void UpdateSelectedRange(TimeRange newTimeRange)
+        public void UpdateSelectedTimeRange(TimeRange newTimeRange)
         {
             try
             {
@@ -224,10 +254,6 @@ namespace SearchAndBook.ViewModels
 
                 SelectedTimeRange = newTimeRange;
                 TotalPrice = CalculatePrice();
-                OnPropertyChanged(nameof(NumberOfDays));
-                OnPropertyChanged(nameof(StartDate));
-                OnPropertyChanged(nameof(EndDate));
-                OnPropertyChanged(nameof(TotalPrice));
             }
             catch (Exception exception)
             {
