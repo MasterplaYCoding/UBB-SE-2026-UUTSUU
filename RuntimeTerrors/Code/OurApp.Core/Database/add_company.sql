@@ -1,6 +1,16 @@
 ﻿USE iss_project;
 
-truncate table companies
+DELETE FROM job_skills;
+DELETE FROM skills;
+DBCC CHECKIDENT ('skills', RESEED, 0);
+
+DELETE FROM applicants;
+DELETE FROM users;
+DELETE FROM jobs;
+DELETE FROM collaborators;
+DELETE FROM events;
+DELETE FROM companies;
+GO
 
 INSERT INTO skills (skill_name) VALUES
 ('C#'),
@@ -35,6 +45,24 @@ INSERT INTO companies (
     'The database server crashed.', 'Wait for it to fix itself', 'Reboot server', 'Alert DevOps', 
     'Too passive.', 'Could cause data loss.', 'Safest and most professional action.', 
     'Analytical companion', 1, 1
+),
+(
+    3, 'EcoCode', 'Building sustainable and green software solutions.', 'ecocode_profile.jpg', 'ecocode_logo.png', 
+    'Seattle, WA', 'hello@ecocode.com', 'Leafy', 3, 'Code for the planet!', 
+    'You notice a memory leak in the background process.', 'Ignore it', 'Log it for next sprint', 'Fix it immediately', 
+    'Irresponsible.', 'Acceptable, but risky.', 'Excellent initiative.', 
+    'The client wants a feature delivered faster than possible.', 'Agree to rush it', 'Explain the tradeoffs', 'Work the weekend', 
+    'Will lead to bugs.', 'Perfect communication.', 'Not sustainable long-term.', 
+    'Eco-friendly assistant', 0, 2
+),
+(
+    4, 'FinEdge', 'High-security financial trading platforms.', 'finedge_profile.jpg', 'finedge_logo.png', 
+    'London, UK', 'hr@finedge.com', 'VaultBot', 4, 'Security is not a feature, it is the foundation.', 
+    'A minor security vulnerability is found in an old module.', 'Hide it', 'Patch it next week', 'Patch it immediately', 
+    'Illegal and unethical.', 'Too slow for finance.', 'The only correct answer.', 
+    'The development team is falling behind schedule.', 'Yell at them', 'Reassess the sprint goals', 'Ignore the delay', 
+    'Toxic leadership.', 'Excellent agile management.', 'Negligent.', 
+    'Strict professional companion', 0, 1
 );
 
 INSERT INTO jobs (
@@ -97,8 +125,33 @@ INSERT INTO events (
     202, 2, 'summit.jpg', 'Data Summit 2026', 
     'Exploring the future of big data, AI, and machine learning.', 
     '2026-08-20', '2026-08-21', 'New York Convention Center', '2026-04-12 11:00:00'
+),
+(
+    203, 3, 'winter_summit_2026.jpg', 'Winter Web Summit 2026', 
+    'Our annual kickoff exploring sustainable tech. Thank you to everyone who attended!', 
+    '2026-01-15', '2026-01-17', 'Seattle Convention Center', '2025-11-01 10:00:00'
+),
+(
+    204, 4, 'fintech_panel.jpg', 'The Future of FinTech Security', 
+    'A live panel discussion on securing high-frequency trading platforms against modern threats.', 
+    '2026-05-05', '2026-05-05', 'Virtual', '2026-04-01 09:00:00'
+),
+(
+    205, 1, 'cloud_workshop_2025.jpg', 'TechNova Cloud Architecture Workshop', 
+    'A hands-on deep dive into building scalable cloud solutions using .NET and Azure.', 
+    '2025-10-10', '2025-10-11', 'TechNova HQ, San Francisco', '2025-08-01 09:00:00'
+),
+(
+    206, 1, 'opensource_summit_2026.jpg', 'TechNova Open Source Summit 2026', 
+    'Join our core developers as we contribute to major open-source projects for the weekend.', 
+    '2026-09-05', '2026-09-06', 'Virtual', '2026-04-10 12:00:00'
 );
 
 INSERT INTO collaborators (event_id, company_id) VALUES
 (201, 2),
-(202, 1);
+(202, 1),
+(203, 1),
+(203, 4),
+(204, 2),
+(205, 2),
+(206, 3);
