@@ -110,5 +110,22 @@ namespace OurApp.Tests.Repositories
             Assert.AreEqual(countBefore + 1, countAfter);
         }
 
+        [TestMethod]
+        public void AddCollaboratorToRepo_InvalidEventId_ThrowsException()
+        {
+            var invalidEvent = new Event(null, "Invalid", "desc",
+                new DateTime(2027, 1, 1), new DateTime(2027, 1, 2),
+                "Cluj-Napoca", TestDbSeeder.CompanyId, new List<Company>());
+            invalidEvent.Id = 99999;
+
+            var collaborator = new Company("TestCollaboratorCompany", "", "", "logo.png", "", "")
+            {
+                CompanyId = TestDbSeeder.CollaboratorCompanyId
+            };
+
+            Assert.ThrowsException<Microsoft.Data.SqlClient.SqlException>(() =>
+                collaboratorsRepo.AddCollaboratorToRepo(invalidEvent, collaborator, TestDbSeeder.CompanyId));
+        }
+
     }
 }

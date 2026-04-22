@@ -144,7 +144,7 @@ namespace OurApp.Core.Repositories
                     cmd.Parameters.AddWithValue("@status", string.IsNullOrEmpty(applicant.ApplicationStatus) ? DBNull.Value : applicant.ApplicationStatus);
                     cmd.Parameters.AddWithValue("@recId", applicant.RecommendedFromCompany?.CompanyId ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@applied", applicant.AppliedAt);
-                    cmd.Parameters.AddWithValue("@userId", applicant.User?.Id ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@userId", applicant.User.Id);
 
                     cmd.ExecuteNonQuery();
                 }

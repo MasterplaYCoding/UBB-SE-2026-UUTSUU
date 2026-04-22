@@ -50,7 +50,7 @@ namespace OurApp.Tests.Repositories
             var result = sut.GetApplicantById(TestDbSeeder.ApplicantId);
             Assert.IsNotNull(result);
         }
-
+        
         [TestMethod]
         public void AddApplicant_ValidApplicant_StoresCorrectId()
         {
@@ -179,6 +179,85 @@ namespace OurApp.Tests.Repositories
             
             var result = sut.GetApplicantById(TestDbSeeder.ApplicantId);
             Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public void AddApplicant_WithNullOptionalFields_CanBeRetrievedAfterwards()
+        {
+            sut.RemoveApplicant(TestDbSeeder.ApplicantId);
+            var applicant = new Applicant
+            {
+                ApplicantId = TestDbSeeder.ApplicantId,
+                Job = null,
+                User = new User(TestDbSeeder.UserId, "Test User", "test@test.com"),
+                ApplicationStatus = null,
+                AppTestGrade = null,
+                CvGrade = null,
+                CompanyTestGrade = null,
+                InterviewGrade = null,
+                RecommendedFromCompany = null,
+                AppliedAt = DateTime.UtcNow
+            };
+
+            sut.AddApplicant(applicant);
+            var result = sut.GetApplicantById(TestDbSeeder.ApplicantId);
+
+            Assert.IsNotNull(result);
+        }
+
+        [TestMethod]
+        public void AddApplicant_WithRecommendedCompany_CanBeRetrievedAfterwards()
+        {
+            sut.RemoveApplicant(TestDbSeeder.ApplicantId);
+            var applicant = new Applicant
+            {
+                ApplicantId = TestDbSeeder.ApplicantId,
+                Job = new JobPosting { JobId = TestDbSeeder.JobId },
+                User = new User(TestDbSeeder.UserId, "Test User", "test@test.com"),
+                ApplicationStatus = "OnHold",
+                RecommendedFromCompany = new Company { CompanyId = TestDbSeeder.CollaboratorCompanyId },
+                AppliedAt = DateTime.UtcNow
+            };
+
+            sut.AddApplicant(applicant);
+            var result = sut.GetApplicantById(TestDbSeeder.ApplicantId);
+
+            Assert.IsNotNull(result);
+        }
+
+        [TestMethod]
+        public void AddApplicant_WithAllGrades_StoresGradesCorrectly()
+        {
+            sut.RemoveApplicant(TestDbSeeder.ApplicantId);
+            var applicant = new Applicant
+            {
+                ApplicantId = TestDbSeeder.ApplicantId,
+                Job = new JobPosting { JobId = TestDbSeeder.JobId },
+                User = new User(TestDbSeeder.UserId, "Test User", "test@test.com"),
+                ApplicationStatus = "OnHold",
+                AppTestGrade = 8.0m,
+                CvGrade = 7.5m,
+                CompanyTestGrade = 9.0m,
+                InterviewGrade = 8.5m,
+                AppliedAt = DateTime.UtcNow
+            };
+
+            sut.AddApplicant(applicant);
+            var result = sut.GetApplicantById(TestDbSeeder.ApplicantId);
+
+            Assert.AreEqual(8.0m, result.AppTestGrade);
+        }
+
+        [TestMethod]
+        public void UpdateApplicant_WithNullStatus_CanBeRetrievedAfterwards()
+        {
+            var applicant = sut.GetApplicantById(TestDbSeeder.ApplicantId);
+            applicant.ApplicationStatus = null;
+
+            sut.UpdateApplicant(applicant);
+            var result = sut.GetApplicantById(TestDbSeeder.ApplicantId);
+
+            Assert.IsNull(result.ApplicationStatus);
         }
     }
 }

@@ -31,7 +31,7 @@ namespace OurApp.Core.Repositories
 
                 object result = sqlCommand.ExecuteScalar();
 
-                if (result == DBNull.Value || result == null)
+                if (result == DBNull.Value)
                     return 0;
 
                 return Convert.ToInt32(result);
