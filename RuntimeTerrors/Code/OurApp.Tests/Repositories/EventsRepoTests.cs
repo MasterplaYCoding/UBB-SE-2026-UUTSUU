@@ -180,5 +180,68 @@ namespace OurApp.Tests.Repositories
             int countAfter = eventsRepo.getPastEventsFromRepo(TestDbSeeder.CompanyId).Count;
             Assert.AreEqual(countBefore, countAfter);
         }
+
+        [TestMethod]
+        public void GetMaxEventId_WhenEventsExist_ReturnsPositiveValue()
+        {
+            eventsRepo.AddEventToRepo(insertedEvent);
+
+            var result = eventsRepo.GetMaxEventId();
+
+            Assert.IsTrue(result > 0);
+        }
+
+        [TestMethod]
+        public void AddEventToRepo_WithPhotoAndNullDescription_CanBeRetrievedAfterwards()
+        {
+            var eventWithPhoto = new Event(
+                "photo.jpg",
+                "Test Event With Photo",
+                null,
+                new DateTime(2027, 1, 1),
+                new DateTime(2027, 1, 2),
+                "Cluj-Napoca",
+                TestDbSeeder.CompanyId,
+                new List<Company>()
+            );
+
+            eventsRepo.AddEventToRepo(eventWithPhoto);
+            var result = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId);
+            var found = result.First(e => e.Id == eventWithPhoto.Id);
+
+            eventsRepo.RemoveEventFromRepo(eventWithPhoto);
+
+            Assert.IsNotNull(found);
+        }
+
+        [TestMethod]
+        public void UpdateEventToRepo_WithNullDescription_UpdateIsPersistedInDb()
+        {
+            eventsRepo.AddEventToRepo(insertedEvent);
+            eventsRepo.UpdateEventToRepo(insertedEvent.Id, null, "Updated Title", null, new DateTime(2027, 1, 1), new DateTime(2027, 1, 2), "Cluj-Napoca");
+
+            var result = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId);
+            var updatedEvent = result.First(e => e.Id == insertedEvent.Id);
+
+            Assert.AreEqual("Updated Title", updatedEvent.Title);
+        }
+
+        [TestMethod]
+        public void AddEventToRepo_NullTitle_ThrowsException()
+        {
+            var invalidEvent = new Event(
+                null,
+                null,
+                "description",
+                new DateTime(2027, 1, 1),
+                new DateTime(2027, 1, 2),
+                "Cluj-Napoca",
+                TestDbSeeder.CompanyId,
+                new List<Company>()
+            );
+
+            Assert.ThrowsException<Microsoft.Data.SqlClient.SqlException>(() =>
+                eventsRepo.AddEventToRepo(invalidEvent));
+        }
     }
 }

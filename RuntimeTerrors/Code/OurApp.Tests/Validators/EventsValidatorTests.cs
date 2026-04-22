@@ -211,6 +211,24 @@ namespace OurApp.Tests.Validators
                 bool result = eventValidator.AreEventDatesCronologicallyValid(date, date);
                 Assert.IsTrue(result);
             }
+            
+            [TestMethod]
+            public void AreEventDatesCronologicallyValid_NullStartDate_ReturnsTrue()
+            {
+                DateTimeOffset? startDate = null;
+                DateTimeOffset endDate = DateTimeOffset.Now.AddDays(2);
+                bool result = eventValidator.AreEventDatesCronologicallyValid(startDate, endDate);
+                Assert.IsTrue(result);
+            }
+
+            [TestMethod]
+            public void AreEventDatesCronologicallyValid_NullEndDate_ReturnsTrue()
+            {
+                DateTimeOffset startDate = DateTimeOffset.Now.AddDays(1);
+                DateTimeOffset? endDate = null;
+                bool result = eventValidator.AreEventDatesCronologicallyValid(startDate, endDate);
+                Assert.IsTrue(result);
+            }
         }
     }
 }

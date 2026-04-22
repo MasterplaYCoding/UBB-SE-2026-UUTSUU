@@ -46,8 +46,8 @@ namespace OurApp.Tests.Helpers
 
                 Execute(conn, @"
                     IF NOT EXISTS (SELECT 1 FROM users WHERE user_id = 90200)
-                    INSERT INTO users (user_id, name, email)
-                    VALUES (90200, 'Placeholder User', 'placeholder@test.com')");
+                    INSERT INTO users (user_id, name, email, cv_xml)
+                    VALUES (90200, 'Placeholder User', 'placeholder@test.com', '<CV><Name>Test</Name></CV>')");
 
                 Execute(conn, @"
                     IF NOT EXISTS (SELECT 1 FROM applicants WHERE applicant_id = 90301)
