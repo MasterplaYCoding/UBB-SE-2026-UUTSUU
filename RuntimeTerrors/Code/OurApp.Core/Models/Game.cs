@@ -44,6 +44,6 @@ public class Game
 
     public void Unpublish()
     {
-        IsPublished = true;
+        IsPublished = false;
     }
 }

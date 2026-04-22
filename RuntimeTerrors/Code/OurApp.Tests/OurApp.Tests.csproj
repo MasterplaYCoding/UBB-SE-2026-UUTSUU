@@ -22,7 +22,6 @@
 
   <ItemGroup>
     <Folder Include="Integration\" />
-    <Folder Include="Validators\" />
   </ItemGroup>
 
 </Project>
