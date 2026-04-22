@@ -265,6 +265,25 @@ namespace OurApp.Tests.Services
             Assert.IsTrue(result <= 10.0m);
         }
 
+        [TestMethod]
+        public void ScanCvXml_CvWithWhitespaceOnlyInterests_ReturnsBaseGrade()
+        {
+            var applicant = MakeApplicant(id: 1);
+            applicant.User = new User(100, "Test", "test@test.com", @"<CV>
+                <Name>Alice Smith</Name>
+                <Email>alice@example.com</Email>
+                <Phone>0466428888</Phone>
+                <Skills>c# sql python</Skills>
+                <Interests>   </Interests>
+                <Summary>Passionate software developer with many years of experience</Summary>
+                <Projects>Built enterprise applications using c# and sql</Projects>
+             </CV>");
+
+            var result = sut.ScanCvXml(applicant);
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
         public void ScanCvXml_CvWithInvalidEmail_ReturnsNull()
         {
             var applicant = MakeApplicant(id: 1);
@@ -591,6 +610,144 @@ namespace OurApp.Tests.Services
             Assert.AreEqual("Rejected", fakeRepo.LastUpdated.ApplicationStatus);
         }
 
+        [TestMethod]
+        public void ScanCvXml_JobSkillWithNullSkillName_UsesDefaultKeywords()
+        {
+            var applicant = MakeApplicant(id: 1);
+            applicant.Job = new JobPosting
+            {
+                JobId = 10,
+                JobSkills = new List<JobSkill>
+        {
+            new JobSkill { Skill = new Skill { SkillName = "" }, RequiredPercentage = 80 },
+            new JobSkill { Skill = null, RequiredPercentage = 80 }
+        }
+            };
+            applicant.User = new User(100, "Test", "test@test.com", MakeValidCvXml());
 
+            var result = sut.ScanCvXml(applicant);
+            Assert.IsNotNull(result);
+        }
+
+        [TestMethod]
+        public void ScanCvXml_ValidCvWithNullJobSkills_ReturnsGrade()
+        {
+            var applicant = MakeApplicant(id: 1);
+            applicant.Job = new JobPosting
+            {
+                JobId = 10,
+                JobSkills = null
+            };
+            applicant.User = new User(100, "Test", "test@test.com", MakeValidCvXml());
+
+            var result = sut.ScanCvXml(applicant);
+            Assert.IsNotNull(result);
+        }
+
+        [TestMethod]
+        public void ScanCvXml_CvWithMissingName_ReturnsNull()
+        {
+            var applicant = MakeApplicant(id: 1);
+            applicant.User = new User(100, "Test", "test@test.com", @"<CV>
+                <Email>alice@example.com</Email>
+                <Phone>0466428888</Phone>
+                <Skills>c# sql</Skills>
+                <Interests>coding</Interests>
+                <Summary>Passionate software developer with many years of experience</Summary>
+                <Projects>Built enterprise applications using c# and sql</Projects>
+            </CV>");
+
+            var result = sut.ScanCvXml(applicant);
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public void ScanCvXml_CvWithMissingEmail_ReturnsNull()
+        {
+            var applicant = MakeApplicant(id: 1);
+            applicant.User = new User(100, "Test", "test@test.com", @"<CV>
+                <Name>Alice Smith</Name>
+                <Phone>0466428888</Phone>
+                <Skills>c# sql</Skills>
+                <Interests>coding</Interests>
+                <Summary>Passionate software developer with many years of experience</Summary>
+                <Projects>Built enterprise applications using c# and sql</Projects>
+            </CV>");
+
+            var result = sut.ScanCvXml(applicant);
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public void ScanCvXml_CvWithMissingSkills_ReturnsNull()
+        {
+            var applicant = MakeApplicant(id: 1);
+            applicant.User = new User(100, "Test", "test@test.com", @"<CV>
+                <Name>Alice Smith</Name>
+                <Email>alice@example.com</Email>
+                <Phone>0466428888</Phone>
+                <Interests>coding</Interests>
+                <Summary>Passionate software developer with many years of experience</Summary>
+                <Projects>Built enterprise applications using c# and sql</Projects>
+            </CV>");
+
+            var result = sut.ScanCvXml(applicant);
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public void ScanCvXml_CvWithMissingSummary_ReturnsNull()
+        {
+            var applicant = MakeApplicant(id: 1);
+            applicant.User = new User(100, "Test", "test@test.com", @"<CV>
+                <Name>Alice Smith</Name>
+                <Email>alice@example.com</Email>
+                <Phone>0466428888</Phone>
+                <Skills>c# sql</Skills>
+                <Interests>coding</Interests>
+                <Projects>Built enterprise applications using c# and sql</Projects>
+            </CV>");
+
+            var result = sut.ScanCvXml(applicant);
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public void ScanCvXml_CvWithMissingProjects_ReturnsNull()
+        {
+            var applicant = MakeApplicant(id: 1);
+            applicant.User = new User(100, "Test", "test@test.com", @"<CV>
+                <Name>Alice Smith</Name>
+                <Email>alice@example.com</Email>
+                <Phone>0466428888</Phone>
+                <Skills>c# sql</Skills>
+                <Interests>coding</Interests>
+                <Summary>Passionate software developer with many years of experience</Summary>
+            </CV>");
+
+            var result = sut.ScanCvXml(applicant);
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public void ScanCvXml_NullUser_ReturnsNull()
+        {
+            var applicant = MakeApplicant(id: 1);
+            applicant.User = null;
+
+            var result = sut.ScanCvXml(applicant);
+            Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public void ScanCvXml_ValidCvWithNullJob_ReturnsGrade()
+        {
+            var applicant = MakeApplicant(id: 1);
+            applicant.Job = null;
+            applicant.User = new User(100, "Test", "test@test.com", MakeValidCvXml());
+
+            var result = sut.ScanCvXml(applicant);
+            Assert.IsNotNull(result);
+        }
     }
 }
