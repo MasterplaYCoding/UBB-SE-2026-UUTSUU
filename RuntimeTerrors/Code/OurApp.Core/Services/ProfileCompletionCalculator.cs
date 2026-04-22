@@ -104,7 +104,8 @@ namespace OurApp.Core.Services
         {
             var applicants = _applRepository.GetApplicantsByCompany(companyId);
 
-            int current = applicants.Count();
+            int current = applicants
+                .Count(a => a.AppliedAt >= DateTime.Now.AddDays(-7));
 
             int previous = applicants
                 .Count(a => a.AppliedAt < DateTime.Now.AddDays(-7));
