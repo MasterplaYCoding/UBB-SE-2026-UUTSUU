@@ -16,11 +16,11 @@ namespace OurApp.Core.Models
         public string Location { get; set; }
         public string Email { get; set; }
 
-        public Game game { get; set; }
+        public Game Game { get; set; }
         public int PostedJobsCount { get; set; }
         public int CollaboratorsCount { get; set; }
 
-        public List<string> Collaborators { get; set; } = new();
+        public List<string> Collaborators { get; set; } = new ();
 
         public Company() { }
         public Company(
@@ -35,12 +35,12 @@ namespace OurApp.Core.Models
             int collaboratorsCount = 0)
         {
             CompanyId = companyId;
-            Name = name ?? "";
-            AboutUs = aboutus ?? "";
-            ProfilePicturePath = pfpUrl ?? "";
-            CompanyLogoPath = logoUrl ?? "";
-            Location = location ?? "";
-            Email = email ?? "";
+            Name = name ?? string.Empty;
+            AboutUs = aboutus ?? string.Empty;
+            ProfilePicturePath = pfpUrl ?? string.Empty;
+            CompanyLogoPath = logoUrl ?? string.Empty;
+            Location = location ?? string.Empty;
+            Email = email ?? string.Empty;
             PostedJobsCount = postedJobsCount;
             CollaboratorsCount = collaboratorsCount;
         }

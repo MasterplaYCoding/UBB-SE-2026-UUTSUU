@@ -127,7 +127,7 @@ public partial class EditCompanyProfileViewModel : ObservableObject
           
             var updated = ToCompany(posted, collab);
             updated.Collaborators = copy;
-            updated.game = game; 
+            updated.Game = game; 
 
           
             _companyService.UpdateCompany(updated);

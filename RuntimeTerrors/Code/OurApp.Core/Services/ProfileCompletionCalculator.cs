@@ -43,7 +43,7 @@ namespace OurApp.Core.Services
             if (company.CollaboratorsCount >= 2 || company.CollaboratorsCount >= 2) done++;
             else tasks.Add("Add 2 collaborators");
 
-            if (IsMiniGameComplete(company.game)) done++;
+            if (IsMiniGameComplete(company.Game)) done++;
             else tasks.Add("Complete mini-game");
 
             return ((done * 100) / total, tasks);

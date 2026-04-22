@@ -7,18 +7,18 @@ using System.Threading.Tasks;
 namespace OurApp.Core.Models
 {
     public class Buddy
-    {   
+    {
         public int Id { get; private set; }
 
         public string Name { get; private set; }
 
-        public string Introduction {  get; private set; }
+        public string Introduction { get; private set; }
 
-        public Buddy(int id, string name, string introduction) {
+        public Buddy(int id, string name, string introduction)
+        {
             Id = id;
             Name = name;
             Introduction = introduction;
         }
-
     }
 }

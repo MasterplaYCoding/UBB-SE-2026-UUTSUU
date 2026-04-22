@@ -41,7 +41,7 @@ namespace OurApp.Core.Repositories
                 collaboratorsCount: reader["collaborators_count"] is DBNull ? 0 : Convert.ToInt32(reader["collaborators_count"])
             );
 
-            company.game = MapGame(reader);
+            company.Game = MapGame(reader);
 
             return company;
         }
@@ -51,7 +51,7 @@ namespace OurApp.Core.Repositories
             if (_currentCompany == null)
                 return null;
 
-            return _currentCompany.game;
+            return _currentCompany.Game;
         }
 
         public void SaveGame(Game game)
@@ -59,7 +59,7 @@ namespace OurApp.Core.Repositories
             if (_currentCompany == null)
                 throw new InvalidOperationException("Nu exista o companie curenta selectata.");
 
-            _currentCompany.game = game;
+            _currentCompany.Game = game;
 
             using var conn = DbConnectionHelper.GetConnection();
             conn.Open();
@@ -286,24 +286,24 @@ namespace OurApp.Core.Repositories
             insertCmd.Parameters.AddWithValue("@LogoPictureUrl", c.CompanyLogoPath);
             insertCmd.Parameters.AddWithValue("@Location", DbValue(c.Location));
             insertCmd.Parameters.AddWithValue("@Email", DbValue(c.Email));
-            insertCmd.Parameters.AddWithValue("@BuddyName", DbValue(c.game.Buddy.Name));
-            insertCmd.Parameters.AddWithValue("@BuddyDescription", DbValue(c.game.Buddy.Introduction));
-            insertCmd.Parameters.AddWithValue("@AvatarId", DbValue(c.game.Buddy.Id));
-            insertCmd.Parameters.AddWithValue("@FinalQuote", DbValue(c.game.Conclusion));
-            insertCmd.Parameters.AddWithValue("@Scenario1Text", DbValue(c.game.GetScenario(0).Description));
-            insertCmd.Parameters.AddWithValue("@Scenario1Answer1", DbValue(c.game.GetScenario(0).GetAdviceTexts()[0]));
-            insertCmd.Parameters.AddWithValue("@Scenario1Answer2", DbValue(c.game.GetScenario(0).GetAdviceTexts()[1]));
-            insertCmd.Parameters.AddWithValue("@Scenario1Answer3", DbValue(c.game.GetScenario(0).GetAdviceTexts()[2]));
-            insertCmd.Parameters.AddWithValue("@Scenario1Reaction1", DbValue(c.game.GetScenario(0).GetAdviceReactions()[0]));
-            insertCmd.Parameters.AddWithValue("@Scenario1Reaction2", DbValue(c.game.GetScenario(0).GetAdviceReactions()[1]));
-            insertCmd.Parameters.AddWithValue("@Scenario1Reaction3", DbValue(c.game.GetScenario(0).GetAdviceReactions()[2]));
-            insertCmd.Parameters.AddWithValue("@Scenario2Text", DbValue(c.game.GetScenario(1).Description));
-            insertCmd.Parameters.AddWithValue("@Scenario2Answer1", DbValue(c.game.GetScenario(1).GetAdviceTexts()[0]));
-            insertCmd.Parameters.AddWithValue("@Scenario2Answer2", DbValue(c.game.GetScenario(1).GetAdviceTexts()[1]));
-            insertCmd.Parameters.AddWithValue("@Scenario2Answer3", DbValue(c.game.GetScenario(1).GetAdviceTexts()[2]));
-            insertCmd.Parameters.AddWithValue("@Scenario2Reaction1", DbValue(c.game.GetScenario(1).GetAdviceReactions()[0]));
-            insertCmd.Parameters.AddWithValue("@Scenario2Reaction2", DbValue(c.game.GetScenario(1).GetAdviceReactions()[1]));
-            insertCmd.Parameters.AddWithValue("@Scenario2Reaction3", DbValue(c.game.GetScenario(1).GetAdviceReactions()[2]));
+            insertCmd.Parameters.AddWithValue("@BuddyName", DbValue(c.Game.Buddy.Name));
+            insertCmd.Parameters.AddWithValue("@BuddyDescription", DbValue(c.Game.Buddy.Introduction));
+            insertCmd.Parameters.AddWithValue("@AvatarId", DbValue(c.Game.Buddy.Id));
+            insertCmd.Parameters.AddWithValue("@FinalQuote", DbValue(c.Game.Conclusion));
+            insertCmd.Parameters.AddWithValue("@Scenario1Text", DbValue(c.Game.GetScenario(0).Description));
+            insertCmd.Parameters.AddWithValue("@Scenario1Answer1", DbValue(c.Game.GetScenario(0).GetAdviceTexts()[0]));
+            insertCmd.Parameters.AddWithValue("@Scenario1Answer2", DbValue(c.Game.GetScenario(0).GetAdviceTexts()[1]));
+            insertCmd.Parameters.AddWithValue("@Scenario1Answer3", DbValue(c.Game.GetScenario(0).GetAdviceTexts()[2]));
+            insertCmd.Parameters.AddWithValue("@Scenario1Reaction1", DbValue(c.Game.GetScenario(0).GetAdviceReactions()[0]));
+            insertCmd.Parameters.AddWithValue("@Scenario1Reaction2", DbValue(c.Game.GetScenario(0).GetAdviceReactions()[1]));
+            insertCmd.Parameters.AddWithValue("@Scenario1Reaction3", DbValue(c.Game.GetScenario(0).GetAdviceReactions()[2]));
+            insertCmd.Parameters.AddWithValue("@Scenario2Text", DbValue(c.Game.GetScenario(1).Description));
+            insertCmd.Parameters.AddWithValue("@Scenario2Answer1", DbValue(c.Game.GetScenario(1).GetAdviceTexts()[0]));
+            insertCmd.Parameters.AddWithValue("@Scenario2Answer2", DbValue(c.Game.GetScenario(1).GetAdviceTexts()[1]));
+            insertCmd.Parameters.AddWithValue("@Scenario2Answer3", DbValue(c.Game.GetScenario(1).GetAdviceTexts()[2]));
+            insertCmd.Parameters.AddWithValue("@Scenario2Reaction1", DbValue(c.Game.GetScenario(1).GetAdviceReactions()[0]));
+            insertCmd.Parameters.AddWithValue("@Scenario2Reaction2", DbValue(c.Game.GetScenario(1).GetAdviceReactions()[1]));
+            insertCmd.Parameters.AddWithValue("@Scenario2Reaction3", DbValue(c.Game.GetScenario(1).GetAdviceReactions()[2]));
 
             insertCmd.ExecuteNonQuery();
             c.CompanyId = nextId;
@@ -371,24 +371,24 @@ namespace OurApp.Core.Repositories
             cmd.Parameters.AddWithValue("@LogoPictureUrl", c.CompanyLogoPath);
             cmd.Parameters.AddWithValue("@Location", DbValue(c.Location));
             cmd.Parameters.AddWithValue("@Email", DbValue(c.Email));
-            cmd.Parameters.AddWithValue("@BuddyName", DbValue(c.game.Buddy.Name));
-            cmd.Parameters.AddWithValue("@BuddyDescription", DbValue(c.game.Buddy.Introduction));
-            cmd.Parameters.AddWithValue("@AvatarId", DbValue(c.game.Buddy.Id));
-            cmd.Parameters.AddWithValue("@FinalQuote", DbValue(c.game.Conclusion));
-            cmd.Parameters.AddWithValue("@Scenario1Text", DbValue(c.game.GetScenario(0).Description));
-            cmd.Parameters.AddWithValue("@Scenario1Answer1", DbValue(c.game.GetScenario(0).GetAdviceTexts()[0]));
-            cmd.Parameters.AddWithValue("@Scenario1Answer2", DbValue(c.game.GetScenario(0).GetAdviceTexts()[1]));
-            cmd.Parameters.AddWithValue("@Scenario1Answer3", DbValue(c.game.GetScenario(0).GetAdviceTexts()[2]));
-            cmd.Parameters.AddWithValue("@Scenario1Reaction1", DbValue(c.game.GetScenario(0).GetAdviceReactions()[0]));
-            cmd.Parameters.AddWithValue("@Scenario1Reaction2", DbValue(c.game.GetScenario(0).GetAdviceReactions()[1]));
-            cmd.Parameters.AddWithValue("@Scenario1Reaction3", DbValue(c.game.GetScenario(0).GetAdviceReactions()[2]));
-            cmd.Parameters.AddWithValue("@Scenario2Text", DbValue(c.game.GetScenario(1).Description));
-            cmd.Parameters.AddWithValue("@Scenario2Answer1", DbValue(c.game.GetScenario(1).GetAdviceTexts()[0]));
-            cmd.Parameters.AddWithValue("@Scenario2Answer2", DbValue(c.game.GetScenario(1).GetAdviceTexts()[1]));
-            cmd.Parameters.AddWithValue("@Scenario2Answer3", DbValue(c.game.GetScenario(1).GetAdviceTexts()[2]));
-            cmd.Parameters.AddWithValue("@Scenario2Reaction1", DbValue(c.game.GetScenario(1).GetAdviceReactions()[0]));
-            cmd.Parameters.AddWithValue("@Scenario2Reaction2", DbValue(c.game.GetScenario(1).GetAdviceReactions()[1]));
-            cmd.Parameters.AddWithValue("@Scenario2Reaction3", DbValue(c.game.GetScenario(1).GetAdviceReactions()[2]));
+            cmd.Parameters.AddWithValue("@BuddyName", DbValue(c.Game.Buddy.Name));
+            cmd.Parameters.AddWithValue("@BuddyDescription", DbValue(c.Game.Buddy.Introduction));
+            cmd.Parameters.AddWithValue("@AvatarId", DbValue(c.Game.Buddy.Id));
+            cmd.Parameters.AddWithValue("@FinalQuote", DbValue(c.Game.Conclusion));
+            cmd.Parameters.AddWithValue("@Scenario1Text", DbValue(c.Game.GetScenario(0).Description));
+            cmd.Parameters.AddWithValue("@Scenario1Answer1", DbValue(c.Game.GetScenario(0).GetAdviceTexts()[0]));
+            cmd.Parameters.AddWithValue("@Scenario1Answer2", DbValue(c.Game.GetScenario(0).GetAdviceTexts()[1]));
+            cmd.Parameters.AddWithValue("@Scenario1Answer3", DbValue(c.Game.GetScenario(0).GetAdviceTexts()[2]));
+            cmd.Parameters.AddWithValue("@Scenario1Reaction1", DbValue(c.Game.GetScenario(0).GetAdviceReactions()[0]));
+            cmd.Parameters.AddWithValue("@Scenario1Reaction2", DbValue(c.Game.GetScenario(0).GetAdviceReactions()[1]));
+            cmd.Parameters.AddWithValue("@Scenario1Reaction3", DbValue(c.Game.GetScenario(0).GetAdviceReactions()[2]));
+            cmd.Parameters.AddWithValue("@Scenario2Text", DbValue(c.Game.GetScenario(1).Description));
+            cmd.Parameters.AddWithValue("@Scenario2Answer1", DbValue(c.Game.GetScenario(1).GetAdviceTexts()[0]));
+            cmd.Parameters.AddWithValue("@Scenario2Answer2", DbValue(c.Game.GetScenario(1).GetAdviceTexts()[1]));
+            cmd.Parameters.AddWithValue("@Scenario2Answer3", DbValue(c.Game.GetScenario(1).GetAdviceTexts()[2]));
+            cmd.Parameters.AddWithValue("@Scenario2Reaction1", DbValue(c.Game.GetScenario(1).GetAdviceReactions()[0]));
+            cmd.Parameters.AddWithValue("@Scenario2Reaction2", DbValue(c.Game.GetScenario(1).GetAdviceReactions()[1]));
+            cmd.Parameters.AddWithValue("@Scenario2Reaction3", DbValue(c.Game.GetScenario(1).GetAdviceReactions()[2]));
 
             int affected = cmd.ExecuteNonQuery();
             if (affected == 0)
