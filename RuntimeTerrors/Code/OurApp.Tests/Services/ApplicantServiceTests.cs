@@ -1,11 +1,6 @@
 ﻿using OurApp.Tests.Helpers;
 using OurApp.Core.Services;
 using OurApp.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OurApp.Tests.Services
 {
