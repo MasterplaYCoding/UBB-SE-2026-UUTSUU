@@ -31,7 +31,7 @@ namespace OurApp.Core.Repositories
 
                 object result = sqlCommand.ExecuteScalar();
 
-                if (result == DBNull.Value || result == null)
+                if (result == DBNull.Value)
                     return 0;
 
                 return Convert.ToInt32(result);
@@ -82,7 +82,7 @@ namespace OurApp.Core.Repositories
                     {
                         using var checkCmd = new SqlCommand(@"
                             SELECT COUNT(*) 
-                            FROM event_collaborators 
+                            FROM collaborators 
                             WHERE company_id = @CompanyId",
                             conn, tx);
 
@@ -90,7 +90,7 @@ namespace OurApp.Core.Repositories
                         int existingCount = (int)checkCmd.ExecuteScalar();
 
                         using var insertCollabCmd = new SqlCommand(@"
-                            INSERT INTO event_collaborators (event_id, company_id)
+                            INSERT INTO collaborators (event_id, company_id)
                             VALUES (@EventId, @CompanyId)",
                             conn, tx);
 
