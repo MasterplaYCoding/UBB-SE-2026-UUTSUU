@@ -18,7 +18,7 @@ namespace OurApp.Tests.Helpers
             using (var conn = DbConnectionHelper.GetConnection())
             {
                 conn.Open();
-
+               
                 Execute(conn, @"
                     IF NOT EXISTS (SELECT 1 FROM companies WHERE company_id = 90001)
                     INSERT INTO companies (company_id, company_name, logo_picture_url, collaborators_count, posted_jobs_count)
