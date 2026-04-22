@@ -42,7 +42,8 @@ namespace OurApp.WinUI
         public CreateEventPage()
         {
             var mainWindow = App.mainWindow;
-            createEventViewModel = new CreateEventViewModel(mainWindow.eventsService, mainWindow.companyService, mainWindow.sessionService, mainWindow.collabsService);
+
+            createEventViewModel = new CreateEventViewModel(mainWindow.eventsService, mainWindow.companyService, mainWindow.sessionService, mainWindow.collabsService, mainWindow.eventValidator);
             this.DataContext = createEventViewModel;
 
             InitializeComponent();

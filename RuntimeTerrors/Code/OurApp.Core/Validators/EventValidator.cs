@@ -6,69 +6,48 @@ using System.Threading.Tasks;
 
 namespace OurApp.Core.Validators
 {
-    public class EventValidator
+    public class EventValidator : IEventValidator
     {
-        /// <summary>
-        /// Function that checks if the event's title is valid
-        /// </summary>
-        /// <param name="eventTitle"> the title of the event </param>
-        /// <returns> true if title is valid </returns>
-        /// <exception cref="Exception"> throws exception if title is not valid </exception>
-        public bool IsEventTitleValid(string eventTitle)
+        private const int MaximumTitleLength = 200;
+        private const int MaximumDescriptionLength = 2000;
+        private const int MaximumLocationLength = 300;
+
+        public bool ValidateEventTitle(string eventTitle)
         {
-            if (eventTitle.Length == 0)
+            if (string.IsNullOrWhiteSpace(eventTitle))
             {
                 throw new Exception("Title is mandatory");
             }
-            if (eventTitle.Length > 200)
+            if (eventTitle.Length > MaximumTitleLength)
             {
                 throw new Exception("Title is too long");
             }
             return true;
         }
 
-        /// <summary>
-        /// Function that checks if the event's description is valid
-        /// </summary>
-        /// <param name="eventDescription"> the description of the event </param>
-        /// <returns> true if the description is valid </returns>
-        /// <exception cref="Exception"> throws exception if description is not valid </exception>
-        public bool IsEventDescriptionValid(string eventDescription)
+        public bool ValidateEventDescription(string eventDescription)
         {
-            if (eventDescription.Length > 2000)
+            if (!string.IsNullOrEmpty(eventDescription) && eventDescription.Length > MaximumDescriptionLength)
             {
                 throw new Exception("Description is too long");
             }
             return true;
         }
 
-
-        /// <summary>
-        /// Function that checks if the event's location is valid
-        /// </summary>
-        /// <param name="eventLocation"> the location of the event </param>
-        /// <returns> true if the location is valid </returns>
-        /// <exception cref="Exception"> throws exception if location is not valid </exception>
-        public bool IsEventLocationValid(string eventLocation)
+        public bool ValidateEventLocation(string eventLocation)
         {
-            if (eventLocation.Length == 0)
+            if (string.IsNullOrWhiteSpace(eventLocation))
             {
                 throw new Exception("Location is mandatory");
             }
-            if (eventLocation.Length > 300)
+            if (eventLocation.Length > MaximumLocationLength)
             {
                 throw new Exception("Location is too long");
             }
             return true;
         }
 
-        /// <summary>
-        /// Function that checks if the event's starting date is valid
-        /// </summary>
-        /// <param name="eventStartDate"> the starting date of the event </param>
-        /// <returns> true if starting date is valid </returns>
-        /// <exception cref="Exception"> throws exception if starting date is not valid </exception>
-        public bool IsEventStartDateValid(DateTimeOffset? eventStartDate)
+        public bool ValidateEventStartDate(DateTimeOffset? eventStartDate)
         {
             if (eventStartDate == null)
             {
@@ -81,13 +60,7 @@ namespace OurApp.Core.Validators
             return true;
         }
 
-        /// <summary>
-        /// Function that checks if the event's ending date is valid
-        /// </summary>
-        /// <param name="eventEndDate"> the ending date of the event </param>
-        /// <returns> true if ending date is valid </returns>
-        /// <exception cref="Exception"> throws exception if ending date is not valid </exception>
-        public bool IsEventEndDateValid(DateTimeOffset? eventEndDate)
+        public bool ValidateEventEndDate(DateTimeOffset? eventEndDate)
         {
             if (eventEndDate == null)
             {
@@ -100,14 +73,7 @@ namespace OurApp.Core.Validators
             return true;
         }
 
-        /// <summary>
-        /// Function that checks if the event's dates are cronologically correct
-        /// </summary>
-        /// <param name="eventStartDate"> the starting date of the event </param>
-        /// <param name="eventEndDate"> the ending date of the event </param>
-        /// <returns> true if dates are in cronological order </returns>
-        /// <exception cref="Exception">  throws exception if dates are not in cronological order </exception>
-        public bool AreEventDatesCronologicallyValid(DateTimeOffset? eventStartDate, DateTimeOffset? eventEndDate)
+        public bool ValidateEventDatesChronologically(DateTimeOffset? eventStartDate, DateTimeOffset? eventEndDate)
         {
             if (eventStartDate > eventEndDate)
             {

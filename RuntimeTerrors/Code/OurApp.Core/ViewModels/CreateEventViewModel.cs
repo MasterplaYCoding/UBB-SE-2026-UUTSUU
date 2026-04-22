@@ -16,39 +16,54 @@ namespace OurApp.Core.ViewModels
 {
     public partial class CreateEventViewModel : ObservableObject
     {
-        private readonly ICollaboratorsService collaboratorsService;
-        private readonly IEventsService eventsService;
-        private readonly ICompanyService companyService;
-        private readonly SessionService sessionService;
+        private const string AdminEmailAddress = "carla.draghiciu@cnglsibiu.ro";
+        private const string AdminEmailPassword = "[REDACTED_PASSWORD]";
+        private const string SmtpHostAddress = "smtp.gmail.com";
+        private const int SmtpHostPort = 587;
+        private const int SmtpTimeoutMilliseconds = 60000;
+        private const string EmailSubject = "Event Invitation";
+        private const string EmailSentDebugMessage = "Email sent!";
+        private const string MissingEmailDebugMessage = "Company has no email";
 
-        public EventValidator eventValidator = new EventValidator();
+        private const string EmptyStringValue = "";
+        private const string ErrorInputsInvalid = "Please enter valid inputs before creating an event";
+        private const string ErrorCompanyNameMissing = "Please enter a company name.";
+        private const string ErrorCompanyNotFound = "Company was not found.";
+        private const string ErrorCompanyAlreadyAdded = "Company is already added as a collaborator.";
+
+        private readonly ICollaboratorsService _collaboratorsService;
+        private readonly IEventsService _eventsService;
+        private readonly ICompanyService _companyService;
+        private readonly SessionService _sessionService;
+        private readonly IEventValidator _eventValidator;
+
         public List<Company> SelectedCollaborators { get; } = new List<Company>();
 
-        [ObservableProperty] private string photo;
+        [ObservableProperty] private string _photo;
 
-        [ObservableProperty] private string title;
-        [ObservableProperty] private string titleError;
-        private bool titleIsValid = false;
+        [ObservableProperty] private string _title;
+        [ObservableProperty] private string _titleError;
+        private bool _titleIsValid = false;
 
-        [ObservableProperty] private string description;
-        [ObservableProperty] private string descriptionError;
-        private bool descriptionIsValid = true;
+        [ObservableProperty] private string _description;
+        [ObservableProperty] private string _descriptionError;
+        private bool _descriptionIsValid = true;
 
-        [ObservableProperty] private DateTimeOffset? startDate = DateTimeOffset.Now;
-        [ObservableProperty] private string startDateError;
-        private bool startDateIsValid = true;
+        [ObservableProperty] private DateTimeOffset? _startDate = DateTimeOffset.Now;
+        [ObservableProperty] private string _startDateError;
+        private bool _startDateIsValid = true;
 
-        [ObservableProperty] private DateTimeOffset? endDate = DateTimeOffset.Now;
-        [ObservableProperty] private string endDateError;
-        private bool endDateIsValid = true;
+        [ObservableProperty] private DateTimeOffset? _endDate = DateTimeOffset.Now;
+        [ObservableProperty] private string _endDateError;
+        private bool _endDateIsValid = true;
 
-        [ObservableProperty] private string location;
-        [ObservableProperty] private string locationError;
-        private bool locationIsValid = false;
+        [ObservableProperty] private string _location;
+        [ObservableProperty] private string _locationError;
+        private bool _locationIsValid = false;
 
-        [ObservableProperty] private string addError = "";
+        [ObservableProperty] private string _addError = EmptyStringValue;
 
-        public bool isEverythingValid => (addError == "");
+        public bool isEverythingValid => (AddError == EmptyStringValue);
         public bool eventCreatedSuccessfully = false;
 
 
@@ -58,12 +73,13 @@ namespace OurApp.Core.ViewModels
         /// <param name="eventsService"> events service </param>
         /// <param name="companyService"> company service </param>
         /// <param name="sessionService"> session service </param>
-        public CreateEventViewModel(IEventsService eventsService, ICompanyService companyService, SessionService sessionService, ICollaboratorsService collaboratorsService)
+        public CreateEventViewModel(IEventsService eventsService, ICompanyService companyService, SessionService sessionService, ICollaboratorsService collaboratorsService, IEventValidator eventValidator)
         {
-            this.eventsService = eventsService;
-            this.companyService = companyService;
-            this.sessionService = sessionService;
-            this.collaboratorsService = collaboratorsService;
+            _eventsService = eventsService;
+            _companyService = companyService;
+            _sessionService = sessionService;
+            _collaboratorsService = collaboratorsService;
+            _eventValidator = eventValidator;
         }
 
 
@@ -73,42 +89,38 @@ namespace OurApp.Core.ViewModels
         /// <param name="destinationCompany"> company to send email to </param>
         private async void SendMailToCompany(Company destinationCompany)
         {
-            if (destinationCompany.Email == null || destinationCompany.Email == "")
+            if (string.IsNullOrEmpty(destinationCompany.Email))
             {
-                System.Diagnostics.Debug.WriteLine("Company has no email");
+                System.Diagnostics.Debug.WriteLine(MissingEmailDebugMessage);
                 return;
             }
 
-            string sourceCompanyName = sessionService.loggedInUser.Name;
-            var fromAddress = new MailAddress("carla.draghiciu@cnglsibiu.ro", sourceCompanyName);
-            if (destinationCompany.Email != null) 
+            string sourceCompanyName = _sessionService.loggedInUser.Name;
+            var fromAddress = new MailAddress(AdminEmailAddress, sourceCompanyName);
+
+            var toAddress = new MailAddress(destinationCompany.Email, destinationCompany.Name);
+            string emailBodyText = $"Hello, you have been invited to collaborate on {sourceCompanyName}'s event: {Title}\nPlease reply to this email within 7 days from receiving it, if you would like to accept the invitation.";
+
+            var smtpClient = new SmtpClient
             {
-                var toAddress = new MailAddress(destinationCompany.Email, destinationCompany.Name);
-                const string fromPassword = "angxokbiqoyodwgm";
-                const string subject = "Event Invitation";
-                string body = $"Hello, you have been invited to collaborate on {sourceCompanyName}'s event: {Title}\nPlease reply to this email within 7 days from receiving it, if you would like to accept the invitation.";
+                Host = SmtpHostAddress,
+                Port = SmtpHostPort,
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                Credentials = new NetworkCredential(fromAddress.Address, AdminEmailPassword),
+                Timeout = SmtpTimeoutMilliseconds
+            };
 
-                var smtp = new SmtpClient
-                {
-                    Host = "smtp.gmail.com",
-                    Port = 587,
-                    EnableSsl = true,
-                    DeliveryMethod = SmtpDeliveryMethod.Network,
-                    Credentials = new NetworkCredential(fromAddress.Address, fromPassword),
-                    Timeout = 60000
-                };
-
-                using (var message = new MailMessage(fromAddress, toAddress)
-                {
-                    Subject = subject,
-                    Body = body
-                })
-                {
-                    await smtp.SendMailAsync(message);
-                }
-
-                System.Diagnostics.Debug.WriteLine("Email sent!");
+            using (var mailMessage = new MailMessage(fromAddress, toAddress)
+            {
+                Subject = EmailSubject,
+                Body = emailBodyText
+            })
+            {
+                await smtpClient.SendMailAsync(mailMessage);
             }
+
+            System.Diagnostics.Debug.WriteLine(EmailSentDebugMessage);
         }
 
         /// <summary>
@@ -125,9 +137,9 @@ namespace OurApp.Core.ViewModels
 
         private void AddAllCollaboratorsWhenEventCreated(Event eventOfCollaboration)
         {
-            foreach(Company invitedCompany in SelectedCollaborators)
+            foreach (Company invitedCompany in SelectedCollaborators)
             {
-                this.collaboratorsService.AddCollaborator(eventOfCollaboration, invitedCompany, sessionService.loggedInUser.CompanyId);
+                _collaboratorsService.AddCollaborator(eventOfCollaboration, invitedCompany, _sessionService.loggedInUser.CompanyId);
             }
         }
 
@@ -138,20 +150,20 @@ namespace OurApp.Core.ViewModels
         [RelayCommand]
         public void CreateEvent()
         {
-            if (!titleIsValid || !descriptionIsValid || !startDateIsValid || !endDateIsValid || !locationIsValid)
+            if (!_titleIsValid || !_descriptionIsValid || !_startDateIsValid || !_endDateIsValid || !_locationIsValid)
             {
-                AddError = "Please enter valid inputs before creating an event";
+                AddError = ErrorInputsInvalid;
                 return;
             }
 
             try
             {
-                AddError = "";
-                DateTime eventStartDateTime = startDate.Value.DateTime;
-                DateTime eventEndDateTime = endDate.Value.DateTime;
+                AddError = EmptyStringValue;
+                DateTime eventStartDateTime = StartDate.Value.DateTime;
+                DateTime eventEndDateTime = EndDate.Value.DateTime;
 
-                int hostId = sessionService.loggedInUser.CompanyId;
-                Event createdEvent = eventsService.AddEvent(Photo, Title, Description, eventStartDateTime, eventEndDateTime, Location, hostId, SelectedCollaborators.ToList());
+                int hostCompanyId = _sessionService.loggedInUser.CompanyId;
+                Event createdEvent = _eventsService.AddEvent(Photo, Title, Description, eventStartDateTime, eventEndDateTime, Location, hostCompanyId, SelectedCollaborators.ToList());
                 eventCreatedSuccessfully = true;
 
                 AddAllCollaboratorsWhenEventCreated(createdEvent);
@@ -173,17 +185,17 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (eventValidator.IsEventTitleValid(Title))
+                if (_eventValidator.ValidateEventTitle(Title))
                 {
-                    TitleError = "";
-                    titleIsValid = true;
+                    TitleError = EmptyStringValue;
+                    _titleIsValid = true;
                     return true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                TitleError = ex.Message;
-                titleIsValid = false;
+                TitleError = exception.Message;
+                _titleIsValid = false;
             }
             return false;
         }
@@ -197,17 +209,17 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (eventValidator.IsEventDescriptionValid(Description))
+                if (_eventValidator.ValidateEventDescription(Description))
                 {
-                    DescriptionError = "";
-                    descriptionIsValid = true;
+                    DescriptionError = EmptyStringValue;
+                    _descriptionIsValid = true;
                     return true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                DescriptionError = ex.Message;
-                descriptionIsValid = false;
+                DescriptionError = exception.Message;
+                _descriptionIsValid = false;
             }
             return false;
         }
@@ -220,17 +232,17 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (eventValidator.IsEventLocationValid(Location))
+                if (_eventValidator.ValidateEventLocation(Location))
                 {
-                    LocationError = "";
-                    locationIsValid = true;
+                    LocationError = EmptyStringValue;
+                    _locationIsValid = true;
                     return true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                LocationError = ex.Message;
-                locationIsValid = false;
+                LocationError = exception.Message;
+                _locationIsValid = false;
             }
             return false;
         }
@@ -243,17 +255,17 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (eventValidator.IsEventStartDateValid(StartDate))
+                if (_eventValidator.ValidateEventStartDate(StartDate))
                 {
-                    StartDateError = "";
-                    startDateIsValid = true;
+                    StartDateError = EmptyStringValue;
+                    _startDateIsValid = true;
                     return true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                StartDateError = ex.Message;
-                startDateIsValid = false;
+                StartDateError = exception.Message;
+                _startDateIsValid = false;
             }
             return false;
         }
@@ -267,17 +279,17 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (eventValidator.IsEventEndDateValid(EndDate))
+                if (_eventValidator.ValidateEventEndDate(EndDate))
                 {
-                    EndDateError = "";
-                    endDateIsValid = true;
+                    EndDateError = EmptyStringValue;
+                    _endDateIsValid = true;
                     return true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                EndDateError = ex.Message;
-                endDateIsValid = false;
+                EndDateError = exception.Message;
+                _endDateIsValid = false;
             }
             return false;
         }
@@ -290,17 +302,17 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (eventValidator.AreEventDatesCronologicallyValid(StartDate, EndDate))
+                if (_eventValidator.ValidateEventDatesChronologically(StartDate, EndDate))
                 {
-                    EndDateError = "";
-                    endDateIsValid = true;
+                    EndDateError = EmptyStringValue;
+                    _endDateIsValid = true;
                     return true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                EndDateError = ex.Message;
-                endDateIsValid = false;
+                EndDateError = exception.Message;
+                _endDateIsValid = false;
             }
             return false;
         }
@@ -313,28 +325,28 @@ namespace OurApp.Core.ViewModels
         /// <returns> true if the company name exists, false otherwise </returns>
         public bool TryAddCollaboratorByName(string companyName, out string errorMessage)
         {
-            errorMessage = "";
+            errorMessage = EmptyStringValue;
 
             if (string.IsNullOrWhiteSpace(companyName))
             {
-                errorMessage = "Please enter a company name.";
+                errorMessage = ErrorCompanyNameMissing;
                 return false;
             }
 
-            Company? company = companyService.GetCompanyByName(companyName);
-            if (company == null)
+            Company? companyToInvite = _companyService.GetCompanyByName(companyName);
+            if (companyToInvite == null)
             {
-                errorMessage = "Company was not found.";
+                errorMessage = ErrorCompanyNotFound;
                 return false;
             }
 
-            if (SelectedCollaborators.Any(c => string.Equals(c.Name, company.Name, StringComparison.OrdinalIgnoreCase)))
+            if (SelectedCollaborators.Any(collaborator => string.Equals(collaborator.Name, companyToInvite.Name, StringComparison.OrdinalIgnoreCase)))
             {
-                errorMessage = "Company is already added as a collaborator.";
+                errorMessage = ErrorCompanyAlreadyAdded;
                 return false;
             }
 
-            SelectedCollaborators.Add(company);
+            SelectedCollaborators.Add(companyToInvite);
             return true;
         }
 
@@ -344,7 +356,7 @@ namespace OurApp.Core.ViewModels
         /// <param name="companyName"> the name of the company to be removed from the collaborators list </param>
         public void RemoveCollaboratorByName(string companyName)
         {
-            foreach (Company selectedCompany in SelectedCollaborators)
+            foreach (Company selectedCompany in SelectedCollaborators.ToList())
             {
                 if (selectedCompany.Name == companyName)
                 {

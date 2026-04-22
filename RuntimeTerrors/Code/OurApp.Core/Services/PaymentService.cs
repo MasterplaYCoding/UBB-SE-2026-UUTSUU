@@ -10,14 +10,32 @@ using System.Threading.Tasks;
 
 namespace OurApp.Core.Services
 {
-    public class PaymentService
+    public class PaymentService : IPaymentService
     {
-        private readonly PaymentValidator _validator = new PaymentValidator();
-        private readonly PaymentRepository _repository = new PaymentRepository();
+        private const int EmptyCollectionCount = 0;
+        private const string AdminEmailAddress = "carla.draghiciu@cnglsibiu.ro";
+        private const string AdminEmailDisplayName = "Job Portal Admin";
+        private const string AdminEmailPassword = "[REDACTED_PASSWORD]";
+        private const string SmtpHostAddress = "smtp.gmail.com";
+        private const int SmtpHostPort = 587;
+        private const int SmtpTimeoutMilliseconds = 60000;
+        private const string NotificationEmailSubject = "Job Promotion Alert!";
+        private const string DatabaseErrorMessagePrefix = "Database Error: ";
+        private const string EmailSentDebugMessagePrefix = "Email sent to ";
+        private const string EmailFailedDebugMessagePrefix = "Failed to send email: ";
+
+        private readonly IPaymentValidator _validator;
+        private readonly IPaymentRepository _repository;
+
+        public PaymentService(IPaymentRepository repository, IPaymentValidator paymentValidator)
+        {
+            _repository = repository;
+            _validator = paymentValidator;
+        }
 
         public async Task<string> ProcessPaymentAsync(int jobId, int amount, string name, string cardNum, string exp, string cvv)
         {
-            string validationError = _validator.Validate(name, cardNum, exp, cvv);
+            string validationError = _validator.ValidatePaymentDetails(name, cardNum, exp, cvv);
             if (!string.IsNullOrEmpty(validationError)) return validationError;
 
             try
@@ -29,16 +47,16 @@ namespace OurApp.Core.Services
                 List<string> emailsToNotify = _repository.GetCompaniesToNotify(jobId, amount);
 
                 // 3. Send Emails 
-                if (emailsToNotify.Count > 0)
+                if (emailsToNotify.Count > EmptyCollectionCount)
                 {
                     await SendNotificationEmailsAsync(emailsToNotify, amount);
                 }
 
                 return string.Empty;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                return $"Database Error: {ex.Message}";
+                return $"{DatabaseErrorMessagePrefix}{exception.Message}";
             }
         }
 
@@ -46,40 +64,38 @@ namespace OurApp.Core.Services
         {
             try
             {
-                var fromAddress = new MailAddress("carla.draghiciu@cnglsibiu.ro", "Job Portal Admin");
-                const string fromPassword = "angxokbiqoyodwgm";
+                var fromAddress = new MailAddress(AdminEmailAddress, AdminEmailDisplayName);
 
-                using (var smtp = new SmtpClient
+                using (var smtpClient = new SmtpClient
                 {
-                    Host = "smtp.gmail.com",
-                    Port = 587,
+                    Host = SmtpHostAddress,
+                    Port = SmtpHostPort,
                     EnableSsl = true,
                     DeliveryMethod = SmtpDeliveryMethod.Network,
-                    Credentials = new NetworkCredential(fromAddress.Address, fromPassword),
-                    Timeout = 60000
+                    Credentials = new NetworkCredential(fromAddress.Address, AdminEmailPassword),
+                    Timeout = SmtpTimeoutMilliseconds
                 })
                 {
                     foreach (string email in emails)
                     {
                         var toAddress = new MailAddress(email);
-                        string subject = "Job Promotion Alert!";
-                        string body = $"Hello, \n\nJust letting you know that a competitor has placed a bid of ${newAmount} on a job that shares the same Type and Experience Level as yours. Consider increasing your budget to stay competitive!";
+                        string notificationBody = $"Hello, \n\nJust letting you know that a competitor has placed a bid of ${newAmount} on a job that shares the same Type and Experience Level as yours. Consider increasing your budget to stay competitive!";
 
-                        using (var message = new MailMessage(fromAddress, toAddress)
+                        using (var mailMessage = new MailMessage(fromAddress, toAddress)
                         {
-                            Subject = subject,
-                            Body = body
+                            Subject = NotificationEmailSubject,
+                            Body = notificationBody
                         })
                         {
-                            await smtp.SendMailAsync(message);
-                            System.Diagnostics.Debug.WriteLine($"Email sent to {email}!");
+                            await smtpClient.SendMailAsync(mailMessage);
+                            System.Diagnostics.Debug.WriteLine($"{EmailSentDebugMessagePrefix}{email}!");
                         }
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to send email: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"{EmailFailedDebugMessagePrefix}{exception.Message}");
             }
         }
 

@@ -8,29 +8,32 @@ namespace OurApp.Core.Repositories
 {
     public class ApplicantRepository : IApplicantRepository
     {
+        private const string DefaultUserName = "Unknown";
+        private const string DefaultUserEmail = "";
+
         public Applicant GetApplicantById(int applicantId)
         {
             Applicant applicant = null;
-            using (var conn = DbConnectionHelper.GetConnection())
+            using (var databaseConnection = DbConnectionHelper.GetConnection())
             {
-                conn.Open();
-                string sql = @"
+                databaseConnection.Open();
+                string sqlQuery = @"
                     SELECT a.applicant_id, a.app_test_grade, a.cv_grade,
                            a.company_test_grade, a.interview_grade, a.application_status, a.applied_at,
                            a.job_id, a.recommended_from_company_id, a.user_id,
                            u.name, u.email, u.cv_xml
                     FROM applicants a
                     LEFT JOIN users u ON a.user_id = u.user_id
-                    WHERE a.applicant_id = @id";
+                    WHERE a.applicant_id = @ApplicantId";
 
-                using (var cmd = new SqlCommand(sql, conn))
+                using (var sqlCommand = new SqlCommand(sqlQuery, databaseConnection))
                 {
-                    cmd.Parameters.AddWithValue("@id", applicantId);
-                    using (var reader = cmd.ExecuteReader())
+                    sqlCommand.Parameters.AddWithValue("@ApplicantId", applicantId);
+                    using (var dataReader = sqlCommand.ExecuteReader())
                     {
-                        if (reader.Read())
+                        if (dataReader.Read())
                         {
-                            applicant = MapReaderToApplicant(reader);
+                            applicant = MapReaderToApplicant(dataReader);
                         }
                     }
                 }
@@ -40,193 +43,190 @@ namespace OurApp.Core.Repositories
 
         public IEnumerable<Applicant> GetApplicantsByCompany(int companyId)
         {
-            var list = new List<Applicant>();
+            var applicantList = new List<Applicant>();
 
-            using (var conn = DbConnectionHelper.GetConnection())
+            using (var databaseConnection = DbConnectionHelper.GetConnection())
             {
-                conn.Open();
+                databaseConnection.Open();
 
-                string sql = @"
-            SELECT a.applicant_id, a.app_test_grade, a.cv_grade,
-                   a.company_test_grade, a.interview_grade, a.application_status, a.applied_at,
-                   a.job_id, a.recommended_from_company_id, a.user_id,
-                   u.name, u.email, u.cv_xml
-            FROM applicants a
-            INNER JOIN jobs j ON a.job_id = j.job_id
-            LEFT JOIN users u ON a.user_id = u.user_id
-            WHERE j.company_id = @companyId";
+                string sqlQuery = @"
+                    SELECT a.applicant_id, a.app_test_grade, a.cv_grade,
+                           a.company_test_grade, a.interview_grade, a.application_status, a.applied_at,
+                           a.job_id, a.recommended_from_company_id, a.user_id,
+                           u.name, u.email, u.cv_xml
+                    FROM applicants a
+                    INNER JOIN jobs j ON a.job_id = j.job_id
+                    LEFT JOIN users u ON a.user_id = u.user_id
+                    WHERE j.company_id = @CompanyId";
 
-                using (var cmd = new SqlCommand(sql, conn))
+                using (var sqlCommand = new SqlCommand(sqlQuery, databaseConnection))
                 {
-                    cmd.Parameters.AddWithValue("@companyId", companyId);
+                    sqlCommand.Parameters.AddWithValue("@CompanyId", companyId);
 
-                    using (var reader = cmd.ExecuteReader())
+                    using (var dataReader = sqlCommand.ExecuteReader())
                     {
-                        while (reader.Read())
+                        while (dataReader.Read())
                         {
-                            var applicant = MapReaderToApplicant(reader);
+                            var applicant = MapReaderToApplicant(dataReader);
 
-                            // Attach job (minimal info, same as your pattern)
-                            if (!reader.IsDBNull(reader.GetOrdinal("job_id")))
+                            if (!dataReader.IsDBNull(dataReader.GetOrdinal("job_id")))
                             {
                                 applicant.Job = new JobPosting
                                 {
-                                    JobId = reader.GetInt32(reader.GetOrdinal("job_id"))
+                                    JobId = dataReader.GetInt32(dataReader.GetOrdinal("job_id"))
                                 };
                             }
 
-                            list.Add(applicant);
+                            applicantList.Add(applicant);
                         }
                     }
                 }
             }
 
-            return list;
+            return applicantList;
         }
 
-        public IEnumerable<Applicant> GetApplicantsByJob(JobPosting job)
+        public IEnumerable<Applicant> GetApplicantsByJob(JobPosting jobPosting)
         {
-            var list = new List<Applicant>();
-            if (job == null) return list;
-
-            using (var conn = DbConnectionHelper.GetConnection())
+            var applicantList = new List<Applicant>();
+            if (jobPosting == null)
             {
-                conn.Open();
-                string sql = @"
+                return applicantList;
+            }
+
+            using (var databaseConnection = DbConnectionHelper.GetConnection())
+            {
+                databaseConnection.Open();
+                string sqlQuery = @"
                     SELECT a.applicant_id, a.app_test_grade, a.cv_grade,
                            a.company_test_grade, a.interview_grade, a.application_status, a.applied_at,
                            a.job_id, a.recommended_from_company_id, a.user_id,
                            u.name, u.email, u.cv_xml
                     FROM applicants a
                     LEFT JOIN users u ON a.user_id = u.user_id
-                    WHERE a.job_id = @jobId";
+                    WHERE a.job_id = @JobId";
 
-                using (var cmd = new SqlCommand(sql, conn))
+                using (var sqlCommand = new SqlCommand(sqlQuery, databaseConnection))
                 {
-                    cmd.Parameters.AddWithValue("@jobId", job.JobId);
-                    using (var reader = cmd.ExecuteReader())
+                    sqlCommand.Parameters.AddWithValue("@JobId", jobPosting.JobId);
+                    using (var dataReader = sqlCommand.ExecuteReader())
                     {
-                        while (reader.Read())
+                        while (dataReader.Read())
                         {
-                            var applicant = MapReaderToApplicant(reader);
-                            applicant.Job = job;
-                            list.Add(applicant);
+                            var applicant = MapReaderToApplicant(dataReader);
+                            applicant.Job = jobPosting;
+                            applicantList.Add(applicant);
                         }
                     }
                 }
             }
-            return list;
+            return applicantList;
         }
 
         public void AddApplicant(Applicant applicant)
         {
-            using (var conn = DbConnectionHelper.GetConnection())
+            using (var databaseConnection = DbConnectionHelper.GetConnection())
             {
-                conn.Open();
-                
-                // If the user is new, ideally we would insert into `users` first.
-                // Assuming `user_id` exists for this demonstration or is handled.
-                
-                string sql = @"
+                databaseConnection.Open();
+
+                string sqlQuery = @"
                     INSERT INTO applicants (applicant_id, job_id, app_test_grade, cv_grade,
                                           company_test_grade, interview_grade, application_status,
                                           recommended_from_company_id, applied_at, user_id)
-                    VALUES (@appId, @jobId, @appGrade, @cvGrade, @compGrade, @intGrade, @status, @recId, @applied, @userId)";
+                    VALUES (@ApplicantId, @JobId, @ApplicationTestGrade, @CurriculumVitaeGrade, @CompanyTestGrade, @InterviewGrade, @ApplicationStatus, @RecommendedFromCompanyId, @AppliedAt, @UserId)";
 
-                using (var cmd = new SqlCommand(sql, conn))
+                using (var sqlCommand = new SqlCommand(sqlQuery, databaseConnection))
                 {
-                    cmd.Parameters.AddWithValue("@appId", applicant.ApplicantId);
-                    cmd.Parameters.AddWithValue("@jobId", applicant.Job?.JobId ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@appGrade", applicant.AppTestGrade ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@cvGrade", applicant.CvGrade ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@compGrade", applicant.CompanyTestGrade ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@intGrade", applicant.InterviewGrade ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@status", string.IsNullOrEmpty(applicant.ApplicationStatus) ? DBNull.Value : applicant.ApplicationStatus);
-                    cmd.Parameters.AddWithValue("@recId", applicant.RecommendedFromCompany?.CompanyId ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@applied", applicant.AppliedAt);
-                    cmd.Parameters.AddWithValue("@userId", applicant.User.Id);
+                    sqlCommand.Parameters.AddWithValue("@ApplicantId", applicant.ApplicantId);
+                    sqlCommand.Parameters.AddWithValue("@JobId", applicant.Job?.JobId ?? (object)DBNull.Value);
+                    sqlCommand.Parameters.AddWithValue("@ApplicationTestGrade", applicant.AppTestGrade ?? (object)DBNull.Value);
+                    sqlCommand.Parameters.AddWithValue("@CurriculumVitaeGrade", applicant.CvGrade ?? (object)DBNull.Value);
+                    sqlCommand.Parameters.AddWithValue("@CompanyTestGrade", applicant.CompanyTestGrade ?? (object)DBNull.Value);
+                    sqlCommand.Parameters.AddWithValue("@InterviewGrade", applicant.InterviewGrade ?? (object)DBNull.Value);
+                    sqlCommand.Parameters.AddWithValue("@ApplicationStatus", string.IsNullOrEmpty(applicant.ApplicationStatus) ? DBNull.Value : applicant.ApplicationStatus);
+                    sqlCommand.Parameters.AddWithValue("@RecommendedFromCompanyId", applicant.RecommendedFromCompany?.CompanyId ?? (object)DBNull.Value);
+                    sqlCommand.Parameters.AddWithValue("@AppliedAt", applicant.AppliedAt);
+                    sqlCommand.Parameters.AddWithValue("@UserId", applicant.User.Id);
 
-                    cmd.ExecuteNonQuery();
+                    sqlCommand.ExecuteNonQuery();
                 }
             }
         }
 
         public void UpdateApplicant(Applicant applicant)
         {
-            using (var conn = DbConnectionHelper.GetConnection())
+            using (var databaseConnection = DbConnectionHelper.GetConnection())
             {
-                conn.Open();
-                string sql = @"
+                databaseConnection.Open();
+                string sqlQuery = @"
                     UPDATE applicants
-                    SET app_test_grade = @appGrade,
-                        cv_grade = @cvGrade,
-                        company_test_grade = @compGrade,
-                        interview_grade = @intGrade,
-                        application_status = @status
-                    WHERE applicant_id = @id";
+                    SET app_test_grade = @ApplicationTestGrade,
+                        cv_grade = @CurriculumVitaeGrade,
+                        company_test_grade = @CompanyTestGrade,
+                        interview_grade = @InterviewGrade,
+                        application_status = @ApplicationStatus
+                    WHERE applicant_id = @ApplicantId";
 
-                using (var cmd = new SqlCommand(sql, conn))
+                using (var sqlCommand = new SqlCommand(sqlQuery, databaseConnection))
                 {
-                    cmd.Parameters.AddWithValue("@appGrade", applicant.AppTestGrade ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@cvGrade", applicant.CvGrade ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@compGrade", applicant.CompanyTestGrade ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@intGrade", applicant.InterviewGrade ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@status", string.IsNullOrEmpty(applicant.ApplicationStatus) ? DBNull.Value : applicant.ApplicationStatus);
-                    cmd.Parameters.AddWithValue("@id", applicant.ApplicantId);
+                    sqlCommand.Parameters.AddWithValue("@ApplicationTestGrade", applicant.AppTestGrade ?? (object)DBNull.Value);
+                    sqlCommand.Parameters.AddWithValue("@CurriculumVitaeGrade", applicant.CvGrade ?? (object)DBNull.Value);
+                    sqlCommand.Parameters.AddWithValue("@CompanyTestGrade", applicant.CompanyTestGrade ?? (object)DBNull.Value);
+                    sqlCommand.Parameters.AddWithValue("@InterviewGrade", applicant.InterviewGrade ?? (object)DBNull.Value);
+                    sqlCommand.Parameters.AddWithValue("@ApplicationStatus", string.IsNullOrEmpty(applicant.ApplicationStatus) ? DBNull.Value : applicant.ApplicationStatus);
+                    sqlCommand.Parameters.AddWithValue("@ApplicantId", applicant.ApplicantId);
 
-                    cmd.ExecuteNonQuery();
+                    sqlCommand.ExecuteNonQuery();
                 }
             }
         }
 
         public void RemoveApplicant(int applicantId)
         {
-            using (var conn = DbConnectionHelper.GetConnection())
+            using (var databaseConnection = DbConnectionHelper.GetConnection())
             {
-                conn.Open();
-                string sql = "DELETE FROM applicants WHERE applicant_id = @id";
-                using (var cmd = new SqlCommand(sql, conn))
+                databaseConnection.Open();
+                string sqlQuery = "DELETE FROM applicants WHERE applicant_id = @ApplicantId";
+                using (var sqlCommand = new SqlCommand(sqlQuery, databaseConnection))
                 {
-                    cmd.Parameters.AddWithValue("@id", applicantId);
-                    cmd.ExecuteNonQuery();
+                    sqlCommand.Parameters.AddWithValue("@ApplicantId", applicantId);
+                    sqlCommand.ExecuteNonQuery();
                 }
             }
         }
 
-        private Applicant MapReaderToApplicant(SqlDataReader reader)
+        private Applicant MapReaderToApplicant(SqlDataReader dataReader)
         {
             var applicant = new Applicant
             {
-                ApplicantId = reader.GetInt32(reader.GetOrdinal("applicant_id")),
-                AppTestGrade = reader.IsDBNull(reader.GetOrdinal("app_test_grade")) ? null : reader.GetDecimal(reader.GetOrdinal("app_test_grade")),
-                CvGrade = reader.IsDBNull(reader.GetOrdinal("cv_grade")) ? null : reader.GetDecimal(reader.GetOrdinal("cv_grade")),
-                CompanyTestGrade = reader.IsDBNull(reader.GetOrdinal("company_test_grade")) ? null : reader.GetDecimal(reader.GetOrdinal("company_test_grade")),
-                InterviewGrade = reader.IsDBNull(reader.GetOrdinal("interview_grade")) ? null : reader.GetDecimal(reader.GetOrdinal("interview_grade")),
-                ApplicationStatus = reader.IsDBNull(reader.GetOrdinal("application_status")) ? null : reader.GetString(reader.GetOrdinal("application_status")),
-                AppliedAt = reader.GetDateTime(reader.GetOrdinal("applied_at"))
+                ApplicantId = dataReader.GetInt32(dataReader.GetOrdinal("applicant_id")),
+                AppTestGrade = dataReader.IsDBNull(dataReader.GetOrdinal("app_test_grade")) ? null : dataReader.GetDecimal(dataReader.GetOrdinal("app_test_grade")),
+                CvGrade = dataReader.IsDBNull(dataReader.GetOrdinal("cv_grade")) ? null : dataReader.GetDecimal(dataReader.GetOrdinal("cv_grade")),
+                CompanyTestGrade = dataReader.IsDBNull(dataReader.GetOrdinal("company_test_grade")) ? null : dataReader.GetDecimal(dataReader.GetOrdinal("company_test_grade")),
+                InterviewGrade = dataReader.IsDBNull(dataReader.GetOrdinal("interview_grade")) ? null : dataReader.GetDecimal(dataReader.GetOrdinal("interview_grade")),
+                ApplicationStatus = dataReader.IsDBNull(dataReader.GetOrdinal("application_status")) ? null : dataReader.GetString(dataReader.GetOrdinal("application_status")),
+                AppliedAt = dataReader.GetDateTime(dataReader.GetOrdinal("applied_at"))
             };
 
-            // Reconstruct nested optional Job
-            if (!reader.IsDBNull(reader.GetOrdinal("job_id")))
+            if (!dataReader.IsDBNull(dataReader.GetOrdinal("job_id")))
             {
-                applicant.Job = new JobPosting { JobId = reader.GetInt32(reader.GetOrdinal("job_id")) };
+                applicant.Job = new JobPosting { JobId = dataReader.GetInt32(dataReader.GetOrdinal("job_id")) };
             }
 
-            // Reconstruct nested User
-            if (!reader.IsDBNull(reader.GetOrdinal("user_id")))
+            if (!dataReader.IsDBNull(dataReader.GetOrdinal("user_id")))
             {
-                var cvXmlOrdinal = reader.GetOrdinal("cv_xml");
+                var curriculumVitaeXmlOrdinal = dataReader.GetOrdinal("cv_xml");
                 applicant.User = new User(
-                    reader.GetInt32(reader.GetOrdinal("user_id")),
-                    reader.IsDBNull(reader.GetOrdinal("name")) ? "Unknown" : reader.GetString(reader.GetOrdinal("name")),
-                    reader.IsDBNull(reader.GetOrdinal("email")) ? "" : reader.GetString(reader.GetOrdinal("email")),
-                    reader.IsDBNull(cvXmlOrdinal) ? null : reader.GetString(cvXmlOrdinal)
+                    dataReader.GetInt32(dataReader.GetOrdinal("user_id")),
+                    dataReader.IsDBNull(dataReader.GetOrdinal("name")) ? DefaultUserName : dataReader.GetString(dataReader.GetOrdinal("name")),
+                    dataReader.IsDBNull(dataReader.GetOrdinal("email")) ? DefaultUserEmail : dataReader.GetString(dataReader.GetOrdinal("email")),
+                    dataReader.IsDBNull(curriculumVitaeXmlOrdinal) ? null : dataReader.GetString(curriculumVitaeXmlOrdinal)
                 );
             }
 
-            if (!reader.IsDBNull(reader.GetOrdinal("recommended_from_company_id")))
+            if (!dataReader.IsDBNull(dataReader.GetOrdinal("recommended_from_company_id")))
             {
-                applicant.RecommendedFromCompany = new Company { CompanyId = reader.GetInt32(reader.GetOrdinal("recommended_from_company_id")) };
+                applicant.RecommendedFromCompany = new Company { CompanyId = dataReader.GetInt32(dataReader.GetOrdinal("recommended_from_company_id")) };
             }
 
             return applicant;

@@ -6,113 +6,129 @@ using System.Threading.Tasks;
 
 namespace OurApp.Core.Validators
 {
-    public class CompanyValidator
+    public class CompanyValidator : ICompanyValidator
     {
-        public bool NameValidator(string name)
+        private const int MaximumNameLength = 200;
+        private const int MaximumAboutUsLength = 2000;
+        private const int MaximumLocationLength = 300;
+        private const int MaximumEmailLength = 100;
+        private const string RequiredEmailCharacter = "@";
+        private const string Base64ImagePrefix = "data:image/";
+
+        private const string ExtensionJpg = ".jpg";
+        private const string ExtensionJpeg = ".jpeg";
+        private const string ExtensionPng = ".png";
+        private const string MimeTypeJpg = "jpg";
+        private const string MimeTypeJpeg = "jpeg";
+        private const string MimeTypePng = "png";
+
+        public bool ValidateName(string companyName)
         {
-            if (string.IsNullOrWhiteSpace(name))
+            if (string.IsNullOrWhiteSpace(companyName))
             {
                 throw new Exception("Name is mandatory");
             }
-            if (name.Length > 200)
+            if (companyName.Length > MaximumNameLength)
             {
                 throw new Exception("Name is too long");
             }
             return true;
         }
 
-        public bool AboutUsValidator(string aboutus)
+        public bool ValidateAboutUs(string aboutUsDescription)
         {
-            if (string.IsNullOrEmpty(aboutus))
+            if (string.IsNullOrEmpty(aboutUsDescription))
             {
                 return true;
             }
-            if (aboutus.Length > 2000)
+            if (aboutUsDescription.Length > MaximumAboutUsLength)
             {
                 throw new Exception("AboutUs is too long");
             }
             return true;
         }
 
-        public bool LocationValidator(string location)
+        public bool ValidateLocation(string companyLocation)
         {
-            if (string.IsNullOrEmpty(location))
+            if (string.IsNullOrEmpty(companyLocation))
             {
                 return true;
             }
-            if (location.Length > 300)
+            if (companyLocation.Length > MaximumLocationLength)
             {
                 throw new Exception("Location is too long");
             }
             return true;
         }
 
-        public bool EmailValidator(string email)
+        public bool ValidateEmail(string companyEmail)
         {
-            if (string.IsNullOrEmpty(email))
+            if (string.IsNullOrEmpty(companyEmail))
             {
                 return true;
             }
-            if (!email.Contains("@"))
+            if (!companyEmail.Contains(RequiredEmailCharacter))
             {
                 throw new Exception("Email must contain '@'");
             }
-            if (email.Length > 100)
+            if (companyEmail.Length > MaximumEmailLength)
             {
                 throw new Exception("Email is too long");
             }
             return true;
         }
 
-        public bool PfpValidator(string pfp)
+        public bool ValidateProfilePicture(string profilePicturePath)
         {
-            if (string.IsNullOrEmpty(pfp))
+            if (string.IsNullOrEmpty(profilePicturePath))
             {
                 return true;
             }
-            if (!HasAllowedImageExtension(pfp))
+            if (!HasAllowedImageExtension(profilePicturePath))
             {
                 throw new Exception("Profile picture must be .jpg, .jpeg or .png");
             }
             return true;
         }
 
-        public bool LogoValidator(string logo)
+        public bool ValidateLogo(string logoPath)
         {
-            if (string.IsNullOrWhiteSpace(logo))
+            if (string.IsNullOrWhiteSpace(logoPath))
             {
                 throw new Exception("Logo is mandatory");
             }
-            if (!HasAllowedImageExtension(logo))
+            if (!HasAllowedImageExtension(logoPath))
             {
                 throw new Exception("Logo must be .jpg, .jpeg or .png");
             }
             return true;
         }
 
-        private static bool HasAllowedImageExtension(string value)
+        private static bool HasAllowedImageExtension(string imagePathOrData)
         {
-            if (string.IsNullOrWhiteSpace(value))
+            if (string.IsNullOrWhiteSpace(imagePathOrData))
+            {
                 return false;
+            }
 
-            if (value.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
-                || value.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)
-                || value.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+            if (imagePathOrData.EndsWith(ExtensionJpg, StringComparison.OrdinalIgnoreCase)
+                || imagePathOrData.EndsWith(ExtensionJpeg, StringComparison.OrdinalIgnoreCase)
+                || imagePathOrData.EndsWith(ExtensionPng, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
 
-            if (value.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase))
+            if (imagePathOrData.StartsWith(Base64ImagePrefix, StringComparison.OrdinalIgnoreCase))
             {
-                var rest = value.Substring("data:image/".Length);
-                var semicolonIndex = rest.IndexOf(';');
-                var mimeSubtype = (semicolonIndex >= 0 ? rest.Substring(0, semicolonIndex) : rest)
+                var remainingString = imagePathOrData.Substring(Base64ImagePrefix.Length);
+                var semicolonIndex = remainingString.IndexOf(';');
+                var mimeSubtype = (semicolonIndex >= 0 ? remainingString.Substring(0, semicolonIndex) : remainingString)
                     .Trim()
                     .ToLowerInvariant();
 
-                return mimeSubtype == "png"
-                    || mimeSubtype == "jpeg"
-                    || mimeSubtype == "jpg";
+                return mimeSubtype == MimeTypePng
+                    || mimeSubtype == MimeTypeJpeg
+                    || mimeSubtype == MimeTypeJpg;
             }
 
             return false;

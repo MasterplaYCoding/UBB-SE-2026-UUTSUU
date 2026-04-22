@@ -9,8 +9,7 @@ namespace OurApp.Core.Models
     public class AdviceChoice
     {
         public string Advice { get; private set; }
-        public string Feedback {  get; private set; }
-
+        public string Feedback { get; private set; }
 
         public AdviceChoice(string advice, string feedback)
         {

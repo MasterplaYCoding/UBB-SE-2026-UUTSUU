@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using OurApp.Core.Database;
 using OurApp.Core.Models;
 using System;
@@ -21,11 +22,13 @@ namespace OurApp.Core.Repositories
         /// <param name="eventOfCollaboration"> the event that the invited company is collaborating on </param>
         /// <param name="collaboratorToBeAdded"> the company that has been invited to collaborate </param>
         /// <param name="loggedInUserID"></param>
+
         public void AddCollaboratorToRepo(Event eventOfCollaboration, Company collaboratorToBeAdded, int loggedInUserID)
         {
             using (SqlConnection sqlConnection = DbConnectionHelper.GetConnection())
             {
                 sqlConnection.Open();
+                const int NewCollaboratorIndicator = 1;
 
                 using (SqlTransaction transaction = sqlConnection.BeginTransaction())
                 {
@@ -53,7 +56,7 @@ namespace OurApp.Core.Repositories
                         checkCommand.Parameters.AddWithValue("@CollaboratorId", collaboratorToBeAdded.CompanyId);
 
                         int existingCount = (int)checkCommand.ExecuteScalar();
-                        bool isNewCollaborator = existingCount == 1;
+                        bool isNewCollaborator = existingCount == NewCollaboratorIndicator;
 
                         if (isNewCollaborator)
                         {
@@ -110,18 +113,16 @@ namespace OurApp.Core.Repositories
                 sqlCommand.Parameters.AddWithValue("@HostID", loggedInCompanyId);
 
                 SqlDataReader reader = sqlCommand.ExecuteReader();
+                string DefaultDatabaseStringValue = string.Empty;
 
                 while (reader.Read())
                 {
-                    usersCollaborators.Add(new Company(
-                        reader["company_name"].ToString(),
-                        "",
-                        "",
+                    usersCollaborators.Add(new Company(reader["company_name"].ToString(),
+                        DefaultDatabaseStringValue,
+                        DefaultDatabaseStringValue, 
                         reader["logo_picture_url"].ToString(),
-                        "",
-                        ""
-                    ));
-                    
+                        DefaultDatabaseStringValue,
+                        DefaultDatabaseStringValue));
                 }
             }
 
