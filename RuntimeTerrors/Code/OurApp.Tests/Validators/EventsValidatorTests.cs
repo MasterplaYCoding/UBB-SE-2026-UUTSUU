@@ -24,7 +24,7 @@ namespace OurApp.Tests.Validators
             public void IsEventTitleValid_NormalTitle_ReturnsTrue()
             { 
                 string title = "Conference";
-                bool result = eventValidator.IsEventTitleValid(title);
+                bool result = eventValidator.ValidateEventTitle(title);
                 Assert.IsTrue(result);
             }
 
@@ -33,7 +33,7 @@ namespace OurApp.Tests.Validators
             {
                 string title = "";
                 var exception = Assert.ThrowsException<Exception>(() =>
-                    eventValidator.IsEventTitleValid(title));
+                    eventValidator.ValidateEventTitle(title));
                 Assert.AreEqual("Title is mandatory", exception.Message);
             }
 
@@ -41,7 +41,7 @@ namespace OurApp.Tests.Validators
             public void IsEventTitleValid_TitleExactly200Characters_ReturnsTrue()
             {
                 string title = new string('A', 200);
-                bool result = eventValidator.IsEventTitleValid(title);
+                bool result = eventValidator.ValidateEventTitle(title);
                 Assert.IsTrue(result);
             }
 
@@ -51,14 +51,14 @@ namespace OurApp.Tests.Validators
 
                 string title = new string('A', 201);
                 var exception = Assert.ThrowsException<Exception>(() =>
-                    eventValidator.IsEventTitleValid(title));
+                    eventValidator.ValidateEventTitle(title));
                 Assert.AreEqual("Title is too long", exception.Message);
             }
             [TestMethod]
             public void IsEventDescriptionValid_NormalDescription_ReturnsTrue()
             {
                 string description = "A very nice event.";
-                bool result = eventValidator.IsEventDescriptionValid(description);
+                bool result = eventValidator.ValidateEventDescription(description);
                 Assert.IsTrue(result);
             }
 
@@ -66,7 +66,7 @@ namespace OurApp.Tests.Validators
             public void IsEventDescriptionValid_EmptyDescription_ReturnsTrue()
             {
                 string description = "";
-                bool result = eventValidator.IsEventDescriptionValid(description);
+                bool result = eventValidator.ValidateEventDescription(description);
                 Assert.IsTrue(result);
             }
 
@@ -74,7 +74,7 @@ namespace OurApp.Tests.Validators
             public void IsEventDescriptionValid_DescriptionExactly2000Characters_ReturnsTrue()
             {
                 string description = new string('X', 2000);
-                bool result = eventValidator.IsEventDescriptionValid(description);
+                bool result = eventValidator.ValidateEventDescription(description);
                 Assert.IsTrue(result);
             }
 
@@ -83,7 +83,7 @@ namespace OurApp.Tests.Validators
             {
                 string description = new string('A', 2001);
                 var exception = Assert.ThrowsException<Exception>(() =>
-                    eventValidator.IsEventDescriptionValid(description));
+                    eventValidator.ValidateEventDescription(description));
                 Assert.AreEqual("Description is too long", exception.Message);
             }
             [TestMethod]
@@ -93,7 +93,7 @@ namespace OurApp.Tests.Validators
                 string location = "Cluj-Napoca";
 
                 // Act
-                bool result = eventValidator.IsEventLocationValid(location);
+                bool result = eventValidator.ValidateEventLocation(location);
 
                 // Assert
                 Assert.IsTrue(result);
@@ -107,7 +107,7 @@ namespace OurApp.Tests.Validators
 
                 // Act
                 var exception = Assert.ThrowsException<Exception>(() =>
-                    eventValidator.IsEventLocationValid(location));
+                    eventValidator.ValidateEventLocation(location));
 
                 // Assert
                 Assert.AreEqual("Location is mandatory", exception.Message);
@@ -121,7 +121,7 @@ namespace OurApp.Tests.Validators
                 string location = new string('L', 300);
 
                 // Act
-                bool result = eventValidator.IsEventLocationValid(location);
+                bool result = eventValidator.ValidateEventLocation(location);
 
                 // Assert
                 Assert.IsTrue(result);
@@ -132,14 +132,14 @@ namespace OurApp.Tests.Validators
             {
                 string location = new string('L', 301);
                 var exception = Assert.ThrowsException<Exception>(() =>
-                    eventValidator.IsEventLocationValid(location));
+                    eventValidator.ValidateEventLocation(location));
                 Assert.AreEqual("Location is too long", exception.Message);
             }
             [TestMethod]
             public void IsEventStartDateValid_FutureDate_ReturnsTrue()
             {
                 DateTimeOffset startDate = DateTimeOffset.Now.AddDays(1);
-                bool result = eventValidator.IsEventStartDateValid(startDate);
+                bool result = eventValidator.ValidateEventStartDate(startDate);
                 Assert.IsTrue(result);
             }
 
@@ -148,7 +148,7 @@ namespace OurApp.Tests.Validators
             {
                 DateTimeOffset? startDate = null;
                 var exception = Assert.ThrowsException<Exception>(() =>
-                    eventValidator.IsEventStartDateValid(startDate));
+                    eventValidator.ValidateEventStartDate(startDate));
                 Assert.AreEqual("Starting date is mandatory", exception.Message);
             }
 
@@ -157,14 +157,14 @@ namespace OurApp.Tests.Validators
             {
                 DateTimeOffset startDate = DateTimeOffset.Now.AddDays(-1);
                 var exception = Assert.ThrowsException<Exception>(() =>
-                    eventValidator.IsEventStartDateValid(startDate));
+                    eventValidator.ValidateEventStartDate(startDate));
                 Assert.AreEqual("Event must start after creation", exception.Message);
             }
             [TestMethod]
             public void IsEventEndDateValid_FutureDate_ReturnsTrue()
             {
                 DateTimeOffset endDate = DateTimeOffset.Now.AddDays(5);
-                bool result = eventValidator.IsEventEndDateValid(endDate);
+                bool result = eventValidator.ValidateEventEndDate(endDate);
                 Assert.IsTrue(result);
             }
 
@@ -173,7 +173,7 @@ namespace OurApp.Tests.Validators
             {
                 DateTimeOffset? endDate = null;
                 var exception = Assert.ThrowsException<Exception>(() =>
-                    eventValidator.IsEventEndDateValid(endDate));
+                    eventValidator.ValidateEventEndDate(endDate));
                 Assert.AreEqual("Ending date is mandatory", exception.Message);
             }
 
@@ -182,7 +182,7 @@ namespace OurApp.Tests.Validators
             {
                 DateTimeOffset endDate = DateTimeOffset.Now.AddDays(-1);
                 var exception = Assert.ThrowsException<Exception>(() =>
-                    eventValidator.IsEventEndDateValid(endDate));
+                    eventValidator.ValidateEventEndDate(endDate));
                 Assert.AreEqual("Event must end after creation", exception.Message);
             }
             [TestMethod]
@@ -190,7 +190,7 @@ namespace OurApp.Tests.Validators
             { 
                 DateTimeOffset startDate = DateTimeOffset.Now.AddDays(1);
                 DateTimeOffset endDate = DateTimeOffset.Now.AddDays(3);
-                bool result = eventValidator.AreEventDatesCronologicallyValid(startDate, endDate);
+                bool result = eventValidator.ValidateEventDatesChronologically(startDate, endDate);
                 Assert.IsTrue(result);
             }
 
@@ -200,7 +200,7 @@ namespace OurApp.Tests.Validators
                 DateTimeOffset startDate = DateTimeOffset.Now.AddDays(5);
                 DateTimeOffset endDate = DateTimeOffset.Now.AddDays(1);
                 var exception = Assert.ThrowsException<Exception>(() =>
-                    eventValidator.AreEventDatesCronologicallyValid(startDate, endDate));
+                    eventValidator.ValidateEventDatesChronologically(startDate, endDate));
                 Assert.AreEqual("Event must begin before ending", exception.Message);
             }
 
@@ -208,7 +208,7 @@ namespace OurApp.Tests.Validators
             public void AreEventDatesCronologicallyValid_StartEqualsEnd_ReturnsTrue()
             {
                 DateTimeOffset date = DateTimeOffset.Now.AddDays(2);
-                bool result = eventValidator.AreEventDatesCronologicallyValid(date, date);
+                bool result = eventValidator.ValidateEventDatesChronologically(date, date);
                 Assert.IsTrue(result);
             }
             
@@ -217,7 +217,7 @@ namespace OurApp.Tests.Validators
             {
                 DateTimeOffset? startDate = null;
                 DateTimeOffset endDate = DateTimeOffset.Now.AddDays(2);
-                bool result = eventValidator.AreEventDatesCronologicallyValid(startDate, endDate);
+                bool result = eventValidator.ValidateEventDatesChronologically(startDate, endDate);
                 Assert.IsTrue(result);
             }
 
@@ -226,7 +226,7 @@ namespace OurApp.Tests.Validators
             {
                 DateTimeOffset startDate = DateTimeOffset.Now.AddDays(1);
                 DateTimeOffset? endDate = null;
-                bool result = eventValidator.AreEventDatesCronologicallyValid(startDate, endDate);
+                bool result = eventValidator.ValidateEventDatesChronologically(startDate, endDate);
                 Assert.IsTrue(result);
             }
         }

@@ -28,7 +28,7 @@ namespace OurApp.Tests.Services
             company.CompanyId = 1;
             company.PostedJobsCount = 0;
             company.CollaboratorsCount = 0;
-            company.game = new Game();
+            company.Game = new Game();
             return company;
         }
 
@@ -50,7 +50,7 @@ namespace OurApp.Tests.Services
             company.AboutUs = "Description";
             company.PostedJobsCount = 5;
             company.CollaboratorsCount = 2;
-            company.game.Publish();
+            company.Game.Publish();
             var result = calculator.Calculate(company);
             Assert.AreEqual(100, result.percentage);
             Assert.AreEqual(0, result.remainingTasks.Count);
