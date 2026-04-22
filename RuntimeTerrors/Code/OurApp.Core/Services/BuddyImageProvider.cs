@@ -8,10 +8,15 @@ namespace OurApp.Core.Services
 {
     public static class BuddyImageProvider
     {
+        private const int FemaleImageKey = 0;
+        private const int MaleImageKey = 1;
+        private const int GenericPhotoKey = 0;
+
+
         private static readonly Dictionary<int, string> BuddyImages = new Dictionary<int, string>
         {
-            { 0, "Assets\\AvatarFemale.png" },
-            { 1, "Assets\\AvatarMale.png" }
+            { FemaleImageKey, "Assets\\AvatarFemale.png" },
+            { MaleImageKey, "Assets\\AvatarMale.png" }
         };
 
         public static string GetImagePathById(int id)
@@ -20,7 +25,7 @@ namespace OurApp.Core.Services
             {
                 return path;
             }
-            return BuddyImages[0];
+            return BuddyImages[GenericPhotoKey];
         }
     }
 }

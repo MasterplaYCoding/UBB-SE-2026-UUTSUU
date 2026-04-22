@@ -13,35 +13,38 @@ namespace OurApp.Core.ViewModels
 {
     public partial class EditEventViewModel : ObservableObject
     {
-        private readonly IEventsService eventsService;
-        private readonly Event eventToEdit;
-        public EventValidator eventValidator = new EventValidator();
+        private const string EmptyStringValue = "";
+        private const string ErrorInputsInvalid = "Please enter valid inputs before creating an event";
 
-        [ObservableProperty] private string photo;
+        private readonly IEventsService _eventsService;
+        private readonly Event _eventToEdit;
+        private readonly IEventValidator _eventValidator;
 
-        [ObservableProperty] private string title;
-        [ObservableProperty] private string titleError;
-        private bool titleIsValid = true;
+        [ObservableProperty] private string _photo = EmptyStringValue;
 
-        [ObservableProperty] private string description;
-        [ObservableProperty] private string descriptionError;
-        private bool descriptionIsValid = true;
+        [ObservableProperty] private string _title = EmptyStringValue;
+        [ObservableProperty] private string _titleError = EmptyStringValue;
+        private bool _titleIsValid = true;
 
-        [ObservableProperty] private DateTimeOffset? startDate;
-        [ObservableProperty] private string startDateError;
-        private bool startDateIsValid = true;
+        [ObservableProperty] private string _description = EmptyStringValue;
+        [ObservableProperty] private string _descriptionError = EmptyStringValue;
+        private bool _descriptionIsValid = true;
 
-        [ObservableProperty] private DateTimeOffset? endDate;
-        [ObservableProperty] private string endDateError;
-        private bool endDateIsValid = true;
+        [ObservableProperty] private DateTimeOffset? _startDate;
+        [ObservableProperty] private string _startDateError = EmptyStringValue;
+        private bool _startDateIsValid = true;
 
-        [ObservableProperty] private string location;
-        [ObservableProperty] private string locationError;
-        private bool locationIsValid = true;
+        [ObservableProperty] private DateTimeOffset? _endDate;
+        [ObservableProperty] private string _endDateError = EmptyStringValue;
+        private bool _endDateIsValid = true;
 
-        [ObservableProperty] private string addError = "";
+        [ObservableProperty] private string _location = EmptyStringValue;
+        [ObservableProperty] private string _locationError = EmptyStringValue;
+        private bool _locationIsValid = true;
 
-        public bool isEverythingValid => (addError == "");
+        [ObservableProperty] private string _addError = EmptyStringValue;
+
+        public bool isEverythingValid => (AddError == EmptyStringValue);
         public bool eventUpdatedSuccessfully = false;
         public bool eventDeletedSuccessfully = false;
 
@@ -51,37 +54,40 @@ namespace OurApp.Core.ViewModels
         /// </summary>
         /// <param name="eventsService"> events service </param>
         /// <param name="selectedEvent"> the selected event to be modified </param>
-        public EditEventViewModel(IEventsService eventsService, Event selectedEvent)
+        /// <param name="eventValidator"> event validator service </param>
+        public EditEventViewModel(IEventsService eventsService, Event selectedEvent, IEventValidator eventValidator)
         {
-            this.eventsService = eventsService;
-            this.eventToEdit = selectedEvent;
+            _eventsService = eventsService;
+            _eventToEdit = selectedEvent;
+            _eventValidator = eventValidator;
 
-            this.title = selectedEvent.Title;
-            this.description = selectedEvent.Description;
-            this.startDate = new DateTimeOffset?(selectedEvent.StartDate);
-            this.endDate = new DateTimeOffset?(selectedEvent.EndDate);
-            this.location = selectedEvent.Location;
+            _title = selectedEvent.Title;
+            _description = selectedEvent.Description;
+            _startDate = selectedEvent.StartDate;
+            _endDate = selectedEvent.EndDate;
+            _location = selectedEvent.Location;
         }
 
 
         /// <summary>
         /// Function that tries to update an event
         /// </summary>
-        [RelayCommand] public void EditEvent()
+        [RelayCommand]
+        public void EditEvent()
         {
-            if (!titleIsValid || !descriptionIsValid || !startDateIsValid || !endDateIsValid || !locationIsValid)
+            if (!_titleIsValid || !_descriptionIsValid || !_startDateIsValid || !_endDateIsValid || !_locationIsValid)
             {
-                AddError = "Please enter valid inputs before creating an event";
+                AddError = ErrorInputsInvalid;
                 return;
             }
 
             try
             {
-                AddError = "";
-                DateTime eventStartDateTime = startDate.Value.DateTime;
-                DateTime eventEndDateTime = endDate.Value.DateTime;
+                AddError = EmptyStringValue;
+                DateTime eventStartDateTime = StartDate.Value.DateTime;
+                DateTime eventEndDateTime = EndDate.Value.DateTime;
 
-                eventsService.UpdateEvent(eventToEdit.Id, Photo, Title, Description, eventStartDateTime, eventEndDateTime, Location);
+                _eventsService.UpdateEvent(_eventToEdit.Id, Photo, Title, Description, eventStartDateTime, eventEndDateTime, Location);
                 eventUpdatedSuccessfully = true;
             }
             catch (Exception)
@@ -93,11 +99,12 @@ namespace OurApp.Core.ViewModels
         /// <summary>
         /// Function that tries to delete an event
         /// </summary>
-        [RelayCommand] public void DeleteEvent()
+        [RelayCommand]
+        public void DeleteEvent()
         {
             try
             {
-                eventsService.DeleteEvent(eventToEdit);
+                _eventsService.DeleteEvent(_eventToEdit);
                 eventDeletedSuccessfully = true;
             }
             catch (Exception)
@@ -115,17 +122,17 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (eventValidator.IsEventTitleValid(Title))
+                if (_eventValidator.ValidateEventTitle(Title))
                 {
-                    TitleError = "";
-                    titleIsValid = true;
+                    TitleError = EmptyStringValue;
+                    _titleIsValid = true;
                     return true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                TitleError = ex.Message;
-                titleIsValid = false;
+                TitleError = exception.Message;
+                _titleIsValid = false;
             }
             return false;
         }
@@ -139,17 +146,17 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (eventValidator.IsEventDescriptionValid(Description))
+                if (_eventValidator.ValidateEventDescription(Description))
                 {
-                    DescriptionError = "";
-                    descriptionIsValid = true;
+                    DescriptionError = EmptyStringValue;
+                    _descriptionIsValid = true;
                     return true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                DescriptionError = ex.Message;
-                descriptionIsValid = false;
+                DescriptionError = exception.Message;
+                _descriptionIsValid = false;
             }
             return false;
         }
@@ -163,21 +170,21 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (eventValidator.AreEventDatesCronologicallyValid(StartDate, EndDate))
+                if (_eventValidator.ValidateEventDatesChronologically(StartDate, EndDate))
                 {
-                    StartDateError = "";
-                    EndDateError = "";
-                    endDateIsValid = true;
-                    startDateIsValid = true;
+                    StartDateError = EmptyStringValue;
+                    EndDateError = EmptyStringValue;
+                    _endDateIsValid = true;
+                    _startDateIsValid = true;
                     return true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                StartDateError = ex.Message;
-                EndDateError = ex.Message;
-                endDateIsValid = false;
-                startDateIsValid = false;
+                StartDateError = exception.Message;
+                EndDateError = exception.Message;
+                _endDateIsValid = false;
+                _startDateIsValid = false;
             }
             return false;
         }
@@ -190,17 +197,17 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (eventValidator.IsEventLocationValid(Location))
+                if (_eventValidator.ValidateEventLocation(Location))
                 {
-                    LocationError = "";
-                    locationIsValid = true;
+                    LocationError = EmptyStringValue;
+                    _locationIsValid = true;
                     return true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                LocationError = ex.Message;
-                locationIsValid = false;
+                LocationError = exception.Message;
+                _locationIsValid = false;
             }
             return false;
         }

@@ -5,17 +5,19 @@ using OurApp.Core.Models;
 
 public class Game
 {
+    private const int DefaultBuddyId = 0;
+
     public Buddy Buddy { get; private set; }
-    public IReadOnlyList<Scenario> Scenarios => scenarios;
-    private readonly List<Scenario> scenarios;
+    public IReadOnlyList<Scenario> Scenarios => _scenarios;
+    private readonly List<Scenario> _scenarios;
 
     public string Conclusion { get; private set; }
     public bool IsPublished { get; private set; }
 
     public Game()
     {
-        Buddy = new Buddy(0, string.Empty, string.Empty);
-        scenarios = new List<Scenario>();
+        Buddy = new Buddy(DefaultBuddyId, string.Empty, string.Empty);
+        _scenarios = new List<Scenario>();
         Conclusion = string.Empty;
         IsPublished = false;
     }
@@ -23,18 +25,18 @@ public class Game
     public Game(Buddy buddy, IEnumerable<Scenario> scenarioList, string conclusion, bool isPublished = false)
     {
         Buddy = buddy ?? throw new ArgumentNullException(nameof(buddy));
-        scenarios = scenarioList?.ToList() ?? throw new ArgumentNullException(nameof(scenarioList));
+        _scenarios = scenarioList?.ToList() ?? throw new ArgumentNullException(nameof(scenarioList));
         Conclusion = conclusion ?? string.Empty;
         IsPublished = isPublished;
     }
     public Scenario GetScenario(int index)
     {
-        return scenarios[index];
+        return _scenarios[index];
     }
 
     public void AddScenario(Scenario scenario)
     {
-        scenarios.Add(scenario);
+        _scenarios.Add(scenario);
     }
 
     public void Publish()

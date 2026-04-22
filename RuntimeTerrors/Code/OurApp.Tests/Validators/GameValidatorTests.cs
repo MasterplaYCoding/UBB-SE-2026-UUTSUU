@@ -39,7 +39,7 @@ namespace OurApp.Tests.Validators
         public void MandatoryFieldsValidator_ValidScenarios_ReturnsTrue()
         {
             var scenarios = GetValidScenarios();
-            var result = validator.MandatoryFieldsValidator(scenarios);
+            var result = validator.ValidateMandatoryFields(scenarios);
             Assert.IsTrue(result);
         }
 
@@ -47,7 +47,7 @@ namespace OurApp.Tests.Validators
         public void MandatoryFieldsValidator_NullScenarios_ThrowsException()
         {
             List<(string, IReadOnlyList<(string, string)>)> scenarios = null;
-            Action action = () => validator.MandatoryFieldsValidator(scenarios);
+            Action action = () => validator.ValidateMandatoryFields(scenarios);
             Assert.ThrowsException<Exception>(action);
         }
 
@@ -56,7 +56,7 @@ namespace OurApp.Tests.Validators
         {
             var scenarios = GetValidScenarios();
             scenarios[0] = ("", scenarios[0].choices);
-            Action action = () => validator.MandatoryFieldsValidator(scenarios);
+            Action action = () => validator.ValidateMandatoryFields(scenarios);
             Assert.ThrowsException<Exception>(action);
         }
 
@@ -69,7 +69,7 @@ namespace OurApp.Tests.Validators
                 ("Scenario 2", new List<(string,string)>{("Advice","Reaction")})
             };
 
-            Action action = () => validator.MandatoryFieldsValidator(scenarios);
+            Action action = () => validator.ValidateMandatoryFields(scenarios);
             Assert.ThrowsException<Exception>(action);
         }
 
@@ -89,7 +89,7 @@ namespace OurApp.Tests.Validators
                 })
             };
 
-            Action action = () => validator.MandatoryFieldsValidator(scenarios);
+            Action action = () => validator.ValidateMandatoryFields(scenarios);
 
             Assert.ThrowsException<Exception>(action);
         }
@@ -110,7 +110,7 @@ namespace OurApp.Tests.Validators
                 })
             };
 
-            Action action = () => validator.MandatoryFieldsValidator(scenarios);
+            Action action = () => validator.ValidateMandatoryFields(scenarios);
 
             Assert.ThrowsException<Exception>(action);
         }
@@ -126,7 +126,7 @@ namespace OurApp.Tests.Validators
                 })
             };
 
-            Action action = () => validator.MandatoryFieldsValidator(scenarios);
+            Action action = () => validator.ValidateMandatoryFields(scenarios);
 
             Assert.ThrowsException<Exception>(action);
         }
@@ -137,7 +137,7 @@ namespace OurApp.Tests.Validators
         public void CharacterLimitsValidator_ValidScenario_ReturnsTrue()
         {
             var scenarios = GetValidScenarios();
-            var result = validator.CharacterLimitsValidator(scenarios);
+            var result = validator.ValidateCharacterLimits(scenarios);
             Assert.IsTrue(result);
         }
 
@@ -146,7 +146,7 @@ namespace OurApp.Tests.Validators
         {
             var scenarios = GetValidScenarios();
             scenarios[0] = (new string('a', 251), scenarios[0].choices);
-            Action action = () => validator.CharacterLimitsValidator(scenarios);
+            Action action = () => validator.ValidateCharacterLimits(scenarios);
             Assert.ThrowsException<Exception>(action);
         }
 
@@ -166,7 +166,7 @@ namespace OurApp.Tests.Validators
                 })
             };
 
-            Action action = () => validator.CharacterLimitsValidator(scenarios);
+            Action action = () => validator.ValidateCharacterLimits(scenarios);
 
             Assert.ThrowsException<Exception>(action);
         }
@@ -175,7 +175,7 @@ namespace OurApp.Tests.Validators
         public void CharacterLimitsValidator_NullScenarios_ReturnsTrue()
         {
             List<(string, IReadOnlyList<(string, string)>)> scenarios = null;
-            var result = validator.CharacterLimitsValidator(scenarios);
+            var result = validator.ValidateCharacterLimits(scenarios);
             Assert.IsTrue(result);
         }
 
@@ -189,7 +189,7 @@ namespace OurApp.Tests.Validators
                 ("Scenario 2", new List<(string,string)>{("Advice","Reaction")})
             };
 
-            var result = validator.CharacterLimitsValidator(scenarios);
+            var result = validator.ValidateCharacterLimits(scenarios);
             Assert.IsTrue(result);
         }
 
@@ -211,7 +211,7 @@ namespace OurApp.Tests.Validators
                 })
             };
 
-            var result = validator.CharacterLimitsValidator(scenarios);
+            var result = validator.ValidateCharacterLimits(scenarios);
             Assert.IsTrue(result);
         }
 
@@ -222,7 +222,7 @@ namespace OurApp.Tests.Validators
         public void ConclusionPositiveValidator_ValidConclusion_ReturnsTrue()
         {
             string conclusion = "Well done!";
-            var result = validator.ConclusionPositiveValidator(conclusion);
+            var result = validator.ValidatePositiveConclusion(conclusion);
             Assert.IsTrue(result);
         }
 
@@ -230,7 +230,7 @@ namespace OurApp.Tests.Validators
         public void ConclusionPositiveValidator_EmptyConclusion_ThrowsException()
         {
             string conclusion = "";
-            Action action = () => validator.ConclusionPositiveValidator(conclusion);
+            Action action = () => validator.ValidatePositiveConclusion(conclusion);
             Assert.ThrowsException<Exception>(action);
         }
 

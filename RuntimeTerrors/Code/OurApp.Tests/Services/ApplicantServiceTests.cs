@@ -749,5 +749,7 @@ namespace OurApp.Tests.Services
             var result = sut.ScanCvXml(applicant);
             Assert.IsNotNull(result);
         }
+
+
     }
 }

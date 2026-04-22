@@ -53,7 +53,7 @@ namespace OurApp.Tests.Services
         public void GetBuddyId_ReturnsCorrectId()
         {
             repo.StoredGame = CreateTestGame();
-            int id = service.getBuddyId();
+            int id = service.GetBuddyId();
             Assert.AreEqual(1, id);
         }
 
@@ -85,7 +85,7 @@ namespace OurApp.Tests.Services
         public void IsPublished_ReturnsTrue()
         {
             repo.StoredGame = CreateTestGame();
-            var result = service.isPublished();
+            var result = service.IsPublished();
             Assert.IsTrue(result);
         }
 
@@ -160,7 +160,7 @@ namespace OurApp.Tests.Services
         public void IsPublished_NoGame_ReturnsFalse()
         {
             repo.StoredGame = null;
-            var result = service.isPublished();
+            var result = service.IsPublished();
             Assert.IsFalse(result);
         }
 

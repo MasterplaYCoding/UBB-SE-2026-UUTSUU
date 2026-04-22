@@ -41,8 +41,6 @@ namespace OurApp.Core.Models
             this.HostID = eventHostID;
             this.Collaborators = eventCollaborators;
         }
-
-
         public override string ToString()
         {
             return "Event: " + Photo + " " + Title + " " + Description + " " +

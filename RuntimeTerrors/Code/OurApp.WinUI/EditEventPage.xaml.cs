@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using OurApp.Core.Models;
+using OurApp.Core.Validators;
 using OurApp.Core.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -52,7 +53,7 @@ namespace OurApp.WinUI
             var ev = e.Parameter as Event;
 
             var mainW = App.mainWindow;
-            ViewModel = new EditEventViewModel(mainW.eventsService, ev);
+            ViewModel = new EditEventViewModel(mainW.eventsService, ev, mainW.eventValidator);
             this.DataContext = ViewModel;
 
             System.Diagnostics.Debug.WriteLine(ev);

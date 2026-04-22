@@ -9,70 +9,19 @@ using System.Threading.Tasks;
 
 namespace OurApp.Core.Repositories
 {
-    public class PaymentRepository
+    public class PaymentRepository : IPaymentRepository
     {
         //change it to your own 
         // private readonly string _connectionString =
         //     "Data Source=Aron\\SQLEXPRESS;Initial Catalog=iss_project;Integrated Security=True;Trust Server Certificate=True";
 
-        public void UpdateJobPayment(int jobId, int paymentAmount)
-        {
-            string query = "UPDATE jobs SET amount_payed = @amount WHERE job_id = @jobId";
-
-            using (SqlConnection connection = DbConnectionHelper.GetConnection())
-            {
-                using (SqlCommand command = new SqlCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@amount", paymentAmount);
-                    command.Parameters.AddWithValue("@jobId", jobId);
-                    connection.Open();
-                    int rowsAffected = command.ExecuteNonQuery();
-                    if (rowsAffected == 0)
-                    {
-                        throw new Exception("Job ID not found. Payment not applied to database.");
-                    }
-                }
-            }
-        }
-        public List<JobPaymentInfo> GetPaidJobs(string jobType, string experienceLevel)
-        {
-            var results = new List<JobPaymentInfo>();
-
-            string query = @"
+        private const string UpdateJobPaymentSqlQuery = "UPDATE jobs SET amount_payed = @amount WHERE job_id = @jobId";
+        private const string GetPaidJobsSqlQuery = @"
                 SELECT c.company_name, j.job_title, j.amount_payed 
                 FROM jobs j
                 INNER JOIN companies c ON j.company_id = c.company_id
                 WHERE j.job_type = @jobType AND j.experience_level = @expLevel";
-
-            using (SqlConnection connection = DbConnectionHelper.GetConnection())
-            {
-                using (SqlCommand command = new SqlCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@jobType", jobType);
-                    command.Parameters.AddWithValue("@expLevel", experienceLevel);
-
-                    connection.Open();
-                    using (SqlDataReader reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            results.Add(new JobPaymentInfo
-                            {
-                                CompanyName = reader.GetString(0),
-                                JobTitle = reader.GetString(1),
-                                AmountPayed = reader.IsDBNull(2) ? 0 : reader.GetInt32(2)
-                            });
-                        }
-                    }
-                }
-            }
-            return results;
-        }
-        public List<string> GetCompaniesToNotify(int currentJobId, int newPaymentAmount)
-        {
-            var emails = new List<string>();
-
-            string query = @"
+        private const string GetCompaniesToNotifySqlQuery = @"
                 SELECT DISTINCT c.email 
                 FROM companies c
                 INNER JOIN jobs j ON c.company_id = j.company_id
@@ -83,24 +32,89 @@ namespace OurApp.Core.Repositories
                   AND j.experience_level = (SELECT experience_level FROM jobs WHERE job_id = @jobId)
                   AND (j.amount_payed IS NULL OR j.amount_payed < @amount)";
 
-            using (SqlConnection connection = DbConnectionHelper.GetConnection())
-            {
-                using (SqlCommand command = new SqlCommand(query, connection))
-                {
-                    command.Parameters.AddWithValue("@jobId", currentJobId);
-                    command.Parameters.AddWithValue("@amount", newPaymentAmount);
+        private const string AmountParameterName = "@amount";
+        private const string JobIdParameterName = "@jobId";
+        private const string JobTypeParameterName = "@jobType";
+        private const string ExperienceLevelParameterName = "@expLevel";
 
-                    connection.Open();
-                    using (SqlDataReader reader = command.ExecuteReader())
+        private const int EmptyRowsAffectedCount = 0;
+        private const string JobNotFoundErrorMessage = "Job ID not found. Payment not applied to database.";
+
+        private const int CompanyNameColumnIndex = 0;
+        private const int JobTitleColumnIndex = 1;
+        private const int AmountPayedColumnIndex = 2;
+        private const int DefaultAmountPayedValue = 0;
+        private const int EmailColumnIndex = 0;
+
+        public void UpdateJobPayment(int jobId, int paymentAmount)
+        {
+            using (SqlConnection databaseConnection = DbConnectionHelper.GetConnection())
+            {
+                using (SqlCommand sqlCommand = new SqlCommand(UpdateJobPaymentSqlQuery, databaseConnection))
+                {
+                    sqlCommand.Parameters.AddWithValue(AmountParameterName, paymentAmount);
+                    sqlCommand.Parameters.AddWithValue(JobIdParameterName, jobId);
+                    databaseConnection.Open();
+                    int affectedRowsCount = sqlCommand.ExecuteNonQuery();
+                    if (affectedRowsCount == EmptyRowsAffectedCount)
                     {
-                        while (reader.Read())
+                        throw new Exception(JobNotFoundErrorMessage);
+                    }
+                }
+            }
+        }
+
+        public List<JobPaymentInfo> GetPaidJobs(string jobType, string experienceLevel)
+        {
+            var paidJobsList = new List<JobPaymentInfo>();
+
+            using (SqlConnection databaseConnection = DbConnectionHelper.GetConnection())
+            {
+                using (SqlCommand sqlCommand = new SqlCommand(GetPaidJobsSqlQuery, databaseConnection))
+                {
+                    sqlCommand.Parameters.AddWithValue(JobTypeParameterName, jobType);
+                    sqlCommand.Parameters.AddWithValue(ExperienceLevelParameterName, experienceLevel);
+
+                    databaseConnection.Open();
+                    using (SqlDataReader sqlDataReader = sqlCommand.ExecuteReader())
+                    {
+                        while (sqlDataReader.Read())
                         {
-                            emails.Add(reader.GetString(0));
+                            paidJobsList.Add(new JobPaymentInfo
+                            {
+                                CompanyName = sqlDataReader.GetString(CompanyNameColumnIndex),
+                                JobTitle = sqlDataReader.GetString(JobTitleColumnIndex),
+                                AmountPayed = sqlDataReader.IsDBNull(AmountPayedColumnIndex) ? DefaultAmountPayedValue : sqlDataReader.GetInt32(AmountPayedColumnIndex)
+                            });
                         }
                     }
                 }
             }
-            return emails;
+            return paidJobsList;
+        }
+
+        public List<string> GetCompaniesToNotify(int currentJobId, int newPaymentAmount)
+        {
+            var emailsToNotifyList = new List<string>();
+
+            using (SqlConnection databaseConnection = DbConnectionHelper.GetConnection())
+            {
+                using (SqlCommand sqlCommand = new SqlCommand(GetCompaniesToNotifySqlQuery, databaseConnection))
+                {
+                    sqlCommand.Parameters.AddWithValue(JobIdParameterName, currentJobId);
+                    sqlCommand.Parameters.AddWithValue(AmountParameterName, newPaymentAmount);
+
+                    databaseConnection.Open();
+                    using (SqlDataReader sqlDataReader = sqlCommand.ExecuteReader())
+                    {
+                        while (sqlDataReader.Read())
+                        {
+                            emailsToNotifyList.Add(sqlDataReader.GetString(EmailColumnIndex));
+                        }
+                    }
+                }
+            }
+            return emailsToNotifyList;
         }
     }
 }

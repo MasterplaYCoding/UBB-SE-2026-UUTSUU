@@ -8,10 +8,10 @@ using System.Reflection.PortableExecutable;
 
 namespace OurApp.Core.Services
 {
-    public class GameService
+    public class GameService : IGameService
     {
         private readonly ICompanyRepo _repository;
-        public SessionService sessionService;
+        public SessionService SessionService;
 
         public GameService(ICompanyRepo repository)
         {
@@ -26,10 +26,11 @@ namespace OurApp.Core.Services
             return game;
         }
 
-        public int getBuddyId()
+        public int GetBuddyId()
         {
             return LoadedGame().Buddy.Id;
         }
+
         public void Save(Game game)
         {
             if (game == null) throw new ArgumentNullException(nameof(game));
@@ -40,11 +41,11 @@ namespace OurApp.Core.Services
         {
             return _repository.GetGame() ?? new Game();
         }
-        public bool isPublished()
+
+        public bool IsPublished()
         {
             var game = _repository.GetGame();
             return game != null && game.IsPublished;
-
         }
 
         public string ShowCoworker()
@@ -57,7 +58,7 @@ namespace OurApp.Core.Services
             var game = LoadedGame();
             if (number < 0 || number >= game.Scenarios.Count)
                 throw new ArgumentOutOfRangeException(nameof(number), "Scenario index is out of bounds.");
-            
+
             return game.Scenarios[number].Description;
         }
 
@@ -93,10 +94,10 @@ namespace OurApp.Core.Services
             var buddy = new Buddy(buddyId, buddyName, buddyIntroduction);
 
             var builtScenarios = scenarios
-                .Select(s =>
+                .Select(scenarioData =>
                 {
-                    var scenario = new Scenario(s.scenarioText);
-                    foreach (var (advice, feedback) in s.choices)
+                    var scenario = new Scenario(scenarioData.scenarioText);
+                    foreach (var (advice, feedback) in scenarioData.choices)
                     {
                         scenario.AddChoice(new AdviceChoice(advice, feedback));
                     }
@@ -117,6 +118,5 @@ namespace OurApp.Core.Services
         {
             existingGame.Unpublish();
         }
-
     }
 }

@@ -21,7 +21,7 @@ namespace OurApp.Tests.Validators
         public void NameValidator_ValidName_ReturnsTrue()
         {
             string name = "Google";
-            bool result = validator.NameValidator(name);
+            bool result = validator.ValidateName(name);
             Assert.IsTrue(result);
         }
 
@@ -29,7 +29,7 @@ namespace OurApp.Tests.Validators
         public void NameValidator_EmptyName_ThrowsException()
         {
             string name = "";
-            Action action = () => validator.NameValidator(name);
+            Action action = () => validator.ValidateName(name);
             Assert.ThrowsException<Exception>(action);
         }
 
@@ -37,7 +37,7 @@ namespace OurApp.Tests.Validators
         public void NameValidator_NameTooLong_ThrowsException()
         {
             string name = new string('a', 201);
-            Action action = () => validator.NameValidator(name);
+            Action action = () => validator.ValidateName(name);
             Assert.ThrowsException<Exception>(action);
         }
 
@@ -47,7 +47,7 @@ namespace OurApp.Tests.Validators
         public void AboutUsValidator_EmptyAboutUs_ReturnsTrue()
         {
             string about = "";
-            bool result = validator.AboutUsValidator(about);
+            bool result = validator.ValidateAboutUs(about);
             Assert.IsTrue(result);
         }
 
@@ -56,7 +56,7 @@ namespace OurApp.Tests.Validators
         {
             
             string about = new string('a', 2001);
-            Action action = () => validator.AboutUsValidator(about);
+            Action action = () => validator.ValidateAboutUs(about);
             Assert.ThrowsException<Exception>(action);
         }
 
@@ -65,7 +65,7 @@ namespace OurApp.Tests.Validators
         public void AboutUsValidator_NullAboutUs_ReturnsTrue()
         {
             string about = null;
-            bool result = validator.AboutUsValidator(about);
+            bool result = validator.ValidateAboutUs(about);
             Assert.IsTrue(result);
         }
 
@@ -74,7 +74,7 @@ namespace OurApp.Tests.Validators
         public void AboutUsValidator_ValidAboutUs_ReturnsTrue()
         {
             string about = "We build software.";
-            bool result = validator.AboutUsValidator(about);
+            bool result = validator.ValidateAboutUs(about);
             Assert.IsTrue(result);
         }
 
@@ -84,7 +84,7 @@ namespace OurApp.Tests.Validators
         public void LocationValidator_EmptyLocation_ReturnsTrue()
         {
             string location = "";
-            bool result = validator.LocationValidator(location);
+            bool result = validator.ValidateLocation(location);
             Assert.IsTrue(result);
         }
 
@@ -92,7 +92,7 @@ namespace OurApp.Tests.Validators
         public void LocationValidator_LocationTooLong_ThrowsException()
         {
             string location = new string('a', 301);
-            Action action = () => validator.LocationValidator(location);
+            Action action = () => validator.ValidateLocation(location);
             Assert.ThrowsException<Exception>(action);
         }
 
@@ -100,7 +100,7 @@ namespace OurApp.Tests.Validators
         public void LocationValidator_NullLocation_ReturnsTrue()
         {
             string location = null;
-            bool result = validator.LocationValidator(location);
+            bool result = validator.ValidateLocation(location);
             Assert.IsTrue(result);
         }
 
@@ -108,7 +108,7 @@ namespace OurApp.Tests.Validators
         public void LocationValidator_ValidLocation_ReturnsTrue()
         {
             string location = "Bucharest";
-            bool result = validator.LocationValidator(location);
+            bool result = validator.ValidateLocation(location);
             Assert.IsTrue(result);
         }
 
@@ -118,7 +118,7 @@ namespace OurApp.Tests.Validators
         public void EmailValidator_EmptyEmail_ReturnsTrue()
         {
             string email = "";
-            bool result = validator.EmailValidator(email);
+            bool result = validator.ValidateEmail(email);
             Assert.IsTrue(result);
         }
 
@@ -126,7 +126,7 @@ namespace OurApp.Tests.Validators
         public void EmailValidator_EmailWithoutAt_ThrowsException()
         {
             string email = "invalidemail";
-            Action action = () => validator.EmailValidator(email);
+            Action action = () => validator.ValidateEmail(email);
             Assert.ThrowsException<Exception>(action);
         }
 
@@ -134,7 +134,7 @@ namespace OurApp.Tests.Validators
         public void EmailValidator_EmailTooLong_ThrowsException()
         { 
             string email = new string('a', 101) + "@gmail.com";
-            Action action = () => validator.EmailValidator(email);
+            Action action = () => validator.ValidateEmail(email);
             Assert.ThrowsException<Exception>(action);
         }
 
@@ -142,7 +142,7 @@ namespace OurApp.Tests.Validators
         public void EmailValidator_ValidEmail_ReturnsTrue()
         {
             string email = "test@gmail.com";
-            bool result = validator.EmailValidator(email);
+            bool result = validator.ValidateEmail(email);
             Assert.IsTrue(result);
         }
 
@@ -152,7 +152,7 @@ namespace OurApp.Tests.Validators
         public void PfpValidator_EmptyPfp_ReturnsTrue()
         {
             string pfp = "";
-            bool result = validator.PfpValidator(pfp);
+            bool result = validator.ValidateProfilePicture(pfp);
             Assert.IsTrue(result);
         }
 
@@ -160,7 +160,7 @@ namespace OurApp.Tests.Validators
         public void PfpValidator_InvalidExtension_ThrowsException()
         {
             string pfp = "image.txt";
-            Action action = () => validator.PfpValidator(pfp);
+            Action action = () => validator.ValidateProfilePicture(pfp);
             Assert.ThrowsException<Exception>(action);
         }
 
@@ -168,7 +168,7 @@ namespace OurApp.Tests.Validators
         public void PfpValidator_ValidImage_ReturnsTrue()
         {
             string pfp = "image.png";
-            bool result = validator.PfpValidator(pfp);
+            bool result = validator.ValidateProfilePicture(pfp);
             Assert.IsTrue(result);
         }
 
@@ -178,7 +178,7 @@ namespace OurApp.Tests.Validators
         public void LogoValidator_EmptyLogo_ThrowsException()
         {
             string logo = "";
-            Action action = () => validator.LogoValidator(logo);
+            Action action = () => validator.ValidateLogo(logo);
             Assert.ThrowsException<Exception>(action);
         }
 
@@ -186,7 +186,7 @@ namespace OurApp.Tests.Validators
         public void LogoValidator_InvalidExtension_ThrowsException()
         {
             string logo = "logo.txt";
-            Action action = () => validator.LogoValidator(logo);
+            Action action = () => validator.ValidateLogo(logo);
             Assert.ThrowsException<Exception>(action);
         }
 
@@ -194,7 +194,7 @@ namespace OurApp.Tests.Validators
         public void LogoValidator_ValidLogo_ReturnsTrue()
         { 
             string logo = "logo.jpg";
-            bool result = validator.LogoValidator(logo);
+            bool result = validator.ValidateLogo(logo);
             Assert.IsTrue(result);
         }
 
@@ -203,7 +203,7 @@ namespace OurApp.Tests.Validators
         public void PfpValidator_DataImagePng_ReturnsTrue()
         {
             string pfp = "data:image/png;base64,AAA";
-            bool result = validator.PfpValidator(pfp);
+            bool result = validator.ValidateProfilePicture(pfp);
             Assert.IsTrue(result);
         }
 
@@ -212,7 +212,7 @@ namespace OurApp.Tests.Validators
         public void LogoValidator_DataImageJpeg_ReturnsTrue()
         {
             string logo = "data:image/jpeg;base64,AAA";
-            bool result = validator.LogoValidator(logo);
+            bool result = validator.ValidateLogo(logo);
             Assert.IsTrue(result);
         }
 
@@ -221,7 +221,7 @@ namespace OurApp.Tests.Validators
         public void PfpValidator_WhitespaceImage_ThrowsException()
         { 
             string pfp = "   ";
-            Action action = () => validator.PfpValidator(pfp);
+            Action action = () => validator.ValidateProfilePicture(pfp);
             Assert.ThrowsException<Exception>(action);
         }
     }
