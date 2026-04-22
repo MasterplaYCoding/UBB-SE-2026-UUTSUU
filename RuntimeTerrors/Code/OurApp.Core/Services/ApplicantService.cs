@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using OurApp.Core.Models;
 using OurApp.Core.Repositories;
-using System.Linq;
 
 namespace OurApp.Core.Services
 {
