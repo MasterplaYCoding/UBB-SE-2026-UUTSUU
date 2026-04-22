@@ -14,64 +14,64 @@ namespace OurApp.Core.Repositories
 {
     public class EventsRepo : IEventsRepo
     {
+        private const int DefaultHostCompanyId = 1;
+        private const int EmptyEventIdFallback = 0;
 
-        /// <summary>
-        /// Function that returns the event id with the maximum value out of the database
-        /// </summary>
-        /// <returns></returns>
         public int GetMaxEventId()
         {
-            using (SqlConnection sqlConnection = DbConnectionHelper.GetConnection())
+            using (SqlConnection databaseConnection = DbConnectionHelper.GetConnection())
             {
-                sqlConnection.Open();
+                databaseConnection.Open();
 
-                string query = "SELECT MAX(event_id) FROM events";
+                string sqlQuery = "SELECT MAX(event_id) FROM events";
 
-                SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
+                SqlCommand sqlCommand = new SqlCommand(sqlQuery, databaseConnection);
 
-                object result = sqlCommand.ExecuteScalar();
+                object queryResult = sqlCommand.ExecuteScalar();
 
-                if (result == DBNull.Value)
-                    return 0;
+                if (queryResult == DBNull.Value)
+                {
+                    return EmptyEventIdFallback;
+                }
 
-                return Convert.ToInt32(result);
+                return Convert.ToInt32(queryResult);
             }
         }
 
         public void AddEventToRepo(Event eventToBeAdded)
         {
-            using var conn = DbConnectionHelper.GetConnection();
-            conn.Open();
+            using var databaseConnection = DbConnectionHelper.GetConnection();
+            databaseConnection.Open();
 
-            using var tx = conn.BeginTransaction();
+            using var sqlTransaction = databaseConnection.BeginTransaction();
 
             try
             {
                 int nextId;
-                using (var idCmd = new SqlCommand(
+                using (var nextIdCommand = new SqlCommand(
                     "SELECT COALESCE(MAX(event_id), 0) + 1 FROM events WITH (UPDLOCK, HOLDLOCK)",
-                    conn, tx))
+                    databaseConnection, sqlTransaction))
                 {
-                    nextId = (int)idCmd.ExecuteScalar();
+                    nextId = (int)nextIdCommand.ExecuteScalar();
                 }
 
-                using (var insertEventCmd = new SqlCommand(@"
+                using (var insertEventCommand = new SqlCommand(@"
                     INSERT INTO events 
                     (event_id, photo, title, description, start_date, end_date, location, host_company_id, posted_at)
                     VALUES (@Id, @Photo, @Title, @Description, @StartDate, @EndDate, @Location, @Host, @Now)",
-                    conn, tx))
+                    databaseConnection, sqlTransaction))
                 {
-                    insertEventCmd.Parameters.AddWithValue("@Id", nextId);
-                    insertEventCmd.Parameters.AddWithValue("@Photo", (object?)eventToBeAdded.Photo ?? DBNull.Value);
-                    insertEventCmd.Parameters.AddWithValue("@Title", eventToBeAdded.Title);
-                    insertEventCmd.Parameters.AddWithValue("@Description", (object?)eventToBeAdded.Description ?? DBNull.Value);
-                    insertEventCmd.Parameters.AddWithValue("@StartDate", eventToBeAdded.StartDate);
-                    insertEventCmd.Parameters.AddWithValue("@EndDate", eventToBeAdded.EndDate);
-                    insertEventCmd.Parameters.AddWithValue("@Location", eventToBeAdded.Location);
-                    insertEventCmd.Parameters.AddWithValue("@Host", eventToBeAdded.HostID);
-                    insertEventCmd.Parameters.AddWithValue("@Now", DateTime.Now);
+                    insertEventCommand.Parameters.AddWithValue("@Id", nextId);
+                    insertEventCommand.Parameters.AddWithValue("@Photo", (object?)eventToBeAdded.Photo ?? DBNull.Value);
+                    insertEventCommand.Parameters.AddWithValue("@Title", eventToBeAdded.Title);
+                    insertEventCommand.Parameters.AddWithValue("@Description", (object?)eventToBeAdded.Description ?? DBNull.Value);
+                    insertEventCommand.Parameters.AddWithValue("@StartDate", eventToBeAdded.StartDate);
+                    insertEventCommand.Parameters.AddWithValue("@EndDate", eventToBeAdded.EndDate);
+                    insertEventCommand.Parameters.AddWithValue("@Location", eventToBeAdded.Location);
+                    insertEventCommand.Parameters.AddWithValue("@Host", eventToBeAdded.HostID);
+                    insertEventCommand.Parameters.AddWithValue("@Now", DateTime.Now);
 
-                    insertEventCmd.ExecuteNonQuery();
+                    insertEventCommand.ExecuteNonQuery();
                 }
 
                 eventToBeAdded.Id = nextId;
@@ -80,179 +80,153 @@ namespace OurApp.Core.Repositories
                 {
                     foreach (var collaborator in eventToBeAdded.Collaborators)
                     {
-                        using var checkCmd = new SqlCommand(@"
+                        using var checkCollaboratorCommand = new SqlCommand(@"
                             SELECT COUNT(*) 
                             FROM collaborators 
                             WHERE company_id = @CompanyId",
-                            conn, tx);
+                            databaseConnection, sqlTransaction);
 
-                        checkCmd.Parameters.AddWithValue("@CompanyId", collaborator.CompanyId);
-                        int existingCount = (int)checkCmd.ExecuteScalar();
+                        checkCollaboratorCommand.Parameters.AddWithValue("@CompanyId", collaborator.CompanyId);
+                        int existingCount = (int)checkCollaboratorCommand.ExecuteScalar();
 
-                        using var insertCollabCmd = new SqlCommand(@"
+                        using var insertCollaboratorCommand = new SqlCommand(@"
                             INSERT INTO collaborators (event_id, company_id)
                             VALUES (@EventId, @CompanyId)",
-                            conn, tx);
+                            databaseConnection, sqlTransaction);
 
-                        insertCollabCmd.Parameters.AddWithValue("@EventId", nextId);
-                        insertCollabCmd.Parameters.AddWithValue("@CompanyId", collaborator.CompanyId);
-                        insertCollabCmd.ExecuteNonQuery();
+                        insertCollaboratorCommand.Parameters.AddWithValue("@EventId", nextId);
+                        insertCollaboratorCommand.Parameters.AddWithValue("@CompanyId", collaborator.CompanyId);
+                        insertCollaboratorCommand.ExecuteNonQuery();
 
                         if (existingCount == 0)
                         {
-                            using var updateCmd = new SqlCommand(@"
+                            using var updateCompanyCommand = new SqlCommand(@"
                                 UPDATE companies
                                 SET collaborators_count = collaborators_count + 1
                                 WHERE company_id = @CompanyId",
-                                conn, tx);
+                                databaseConnection, sqlTransaction);
 
-                            updateCmd.Parameters.AddWithValue("@CompanyId", collaborator.CompanyId);
-                            updateCmd.ExecuteNonQuery();
+                            updateCompanyCommand.Parameters.AddWithValue("@CompanyId", collaborator.CompanyId);
+                            updateCompanyCommand.ExecuteNonQuery();
                         }
                     }
                 }
 
-                tx.Commit();
+                sqlTransaction.Commit();
             }
             catch
             {
-                tx.Rollback();
+                sqlTransaction.Rollback();
                 throw;
             }
         }
 
-        /// <summary>
-        /// Function that removes an event from the database
-        /// </summary>
-        /// <param name="eventToBeRemoved"> the event selected to be removed </param>
         public void RemoveEventFromRepo(Event eventToBeRemoved)
         {
-            using (SqlConnection conn = DbConnectionHelper.GetConnection())
+            using (SqlConnection databaseConnection = DbConnectionHelper.GetConnection())
             {
-                conn.Open();
+                databaseConnection.Open();
 
-                string query = "DELETE FROM events WHERE event_id = @Id";
+                string sqlQuery = "DELETE FROM events WHERE event_id = @Id";
 
-                SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@Id", eventToBeRemoved.Id);
+                SqlCommand sqlCommand = new SqlCommand(sqlQuery, databaseConnection);
+                sqlCommand.Parameters.AddWithValue("@Id", eventToBeRemoved.Id);
 
-                cmd.ExecuteNonQuery();
+                sqlCommand.ExecuteNonQuery();
             }
         }
 
-        /// <summary>
-        /// Function that returns a collection of all the current events, 
-        /// whose ending date has not exceeded the current date
-        /// </summary>
-        /// <returns> ObservableCollection of current events </returns>
         public ObservableCollection<Event> getCurrentEventsFromRepo(int loggedInUser)
         {
             var currentEvents = new ObservableCollection<Event>();
 
             try
             {
-                using (SqlConnection sqlConnection = DbConnectionHelper.GetConnection())
+                using (SqlConnection databaseConnection = DbConnectionHelper.GetConnection())
                 {
-                    sqlConnection.Open();
+                    databaseConnection.Open();
 
-                    string queryToBeRun = "SELECT * FROM events WHERE host_company_id = @HostID and end_date >= @TodaysDate";
+                    string sqlQuery = "SELECT * FROM events WHERE host_company_id = @HostId and end_date >= @TodaysDate";
 
-                    SqlCommand sqlCommand = new SqlCommand(queryToBeRun, sqlConnection);
+                    SqlCommand sqlCommand = new SqlCommand(sqlQuery, databaseConnection);
 
-                    sqlCommand.Parameters.AddWithValue("@HostID", loggedInUser);
+                    sqlCommand.Parameters.AddWithValue("@HostId", loggedInUser);
                     sqlCommand.Parameters.AddWithValue("@TodaysDate", DateTime.Now.Date);
 
-                    SqlDataReader reader = sqlCommand.ExecuteReader();
+                    SqlDataReader dataReader = sqlCommand.ExecuteReader();
 
-                    while (reader.Read())
+                    while (dataReader.Read())
                     {
                         currentEvents.Add(new Event(
-                            reader["photo"].ToString(),
-                            reader["title"].ToString(),
-                            reader["description"].ToString(),
-                            (DateTime)reader["start_date"],
-                            (DateTime)reader["end_date"],
-                            reader["location"].ToString(),
-                            1,
+                            dataReader["photo"].ToString(),
+                            dataReader["title"].ToString(),
+                            dataReader["description"].ToString(),
+                            (DateTime)dataReader["start_date"],
+                            (DateTime)dataReader["end_date"],
+                            dataReader["location"].ToString(),
+                            DefaultHostCompanyId,
                             new List<Company>()
                         )
                         {
-                            Id = (int)reader["event_id"]
+                            Id = (int)dataReader["event_id"]
                         });
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                System.Diagnostics.Debug.WriteLine(ex.Message);
+                System.Diagnostics.Debug.WriteLine(exception.Message);
                 throw;
             }
 
             return currentEvents;
         }
 
-        /// <summary>
-        /// Function that returns a collection of all the past events, 
-        /// whose ending date has exceeded the current date
-        /// </summary>
-        /// <returns> ObservableCollection of past events </returns>
         public ObservableCollection<Event> getPastEventsFromRepo(int loggedInUser)
         {
             var pastEvents = new ObservableCollection<Event>();
 
-            using (SqlConnection sqlConnection = DbConnectionHelper.GetConnection())
+            using (SqlConnection databaseConnection = DbConnectionHelper.GetConnection())
             {
-                sqlConnection.Open();
+                databaseConnection.Open();
 
-                string queryToBeRun = "SELECT * FROM events WHERE host_company_id = @HostID and end_date < @TodaysDate";
+                string sqlQuery = "SELECT * FROM events WHERE host_company_id = @HostId and end_date < @TodaysDate";
 
-                SqlCommand sqlCommand = new SqlCommand(queryToBeRun, sqlConnection);
+                SqlCommand sqlCommand = new SqlCommand(sqlQuery, databaseConnection);
 
-
-                sqlCommand.Parameters.AddWithValue("@HostID", loggedInUser);
+                sqlCommand.Parameters.AddWithValue("@HostId", loggedInUser);
                 sqlCommand.Parameters.AddWithValue("@TodaysDate", DateTime.Now.Date);
 
-                SqlDataReader reader = sqlCommand.ExecuteReader();
+                SqlDataReader dataReader = sqlCommand.ExecuteReader();
 
-                while (reader.Read())
+                while (dataReader.Read())
                 {
                     pastEvents.Add(new Event(
-                        reader["photo"].ToString(),
-                        reader["title"].ToString(),
-                        reader["description"].ToString(),
-                        (DateTime)reader["start_date"],
-                        (DateTime)reader["end_date"],
-                        reader["location"].ToString(),
-                        1, 
+                        dataReader["photo"].ToString(),
+                        dataReader["title"].ToString(),
+                        dataReader["description"].ToString(),
+                        (DateTime)dataReader["start_date"],
+                        (DateTime)dataReader["end_date"],
+                        dataReader["location"].ToString(),
+                        DefaultHostCompanyId,
                         new List<Company>()
                     )
                     {
-                        Id = (int)reader["event_id"]
+                        Id = (int)dataReader["event_id"]
                     });
                 }
             }
 
             return pastEvents;
-        
         }
 
-        /// <summary>
-        /// Function that updates the contents of an event.
-        /// </summary>
-        /// <param name="eventIdToBeUpdated"> id of the event that is updated </param>
-        /// <param name="newEventPhoto"> the updated photo url </param>
-        /// <param name="newEventTitle"> the updated title of the event </param>
-        /// <param name="newEventDescription"> the updated description of the event </param>
-        /// <param name="newEventStartDate"> the updated starting date of the event </param>
-        /// <param name="newEventEndDate"> the updated ending date of the event </param>
-        /// <param name="newEventLocation"> the updated location of the event </param>
         public void UpdateEventToRepo(int eventIdToBeUpdated, string newEventPhoto, string newEventTitle, string newEventDescription, DateTime newEventStartDate, DateTime newEventEndDate, string newEventLocation)
         {
-            using (SqlConnection sqlConnection = DbConnectionHelper.GetConnection())
+            using (SqlConnection databaseConnection = DbConnectionHelper.GetConnection())
             {
-                sqlConnection.Open();
+                databaseConnection.Open();
 
-                string queryToBeRun = @"UPDATE events SET 
+                string sqlQuery = @"UPDATE events SET 
                                 photo=@Photo,
                                 title=@Title,
                                 description=@Description,
@@ -262,7 +236,7 @@ namespace OurApp.Core.Repositories
                                 posted_at=@PostedAt
                                 WHERE event_id=@Id";
 
-                SqlCommand sqlCommand = new SqlCommand(queryToBeRun, sqlConnection);
+                SqlCommand sqlCommand = new SqlCommand(sqlQuery, databaseConnection);
 
                 sqlCommand.Parameters.AddWithValue("@Photo", newEventPhoto ?? (object)DBNull.Value);
                 sqlCommand.Parameters.AddWithValue("@Title", newEventTitle);

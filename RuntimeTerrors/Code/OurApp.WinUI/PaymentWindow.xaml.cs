@@ -13,7 +13,8 @@ namespace OurApp.WinUI
         {
             this.InitializeComponent();
 
-            ViewModel = new PaymentViewModel();
+            var mainWindow = App.mainWindow;
+            ViewModel = new PaymentViewModel(mainWindow.paymentService);
 
             ViewModel.CurrentJobId = jobId;
 

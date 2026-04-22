@@ -11,6 +11,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Storage.Streams;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
+using OurApp.Core.Validators;
 
 namespace OurApp.WinUI;
 
@@ -21,7 +22,7 @@ public sealed partial class EditProfilePage : Page
     public EditProfilePage()
     {
         var mainWindow = App.mainWindow;
-        ViewModel = new EditCompanyProfileViewModel(mainWindow.companyService, mainWindow.gameService);
+        ViewModel = new EditCompanyProfileViewModel(mainWindow.companyService, mainWindow.gameService, mainWindow.companyValidator, mainWindow.gameValidator);
         InitializeComponent();
         DataContext = ViewModel;
     }

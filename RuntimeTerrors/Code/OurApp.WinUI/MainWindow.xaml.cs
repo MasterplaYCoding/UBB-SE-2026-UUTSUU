@@ -6,59 +6,50 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using OurApp.Core.Repositories;
 using OurApp.Core.Services;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using OurApp.Core.Models;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+using OurApp.Core.Validators;
 
 namespace OurApp.WinUI
 {
     public sealed partial class MainWindow : Window
     {
+        private const int DefaultCompanyId = 1;
+
         public Frame RootFrame => rootFrame;
         public IEventsService eventsService { get; }
         public ICompanyService companyService { get; }
         public SessionService sessionService { get; }
         public ICollaboratorsService collabsService { get; }
-
         public IJobsRepository jobsRepository { get; }
-
         public IApplicantRepository applicantsRepository { get; }
-
+        public IGameService gameService { get; }
+        public IPaymentService paymentService { get; }
+        public IGameValidator gameValidator {  get; }
+        public IEventValidator eventValidator { get; }
+        public ICompanyValidator companyValidator { get; }
+        public IPaymentValidator paymentValidator { get; }
         /// <summary>
         /// MainWindow constructor that initialize the repositories and services
         /// </summary>
-
-
-        public GameService gameService;
-
-
         public MainWindow()
         {
-            
-            ICompanyRepo repo = new CompanyRepo();
-            this.companyService = new CompanyService(repo);
+            ICompanyRepo companyRepository = new CompanyRepo();
+            this.companyService = new CompanyService(companyRepository);
 
+            // Interface fix: Mapping concrete GameService to IGameService
+            this.gameService = new GameService(companyRepository);
 
-            this.gameService = new GameService(repo);
+            ICollaboratorsRepo collaboratorsRepository = new CollaboratorsRepo();
+            this.collabsService = new CollaboratorsService(collaboratorsRepository);
 
-            ICollaboratorsRepo collabRepo = new CollaboratorsRepo();
-            this.collabsService = new CollaboratorsService(collabRepo);
-
-            Company c1 = new Company("ndj", "dnis", "dnjs", "hdjd", "sybau", "dj@");
+            Company defaultCompany = new Company("ndj", "dnis", "dnjs", "hdjd", "sybau", "dj@");
             //companyService.addCompany("ndj", "dnis", "dnjs", "hdjd", "sybau", "dj@");
             //companyService.addCompany("ndj2", "dnis", "dnjs", "hdjd", "sybau", "dj@");
             //companyService.printAll();
+
             InitializeComponent();
 
-            IEventsRepo eventsRepo = new EventsRepo();
+            IEventsRepo eventsRepository = new EventsRepo();
 
             // hardcode events
             //Event ev1 = new Event("", "Event1", "This is such a cool event. You should attend.", new DateTime(2026, 1, 21, 14, 0, 0), new DateTime(2026, 1, 24, 18, 0, 0), "Cluj-Napoca, Cluj", 1, new List<Company>());
@@ -72,46 +63,23 @@ namespace OurApp.WinUI
             //eventsRepo.AddEventToRepo(ev4);
 
             //eventsRepo.printAll();
-            eventsService = new EventsService(eventsRepo);
-            sessionService = new SessionService(c1); // hardcode user = c1
 
-            IJobsRepository jobsRepo = new JobsRepository();
-            this.jobsRepository = jobsRepo;
+            this.eventsService = new EventsService(eventsRepository);
 
-            IApplicantRepository applicantRepo = new ApplicantRepository();
-            this.applicantsRepository = applicantRepo;
+            // Interface fix: Mapping concrete SessionService to ISessionService
+            this.sessionService = new SessionService(defaultCompany); // hardcode user = defaultCompany
+
+            this.jobsRepository = new JobsRepository();
+            this.applicantsRepository = new ApplicantRepository();
+
+            this.companyValidator = new CompanyValidator();
+            this.eventValidator = new EventValidator();
+            this.paymentValidator = new PaymentValidator();
+            this.gameValidator = new GameValidator();
+
+            IPaymentRepository paymentRepository = new PaymentRepository();
+            this.paymentService = new PaymentService(paymentRepository, this.paymentValidator);
         }
-
-        /// <summary>
-        /// Function that navigates to a different page: "Our Events" page
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        //private void NavigateToOurEvents_Click(object sender, RoutedEventArgs e)
-        //{
-        //    System.Diagnostics.Debug.WriteLine("Clicked to nav");
-        //    RootFrame.Navigate(typeof(OurEventsPage));
-        //}
-        //private void NavigateToEditGame_Click(object sender, RoutedEventArgs e)
-        //{
-        //    System.Diagnostics.Debug.WriteLine("Clicked to editgame");
-        //    RootFrame.Navigate(typeof(EditGame), gameService);
-        //}
-
-        /// <summary>
-        /// Function that navigates to a different page: "Past Events" page
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        //private void NavigateToPastEvents_Click(object sender, RoutedEventArgs e)
-        //{
-        //    RootFrame.Navigate(typeof(PastEventsPage));
-        //}
-
-        //private void NavigateToGamePage_Click(object sender, RoutedEventArgs e)
-        //{
-        //    RootFrame.Navigate(typeof(GamePage));
-        //}
 
         /// <summary>
         /// Function that navigates to a different page: "View Profile" page
@@ -120,20 +88,8 @@ namespace OurApp.WinUI
         /// <param name="e"></param>
         private void NavigateToViewProfile_Click(object sender, RoutedEventArgs e)
         {
-            RootFrame.Navigate(typeof(ViewProfilePage), 1);
+            RootFrame.Navigate(typeof(ViewProfilePage), DefaultCompanyId);
         }
-
-        /// <summary>
-        /// Function that navigates to a different page: "Edit Profile" page
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        //private void NavigateToEditProfile_Click(object sender, RoutedEventArgs e)
-        //{
-        //    RootFrame.Navigate(typeof(EditProfilePage), 1);
-        //    System.Diagnostics.Debug.WriteLine("Clicked to nav");
-
-        //}
 
         // OLD CONECTIONS
         //<AppBarButton Label = "Our jobs" />

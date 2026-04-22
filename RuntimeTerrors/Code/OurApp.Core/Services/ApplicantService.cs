@@ -8,9 +8,58 @@ namespace OurApp.Core.Services
 {
     public class ApplicantService : IApplicantService
     {
-        private readonly IApplicantRepository _repository;
         private const decimal PassIndividual = 5.5m;
         private const decimal PassCollective = 7.0m;
+
+        private const int MinimumNameLength = 2;
+        private const int MinimumSkillsLength = 3;
+        private const int MinimumInterestsLength = 3;
+        private const int MinimumPhoneDigits = 8;
+        private const int MinimumSummaryLength = 20;
+        private const int MinimumProjectsLength = 15;
+        private const int MinimumSkillsWordCount = 1;
+        private const int MinimumProjectsWordCount = 2;
+        private const int TotalExpectedGradesCount = 4;
+
+        private const decimal BaseTotalGrade = 3.5m;
+        private const decimal MaximumTotalGrade = 10.0m;
+        private const decimal InitialWordPointValue = 0.5m;
+        private const decimal WordPointDecayMultiplier = 0.7m;
+        private const decimal SkillsSectionWeight = 1.35m;
+        private const decimal InterestsSectionWeight = 0.55m;
+        private const decimal SummarySectionWeight = 1.15m;
+        private const decimal ProjectsSectionWeight = 1.35m;
+
+        private const string ApplicationStatusRejected = "Rejected";
+        private const string ApplicationStatusOnHold = "On Hold";
+
+        private const string XmlElementName = "Name";
+        private const string XmlElementEmail = "Email";
+        private const string XmlElementSkills = "Skills";
+        private const string XmlElementInterests = "Interests";
+        private const string XmlElementPhone = "Phone";
+        private const string XmlElementContactNumber = "ContactNumber";
+        private const string XmlElementSummary = "Summary";
+        private const string XmlElementProjects = "Projects";
+
+        private const char AtSymbolCharacter = '@';
+        private const char DotCharacter = '.';
+        private const char SpaceCharacter = ' ';
+        private const string SpaceString = " ";
+
+        private static readonly char[] TextSplitCharacters = new[] { ' ', ',', ';' };
+        private static readonly List<string> StopWordsList = new List<string> { "the", "and", "is", "a", "an", "in", "to", "of", "for" };
+        private static readonly List<string> DefaultKeywordsList = new List<string> { "c#", "java", "sql", "react", "agile", "javascript", ".net", "python", "docker", "azure" };
+        private static readonly Dictionary<string, string> SynonymDictionaryMap = new Dictionary<string, string>
+        {
+            { "csharp", "c#" },
+            { "js", "javascript" },
+            { "reactjs", "react" },
+            { "dot net", ".net" },
+            { "dotnet", ".net" }
+        };
+
+        private readonly IApplicantRepository _repository;
 
         public ApplicantService(IApplicantRepository repository)
         {
@@ -26,8 +75,6 @@ namespace OurApp.Core.Services
         {
             return _repository.GetApplicantById(applicantId);
         }
-
-        
 
         public void UpdateCompanyTestGrade(int applicantId, decimal grade)
         {
@@ -51,107 +98,107 @@ namespace OurApp.Core.Services
             }
         }
 
-        private static bool TryGetTrimmedElement(XDocument doc, string localName, out string value)
+        private static bool TryGetTrimmedElement(XDocument xmlDocument, string localName, out string elementValue)
         {
-            value = "";
-            var el = doc.Descendants(localName).FirstOrDefault();
-            if (el == null || string.IsNullOrWhiteSpace(el.Value))
+            elementValue = string.Empty;
+            var xmlElement = xmlDocument.Descendants(localName).FirstOrDefault();
+            if (xmlElement == null || string.IsNullOrWhiteSpace(xmlElement.Value))
             {
                 return false;
             }
 
-            value = el.Value.Trim();
+            elementValue = xmlElement.Value.Trim();
             return true;
         }
 
-        private static bool LooksLikeEmail(string email)
+        private static bool ValidateEmailFormat(string emailAddress)
         {
-            var at = email.IndexOf('@', StringComparison.Ordinal);
-            if (at <= 0 || at >= email.Length - 1)
+            var atSymbolIndex = emailAddress.IndexOf(AtSymbolCharacter, StringComparison.Ordinal);
+            if (atSymbolIndex <= 0 || atSymbolIndex >= emailAddress.Length - 1)
             {
                 return false;
             }
 
-            var domain = email[(at + 1)..];
-            return domain.Contains('.', StringComparison.Ordinal);
+            var domainString = emailAddress[(atSymbolIndex + 1)..];
+            return domainString.Contains(DotCharacter, StringComparison.Ordinal);
         }
 
-        private static bool HasMeaningfulSkillsText(string skillsText)
+        private static bool ValidateMeaningfulSkillsText(string skillsText)
         {
-            if (skillsText.Length < 3)
+            if (skillsText.Length < MinimumSkillsLength)
             {
                 return false;
             }
 
-            var parts = skillsText.Split(new[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-            return parts.Length >= 1;
+            var stringParts = skillsText.Split(TextSplitCharacters, StringSplitOptions.RemoveEmptyEntries);
+            return stringParts.Length >= MinimumSkillsWordCount;
         }
 
-        private static bool HasMeaningfulProjectsText(string projectsText)
+        private static bool ValidateMeaningfulProjectsText(string projectsText)
         {
-            if (projectsText.Length < 15)
+            if (projectsText.Length < MinimumProjectsLength)
             {
                 return false;
             }
 
-            var parts = projectsText.Split(new[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-            return parts.Length >= 2;
+            var stringParts = projectsText.Split(TextSplitCharacters, StringSplitOptions.RemoveEmptyEntries);
+            return stringParts.Length >= MinimumProjectsWordCount;
         }
 
-        private static bool HasPlausiblePhone(string phoneText)
+        private static bool ValidatePlausiblePhone(string phoneText)
         {
             var digitCount = phoneText.Count(char.IsDigit);
-            return digitCount >= 8;
+            return digitCount >= MinimumPhoneDigits;
         }
 
-        private bool IsCvValid(string? cvXml)
+        private bool ValidateCurriculumVitae(string? curriculumVitaeXml)
         {
-            if (string.IsNullOrWhiteSpace(cvXml))
+            if (string.IsNullOrWhiteSpace(curriculumVitaeXml))
             {
                 return false;
             }
 
             try
             {
-                XDocument doc = XDocument.Parse(cvXml);
+                XDocument xmlDocument = XDocument.Parse(curriculumVitaeXml);
 
-                if (!TryGetTrimmedElement(doc, "Name", out var name) || name.Length < 2)
+                if (!TryGetTrimmedElement(xmlDocument, XmlElementName, out var nameString) || nameString.Length < MinimumNameLength)
                 {
                     return false;
                 }
 
-                if (!TryGetTrimmedElement(doc, "Email", out var email) || !LooksLikeEmail(email))
+                if (!TryGetTrimmedElement(xmlDocument, XmlElementEmail, out var emailString) || !ValidateEmailFormat(emailString))
                 {
                     return false;
                 }
 
-                if (!TryGetTrimmedElement(doc, "Skills", out var skills) || !HasMeaningfulSkillsText(skills))
+                if (!TryGetTrimmedElement(xmlDocument, XmlElementSkills, out var skillsString) || !ValidateMeaningfulSkillsText(skillsString))
                 {
                     return false;
                 }
 
-                if (!TryGetTrimmedElement(doc, "Interests", out var interests) || interests.Length < 3)
+                if (!TryGetTrimmedElement(xmlDocument, XmlElementInterests, out var interestsString) || interestsString.Length < MinimumInterestsLength)
                 {
                     return false;
                 }
 
-                string phone;
-                if (!TryGetTrimmedElement(doc, "Phone", out phone) && !TryGetTrimmedElement(doc, "ContactNumber", out phone))
+                string phoneString;
+                if (!TryGetTrimmedElement(xmlDocument, XmlElementPhone, out phoneString) && !TryGetTrimmedElement(xmlDocument, XmlElementContactNumber, out phoneString))
                 {
                     return false;
                 }
 
-                if (!HasPlausiblePhone(phone))
+                if (!ValidatePlausiblePhone(phoneString))
                 {
                     return false;
                 }
 
-                if (!TryGetTrimmedElement(doc, "Summary", out var summary) || summary.Length < 20)
+                if (!TryGetTrimmedElement(xmlDocument, XmlElementSummary, out var summaryString) || summaryString.Length < MinimumSummaryLength)
                 {
                     return false;
                 }
 
-                if (!TryGetTrimmedElement(doc, "Projects", out var projects) || !HasMeaningfulProjectsText(projects))
+                if (!TryGetTrimmedElement(xmlDocument, XmlElementProjects, out var projectsString) || !ValidateMeaningfulProjectsText(projectsString))
                 {
                     return false;
                 }
@@ -164,116 +211,104 @@ namespace OurApp.Core.Services
             }
         }
 
-        private List<string> TokenizeAndClean(string text)
+        private List<string> TokenizeAndClean(string textToClean)
         {
-            List<string> stopWords = new List<string> { "the", "and", "is", "a", "an", "in", "to", "of", "for" };
-            
-            string cleanText = "";
-            foreach (char c in text)
+            string cleanedText = string.Empty;
+            foreach (char character in textToClean)
             {
-                if (char.IsPunctuation(c))
+                if (char.IsPunctuation(character))
                 {
-                    cleanText += " ";
+                    cleanedText += SpaceString;
                 }
                 else
                 {
-                    cleanText += c;
+                    cleanedText += character;
                 }
             }
 
-            string[] rawWords = cleanText.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            List<string> finalWords = new List<string>();
+            string[] rawWordsArray = cleanedText.Split(new char[] { SpaceCharacter }, StringSplitOptions.RemoveEmptyEntries);
+            List<string> finalWordsList = new List<string>();
 
-            foreach (string word in rawWords)
+            foreach (string word in rawWordsArray)
             {
-                string lowerWord = word.ToLower();
-                if (stopWords.Contains(lowerWord) == false)
+                string lowercasedWord = word.ToLower();
+                if (StopWordsList.Contains(lowercasedWord) == false)
                 {
-                    finalWords.Add(lowerWord);
+                    finalWordsList.Add(lowercasedWord);
                 }
             }
 
-            return finalWords;
+            return finalWordsList;
         }
 
-        private List<string> ApplySynonyms(List<string> words)
+        private List<string> ApplySynonyms(List<string> wordsList)
         {
-            Dictionary<string, string> map = new Dictionary<string, string>();
-            map.Add("csharp", "c#");
-            map.Add("js", "javascript");
-            map.Add("reactjs", "react");
-            map.Add("dot net", ".net");
-            map.Add("dotnet", ".net");
-            
-            List<string> newWords = new List<string>();
+            List<string> newWordsList = new List<string>();
 
-            foreach (string word in words)
+            foreach (string word in wordsList)
             {
-                if (map.ContainsKey(word))
+                if (SynonymDictionaryMap.ContainsKey(word))
                 {
-                    newWords.Add(map[word]);
+                    newWordsList.Add(SynonymDictionaryMap[word]);
                 }
                 else
                 {
-                    newWords.Add(word);
+                    newWordsList.Add(word);
                 }
             }
 
-            return newWords;
+            return newWordsList;
         }
 
-        private decimal CalculateTfIdfGrade(List<string> words, List<string> importantKeywords, decimal sectionWeight)
+        private decimal CalculateTermFrequencyInverseDocumentFrequencyGrade(List<string> wordsList, List<string> importantKeywordsList, decimal sectionWeight)
         {
-            
-            Dictionary<string, int> termFrequencies = new Dictionary<string, int>();
+            Dictionary<string, int> termFrequenciesDictionary = new Dictionary<string, int>();
 
-            foreach (string word in words)
+            foreach (string word in wordsList)
             {
-                if (importantKeywords.Contains(word))
+                if (importantKeywordsList.Contains(word))
                 {
-                    if (termFrequencies.ContainsKey(word))
+                    if (termFrequenciesDictionary.ContainsKey(word))
                     {
-                        termFrequencies[word] += 1;
+                        termFrequenciesDictionary[word] += 1;
                     }
                     else
                     {
-                        termFrequencies[word] = 1;
+                        termFrequenciesDictionary[word] = 1;
                     }
                 }
             }
 
-            decimal score = 0;
-            foreach (var keywordAppearance in termFrequencies)
+            decimal totalScore = 0;
+            foreach (var keywordAppearance in termFrequenciesDictionary)
             {
-                int count = keywordAppearance.Value;
+                int keywordCount = keywordAppearance.Value;
                 decimal wordScore = 0;
-                decimal currentPointValue = 0.5m;
+                decimal currentPointValue = InitialWordPointValue;
 
-                for (int i = 0; i < count; i++)
+                for (int index = 0; index < keywordCount; index++)
                 {
                     wordScore += currentPointValue;
-
-                    
-                    currentPointValue = currentPointValue * 0.7m;
+                    currentPointValue = currentPointValue * WordPointDecayMultiplier;
                 }
 
-                score += wordScore;
+                totalScore += wordScore;
             }
-                
-            return score * sectionWeight;
+
+            return totalScore * sectionWeight;
         }
 
-        private decimal ScoreCvSection(XDocument doc, string elementName, List<string> expectedKeywords, decimal sectionWeight)
+        private decimal ScoreCurriculumVitaeSection(XDocument xmlDocument, string elementName, List<string> expectedKeywordsList, decimal sectionWeight)
         {
-            var node = doc.Descendants(elementName).FirstOrDefault();
-            if (node == null || string.IsNullOrWhiteSpace(node.Value))
+            var xmlNode = xmlDocument.Descendants(elementName).FirstOrDefault();
+            if (xmlNode == null || string.IsNullOrWhiteSpace(xmlNode.Value))
             {
                 return 0m;
             }
 
-            List<string> words = TokenizeAndClean(node.Value);
-            words = ApplySynonyms(words);
-            return CalculateTfIdfGrade(words, expectedKeywords, sectionWeight);
+            List<string> wordsList = TokenizeAndClean(xmlNode.Value);
+            wordsList = ApplySynonyms(wordsList);
+            return CalculateTermFrequencyInverseDocumentFrequencyGrade(wordsList, expectedKeywordsList, sectionWeight);
         }
 
         public void ProcessCv(int applicantId)
@@ -285,10 +320,10 @@ namespace OurApp.Core.Services
             }
 
             // If the CV XML is invalid, grade remains null
-            decimal? cvGrade = ScanCvXml(applicant);
-            if (cvGrade != null)
+            decimal? curriculumVitaeGrade = ScanCvXml(applicant);
+            if (curriculumVitaeGrade != null)
             {
-                applicant.CvGrade = cvGrade;
+                applicant.CvGrade = curriculumVitaeGrade;
             }
 
             EvaluateApplicantStatus(applicant);
@@ -308,41 +343,41 @@ namespace OurApp.Core.Services
 
         public decimal? ScanCvXml(Applicant applicant)
         {
-            var cvXml = applicant.User?.CvXml;
-            if (IsCvValid(cvXml) == false)
+            var curriculumVitaeXml = applicant.User?.CvXml;
+            if (ValidateCurriculumVitae(curriculumVitaeXml) == false)
             {
                 return null;
             }
 
-            List<string> expectedKeywords = new List<string>();
+            List<string> expectedKeywordsList = new List<string>();
             if (applicant.Job != null && applicant.Job.JobSkills != null)
             {
-                foreach (var js in applicant.Job.JobSkills)
+                foreach (var jobSkill in applicant.Job.JobSkills)
                 {
-                    if (js.Skill != null && !string.IsNullOrWhiteSpace(js.Skill.SkillName))
+                    if (jobSkill.Skill != null && !string.IsNullOrWhiteSpace(jobSkill.Skill.SkillName))
                     {
-                        expectedKeywords.Add(js.Skill.SkillName.ToLower());
+                        expectedKeywordsList.Add(jobSkill.Skill.SkillName.ToLower());
                     }
                 }
             }
 
-            if (expectedKeywords.Count == 0)
+            if (expectedKeywordsList.Count == 0)
             {
-                expectedKeywords = new List<string> { "c#", "java", "sql", "react", "agile", "javascript", ".net", "python", "docker", "azure" };
+                expectedKeywordsList = DefaultKeywordsList;
             }
 
-            XDocument doc = XDocument.Parse(cvXml!);
-            decimal totalGrade = 3.5m;
-            totalGrade += ScoreCvSection(doc, "Skills", expectedKeywords, 1.35m);
-            totalGrade += ScoreCvSection(doc, "Interests", expectedKeywords, 0.55m);
-            totalGrade += ScoreCvSection(doc, "Summary", expectedKeywords, 1.15m);
-            totalGrade += ScoreCvSection(doc, "Projects", expectedKeywords, 1.35m);
+            XDocument xmlDocument = XDocument.Parse(curriculumVitaeXml!);
+            decimal totalGrade = BaseTotalGrade;
+            totalGrade += ScoreCurriculumVitaeSection(xmlDocument, XmlElementSkills, expectedKeywordsList, SkillsSectionWeight);
+            totalGrade += ScoreCurriculumVitaeSection(xmlDocument, XmlElementInterests, expectedKeywordsList, InterestsSectionWeight);
+            totalGrade += ScoreCurriculumVitaeSection(xmlDocument, XmlElementSummary, expectedKeywordsList, SummarySectionWeight);
+            totalGrade += ScoreCurriculumVitaeSection(xmlDocument, XmlElementProjects, expectedKeywordsList, ProjectsSectionWeight);
 
-            if (totalGrade > 10.0m)
+            if (totalGrade > MaximumTotalGrade)
             {
-                return 10.0m;
+                return MaximumTotalGrade;
             }
-            
+
             return totalGrade;
         }
 
@@ -359,41 +394,41 @@ namespace OurApp.Core.Services
 
         private void EvaluateApplicantStatus(Applicant applicant)
         {
-            List<decimal> nonNullGrades = new List<decimal>();
+            List<decimal> nonNullGradesList = new List<decimal>();
 
-            if (applicant.AppTestGrade != null) { nonNullGrades.Add(applicant.AppTestGrade.Value); }
-            if (applicant.CvGrade != null) { nonNullGrades.Add(applicant.CvGrade.Value); }
-            if (applicant.CompanyTestGrade != null) { nonNullGrades.Add(applicant.CompanyTestGrade.Value); }
-            if (applicant.InterviewGrade != null) {nonNullGrades.Add(applicant.InterviewGrade.Value); }
+            if (applicant.AppTestGrade != null) { nonNullGradesList.Add(applicant.AppTestGrade.Value); }
+            if (applicant.CvGrade != null) { nonNullGradesList.Add(applicant.CvGrade.Value); }
+            if (applicant.CompanyTestGrade != null) { nonNullGradesList.Add(applicant.CompanyTestGrade.Value); }
+            if (applicant.InterviewGrade != null) { nonNullGradesList.Add(applicant.InterviewGrade.Value); }
 
-            foreach (decimal grade in nonNullGrades)
+            foreach (decimal grade in nonNullGradesList)
             {
                 if (grade < PassIndividual)
                 {
-                    applicant.ApplicationStatus = "Rejected";
+                    applicant.ApplicationStatus = ApplicationStatusRejected;
                     return;
                 }
             }
 
-            if (nonNullGrades.Count > 0)
+            if (nonNullGradesList.Count > 0)
             {
-                decimal sum = 0;
-                foreach (decimal grade in nonNullGrades)
+                decimal sumOfGrades = 0;
+                foreach (decimal grade in nonNullGradesList)
                 {
-                    sum += grade;
+                    sumOfGrades += grade;
                 }
-                decimal average = sum / nonNullGrades.Count;
-                
-                if (average < PassCollective)
+                decimal averageGrade = sumOfGrades / nonNullGradesList.Count;
+
+                if (averageGrade < PassCollective)
                 {
-                    applicant.ApplicationStatus = "Rejected";
+                    applicant.ApplicationStatus = ApplicationStatusRejected;
                     return;
                 }
             }
 
-            if (nonNullGrades.Count == 4 && string.IsNullOrEmpty(applicant.ApplicationStatus))
+            if (nonNullGradesList.Count == TotalExpectedGradesCount && string.IsNullOrEmpty(applicant.ApplicationStatus))
             {
-                applicant.ApplicationStatus = "On Hold";
+                applicant.ApplicationStatus = ApplicationStatusOnHold;
             }
         }
     }

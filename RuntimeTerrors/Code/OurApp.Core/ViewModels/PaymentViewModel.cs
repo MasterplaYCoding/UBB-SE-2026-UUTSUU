@@ -4,29 +4,43 @@ using OurApp.Core.Models;
 using OurApp.Core.Services;
 using System;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace OurApp.Core.ViewModels
 {
     public partial class PaymentViewModel : ObservableObject
     {
-        private readonly PaymentService _paymentService = new PaymentService();
-        [ObservableProperty] private string _cardHolderName;
-        [ObservableProperty] private string _cardNumber;
-        [ObservableProperty] private string _expDate;
-        [ObservableProperty] private string _cvv;
-        [ObservableProperty] private string _amountToPayText;
+        private const string DefaultJobTypeValue = "Full-Time";
+        private const string DefaultExperienceLevelValue = "Senior";
+        private const int MinimumValidPaymentAmount = 0;
 
-        [ObservableProperty] private string _selectedJobType = "Full-Time";
-        [ObservableProperty] private string _selectedExperienceLevel = "Senior";
+        private const string MessageTitleInvalidAmount = "Invalid Amount";
+        private const string MessageBodyInvalidAmount = "Please enter a valid numerical amount greater than 0.";
+        private const string MessageTitleError = "Error";
+        private const string MessageTitleSuccess = "Success";
+        private const string MessageBodySuccessPrefix = "Payment of $";
+        private const string MessageBodySuccessSuffix = " processed successfully. Emails dispatched!";
+
+        private readonly IPaymentService _paymentService;
+
+        [ObservableProperty] private string _cardHolderName = string.Empty;
+        [ObservableProperty] private string _cardNumber = string.Empty;
+        [ObservableProperty] private string _expDate = string.Empty;
+        [ObservableProperty] private string _cvv = string.Empty;
+        [ObservableProperty] private string _amountToPayText = string.Empty;
+
+        [ObservableProperty] private string _selectedJobType = DefaultJobTypeValue;
+        [ObservableProperty] private string _selectedExperienceLevel = DefaultExperienceLevelValue;
 
         public ObservableCollection<JobPaymentInfo> PaymentData { get; } = new ObservableCollection<JobPaymentInfo>();
 
-        public Action<string, string> ShowMessageAction { get; set; }
-        public Action CloseWindowAction { get; set; }
+        public Action<string, string>? ShowMessageAction { get; set; }
+        public Action? CloseWindowAction { get; set; }
         public int CurrentJobId { get; set; }
 
-        public PaymentViewModel()
+        public PaymentViewModel(IPaymentService paymentService)
         {
+            _paymentService = paymentService;
             LoadData(); // Load initially
         }
 
@@ -38,20 +52,20 @@ namespace OurApp.Core.ViewModels
             if (string.IsNullOrEmpty(SelectedJobType) || string.IsNullOrEmpty(SelectedExperienceLevel)) return;
 
             PaymentData.Clear();
-            var dataFromDb = _paymentService.GetPaidJobsInfo(SelectedJobType, SelectedExperienceLevel);
+            var dataFromDatabase = _paymentService.GetPaidJobsInfo(SelectedJobType, SelectedExperienceLevel);
 
-            foreach (var item in dataFromDb)
+            foreach (var item in dataFromDatabase)
             {
                 PaymentData.Add(item);
             }
         }
 
         [RelayCommand]
-        private async Task Pay() 
+        private async Task Pay()
         {
-            if (!int.TryParse(AmountToPayText, out int amountToPay) || amountToPay <= 0)
+            if (!int.TryParse(AmountToPayText, out int amountToPay) || amountToPay <= MinimumValidPaymentAmount)
             {
-                ShowMessageAction?.Invoke("Invalid Amount", "Please enter a valid numerical amount greater than 0.");
+                ShowMessageAction?.Invoke(MessageTitleInvalidAmount, MessageBodyInvalidAmount);
                 return;
             }
 
@@ -59,11 +73,11 @@ namespace OurApp.Core.ViewModels
 
             if (!string.IsNullOrEmpty(resultMessage))
             {
-                ShowMessageAction?.Invoke("Error", resultMessage);
+                ShowMessageAction?.Invoke(MessageTitleError, resultMessage);
             }
             else
             {
-                ShowMessageAction?.Invoke("Success", $"Payment of ${amountToPay} processed successfully. Emails dispatched!");
+                ShowMessageAction?.Invoke(MessageTitleSuccess, $"{MessageBodySuccessPrefix}{amountToPay}{MessageBodySuccessSuffix}");
                 LoadData();
                 AmountToPayText = string.Empty;
             }

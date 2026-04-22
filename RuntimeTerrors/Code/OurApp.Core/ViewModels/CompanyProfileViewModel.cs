@@ -5,6 +5,7 @@ using OurApp.Core.Repositories;
 using OurApp.Core.Services;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace OurApp.Core.ViewModels;
 
@@ -30,13 +31,30 @@ public sealed class CompanyTrendingSkillRow
 
 public partial class CompanyProfileViewModel : ObservableObject
 {
+    private const int MaximumTopJobsCount = 3;
+    private const int MaximumTopEventsCount = 3;
+    private const int MaximumTopCollaboratorsCount = 7;
+    private const int MaximumTrendingSkillsCount = 3;
+    private const int MaximumScenarioCount = 2;
+    private const int InitialScenarioIndex = 0;
+    private const int TotalProfileTasksCount = 5;
+    private const int EmptyTaskCount = 0;
+    private const int EmptyCompletionPercentage = 0;
+    private const int BaseDisplayRankOffset = 1;
+
+    private const string ProfileLoadErrorMessage = "We could not load this company profile.";
+    private const string EmptySkillNameFallback = "—";
+    private const string EmptySkillPercentageFallback = "0%";
+    private const string FormattedSkillPercentageSuffix = "%";
+
     private readonly ICompanyService _companyService;
-    private readonly GameService _gameService;
-    IEventsService eventService;
-    IJobsRepository jobsRepository;
-    SessionService sessionService;
-    ICollaboratorsService collabService;
-    private readonly ProfileCompletionCalculator _calculator;
+    private readonly IGameService _gameService;
+    private readonly IEventsService _eventsService;
+    private readonly IJobsRepository _jobsRepository;
+    private readonly SessionService _sessionService;
+    private readonly ICollaboratorsService _collaboratorsService;
+    private readonly IProfileCompletionCalculator _calculator;
+
     private int _currentScenarioIndex;
 
     [ObservableProperty]
@@ -48,7 +66,7 @@ public partial class CompanyProfileViewModel : ObservableObject
     [ObservableProperty]
     private string _feedback = string.Empty;
 
-    public string BuddyImagePath => BuddyImageProvider.GetImagePathById(_gameService.getBuddyId());
+    public string BuddyImagePath => BuddyImageProvider.GetImagePathById(_gameService.GetBuddyId());
 
     [ObservableProperty]
     private string _welcomeMessage = string.Empty;
@@ -60,7 +78,7 @@ public partial class CompanyProfileViewModel : ObservableObject
     private Company? _company;
 
     [ObservableProperty]
-    private string _loadMessage = "";
+    private string _loadMessage = string.Empty;
 
     [ObservableProperty]
     private int _completionPercentage;
@@ -72,37 +90,40 @@ public partial class CompanyProfileViewModel : ObservableObject
     private ObservableCollection<string> _remainingTasks = new();
 
     [ObservableProperty]
-    private string _applicantSummary;
+    private string _applicantSummary = string.Empty;
 
     [ObservableProperty]
     private ObservableCollection<CompanyTrendingSkillRow> _trendingSkills = new();
 
     public IEnumerable<CompanyProfileListRow> Top3JobPreviews =>
-        jobsRepository
+        _jobsRepository
             .GetAllJobs()
-            .Take(3)
-            .Select(e => new CompanyProfileListRow
+            .Take(MaximumTopJobsCount)
+            .Select(job => new CompanyProfileListRow
             {
-                Title = e.JobTitle,
-                Subtitle = e.JobDescription
-            });
-    public IEnumerable<CompanyProfileListRow> Top3EventPreviews => eventService
-            .GetCurrentEvents(sessionService.loggedInUser.CompanyId)
-            .Take(3)
-            .Select(e => new CompanyProfileListRow
-            {
-                Title = e.Title,
-                Subtitle = e.Description
+                Title = job.JobTitle,
+                Subtitle = job.JobDescription
             });
 
-    public IEnumerable<CompanyCollabListRow> Top3CollabsPreviews => collabService
-            .GetAllCollaborators(sessionService.loggedInUser.CompanyId)
-            .Take(7)
-            .Select(e => new CompanyCollabListRow
+    public IEnumerable<CompanyProfileListRow> Top3EventPreviews =>
+        _eventsService
+            .GetCurrentEvents(_sessionService.loggedInUser.CompanyId)
+            .Take(MaximumTopEventsCount)
+            .Select(eventItem => new CompanyProfileListRow
             {
-                Name = e.Name
+                Title = eventItem.Title,
+                Subtitle = eventItem.Description
             });
-   
+
+    public IEnumerable<CompanyCollabListRow> Top3CollabsPreviews =>
+        _collaboratorsService
+            .GetAllCollaborators(_sessionService.loggedInUser.CompanyId)
+            .Take(MaximumTopCollaboratorsCount)
+            .Select(collaborator => new CompanyCollabListRow
+            {
+                Name = collaborator.Name
+            });
+
     public event EventHandler? NavigateAllCollaboratorRequested;
     public event EventHandler? NavigateEditProfileRequested;
     public event EventHandler? NavigateAllEventsRequested;
@@ -110,16 +131,22 @@ public partial class CompanyProfileViewModel : ObservableObject
 
     public int CompanyId { get; private set; }
 
-    public CompanyProfileViewModel(ICompanyService companyService, ProfileCompletionCalculator calculator, GameService gameService, IEventsService eventService, SessionService sessionService, ICollaboratorsService collaboratorsService, IJobsRepository jobsRepo)
+    public CompanyProfileViewModel(
+        ICompanyService companyService,
+        IProfileCompletionCalculator calculator,
+        IGameService gameService,
+        IEventsService eventService,
+        SessionService sessionService,
+        ICollaboratorsService collaboratorsService,
+        IJobsRepository jobsRepository)
     {
         _gameService = gameService;
         _companyService = companyService;
         _calculator = calculator;
-        this.eventService = eventService;
-        this.sessionService = sessionService;
-        this.collabService = collaboratorsService;
-        this.jobsRepository = jobsRepo;
-
+        _eventsService = eventService;
+        _sessionService = sessionService;
+        _collaboratorsService = collaboratorsService;
+        _jobsRepository = jobsRepository;
     }
 
     public void Load(int companyId)
@@ -128,16 +155,16 @@ public partial class CompanyProfileViewModel : ObservableObject
         Company = _companyService.GetCompanyById(companyId);
         if (Company is null)
         {
-            LoadMessage = "We could not load this company profile.";
-            CompletionPercentage = 0;
-            CompletedTasksCount = 0;
+            LoadMessage = ProfileLoadErrorMessage;
+            CompletionPercentage = EmptyCompletionPercentage;
+            CompletedTasksCount = EmptyTaskCount;
             RemainingTasks.Clear();
             return;
         }
 
         ApplicantSummary = _calculator.applicantsMessage(companyId);
 
-        LoadMessage = "";
+        LoadMessage = string.Empty;
         RefreshProfileStatistics();
         FillPreviewSections();
         gamePreview();
@@ -150,9 +177,9 @@ public partial class CompanyProfileViewModel : ObservableObject
 
         var (percentage, tasks) = _calculator.Calculate(Company);
         CompletionPercentage = percentage;
-        CompletedTasksCount = 5 - tasks.Count;
-        if (CompletedTasksCount < 0)
-            CompletedTasksCount = 0;
+        CompletedTasksCount = TotalProfileTasksCount - tasks.Count;
+        if (CompletedTasksCount < EmptyTaskCount)
+            CompletedTasksCount = EmptyTaskCount;
 
         RemainingTasks.Clear();
         foreach (var task in tasks)
@@ -167,14 +194,14 @@ public partial class CompanyProfileViewModel : ObservableObject
         TrendingSkills.Clear();
         var (skillNames, percents) = _calculator.GetSkillsTop3(Company.CompanyId);
 
-        for (int i = 0; i < 3; i++)
+        for (int index = 0; index < MaximumTrendingSkillsCount; index++)
         {
-            string skillName = i < skillNames.Count ? skillNames[i] : "—";
-            string percent = i < percents.Count ? $"{percents[i]}%" : "0%";
+            string skillName = index < skillNames.Count ? skillNames[index] : EmptySkillNameFallback;
+            string percent = index < percents.Count ? $"{percents[index]}{FormattedSkillPercentageSuffix}" : EmptySkillPercentageFallback;
 
             TrendingSkills.Add(new CompanyTrendingSkillRow
             {
-                Rank = (i + 1).ToString(),
+                Rank = (index + BaseDisplayRankOffset).ToString(),
                 SkillName = skillName,
                 Detail = percent
             });
@@ -238,7 +265,7 @@ public partial class CompanyProfileViewModel : ObservableObject
 
     private void UpdateScenario()
     {
-        if (_currentScenarioIndex < 2)
+        if (_currentScenarioIndex < MaximumScenarioCount)
         {
             CurrentQuestion = _gameService.ShowScenarioText(_currentScenarioIndex);
 
@@ -247,19 +274,17 @@ public partial class CompanyProfileViewModel : ObservableObject
             foreach (var choice in choices)
                 CurrentChoices.Add(choice);
         }
-
-
     }
+
     public void gamePreview()
     {
-        if (_gameService.isPublished())
+        if (_gameService.IsPublished())
         {
             WelcomeMessage = _gameService.ShowCoworker();
             CurrentState = GameState.Start;
-            _currentScenarioIndex = 0;      
-            UpdateScenario();               
+            _currentScenarioIndex = InitialScenarioIndex;
+            UpdateScenario();
         }
-
     }
 
     [RelayCommand]
@@ -286,7 +311,7 @@ public partial class CompanyProfileViewModel : ObservableObject
             return;
 
         Feedback = _gameService.ChoiceMade(_currentScenarioIndex, adviceIndex);
-        CurrentState = _currentScenarioIndex == 0 ? GameState.Reaction1 : GameState.Reaction2;
+        CurrentState = _currentScenarioIndex == InitialScenarioIndex ? GameState.Reaction1 : GameState.Reaction2;
     }
 
     [RelayCommand]
@@ -294,7 +319,7 @@ public partial class CompanyProfileViewModel : ObservableObject
     {
         _currentScenarioIndex++;
 
-        if (_currentScenarioIndex < 2)
+        if (_currentScenarioIndex < MaximumScenarioCount)
         {
             UpdateScenario();
             CurrentState = GameState.Choices2;
@@ -305,5 +330,4 @@ public partial class CompanyProfileViewModel : ObservableObject
             CurrentState = GameState.Conclusion;
         }
     }
-
 }

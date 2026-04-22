@@ -131,7 +131,7 @@ namespace OurApp.WinUI.ViewModels
             }
         }
 
-        public JobApplicantsViewModel(JobPosting job, SessionService? sessionService)
+        public JobApplicantsViewModel(JobPosting job, SessionService sessionService)
         {
             SelectedJob = job;
             _sessionService = sessionService;

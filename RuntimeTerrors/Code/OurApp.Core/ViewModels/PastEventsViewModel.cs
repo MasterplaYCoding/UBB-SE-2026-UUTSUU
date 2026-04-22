@@ -1,21 +1,16 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using OurApp.Core.Models;
 using OurApp.Core.Services;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OurApp.Core.ViewModels
 {
     public partial class PastEventsViewModel : ObservableObject
     {
-        private readonly IEventsService eventsService;
-        SessionService sessionService;
-        public ObservableCollection<Event> pastEventsCollection { get; }
+        private readonly IEventsService _eventsService;
+        private readonly SessionService _sessionService;
 
+        public ObservableCollection<Event> pastEventsCollection { get; }
 
         /// <summary>
         /// Past Events View Model constructor
@@ -24,10 +19,10 @@ namespace OurApp.Core.ViewModels
         /// <param name="sessionService"> session service - the logged in user </param>
         public PastEventsViewModel(IEventsService eventsService, SessionService sessionService)
         {
-            this.eventsService = eventsService;
-            this.sessionService = sessionService;
+            _eventsService = eventsService;
+            _sessionService = sessionService;
 
-            pastEventsCollection = eventsService.GetPastEvents(sessionService.loggedInUser.CompanyId);
+            pastEventsCollection = _eventsService.GetPastEvents(_sessionService.loggedInUser.CompanyId);
         }
     }
 }

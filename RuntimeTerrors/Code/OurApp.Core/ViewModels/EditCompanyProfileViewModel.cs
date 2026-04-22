@@ -4,7 +4,9 @@ using OurApp.Core.Models;
 using OurApp.Core.Services;
 using OurApp.Core.Validators;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace OurApp.Core.ViewModels;
 
@@ -13,65 +15,75 @@ namespace OurApp.Core.ViewModels;
 /// </summary>
 public partial class EditCompanyProfileViewModel : ObservableObject
 {
+    private const string MessageCompanyNotFound = "Company not found.";
+    private const int DefaultCountValue = 0;
+
     private readonly ICompanyService _companyService;
-    private readonly GameService _gameService;
-    private readonly CompanyValidator _validator = new();
+    private readonly IGameService _gameService;
+    private readonly ICompanyValidator _companyValidator;
+    private readonly IGameValidator _gameValidator;
 
     [ObservableProperty]
     private int _companyId;
 
     [ObservableProperty]
-    private string _name = "";
+    private string _name = string.Empty;
 
     [ObservableProperty]
-    private string _aboutUs = "";
+    private string _aboutUs = string.Empty;
 
     [ObservableProperty]
-    public string profilePicturePath = "";
+    private string _profilePicturePath = string.Empty;
 
     [ObservableProperty]
-    public string companyLogoPath = "";
+    private string _companyLogoPath = string.Empty;
 
     [ObservableProperty]
-    private string _location = "";
+    private string _location = string.Empty;
 
     [ObservableProperty]
-    private string _email = "";
+    private string _email = string.Empty;
 
     [ObservableProperty]
-    private string _statusMessage = "";
+    private string _statusMessage = string.Empty;
 
     public EditGame editGame { get; }
 
-    public EditCompanyProfileViewModel(ICompanyService companyService, GameService gameService)
+    public EditCompanyProfileViewModel(
+        ICompanyService companyService,
+        IGameService gameService,
+        ICompanyValidator companyValidator,
+        IGameValidator gameValidator)
     {
         _companyService = companyService;
-
         _gameService = gameService;
+        _companyValidator = companyValidator;
+        _gameValidator = gameValidator;
 
-        editGame = new EditGame(_gameService);
+        editGame = new EditGame(_gameService, _gameValidator);
     }
 
     public void Load(int companyId)
     {
         CompanyId = companyId;
-        StatusMessage = "";
-        var c = _companyService.GetCompanyById(companyId);
-        if (c is null)
+        StatusMessage = string.Empty;
+
+        Company? existingCompany = _companyService.GetCompanyById(companyId);
+        if (existingCompany is null)
         {
-            StatusMessage = "Company not found.";
+            StatusMessage = MessageCompanyNotFound;
             return;
         }
 
-        Name = c.Name;
-        AboutUs = c.AboutUs;
-        ProfilePicturePath = c.ProfilePicturePath;
-        CompanyLogoPath = c.CompanyLogoPath;
-        Location = c.Location;
-        Email = c.Email;
+        Name = existingCompany.Name;
+        AboutUs = existingCompany.AboutUs;
+        ProfilePicturePath = existingCompany.ProfilePicturePath;
+        CompanyLogoPath = existingCompany.CompanyLogoPath;
+        Location = existingCompany.Location;
+        Email = existingCompany.Email;
     }
 
-    private Company ToCompany(int postedJobs, int collaborators)
+    private Company ToCompany(int postedJobsCount, int collaboratorsCount)
     {
         return new Company(
             name: Name,
@@ -81,180 +93,180 @@ public partial class EditCompanyProfileViewModel : ObservableObject
             location: Location,
             email: Email,
             companyId: CompanyId,
-            postedJobsCount: postedJobs,
-            collaboratorsCount: collaborators);
+            postedJobsCount: postedJobsCount,
+            collaboratorsCount: collaboratorsCount);
     }
 
-   
     public string? TrySave()
     {
-        StatusMessage = "";
+        StatusMessage = string.Empty;
 
-        var existing = _companyService.GetCompanyById(CompanyId);
-        var posted = existing?.PostedJobsCount ?? 0;
-        var collab = existing?.CollaboratorsCount ?? 0;
-        var copy = existing?.Collaborators ?? new System.Collections.Generic.List<string>();
+        Company? existingCompany = _companyService.GetCompanyById(CompanyId);
+        int existingPostedJobsCount = existingCompany?.PostedJobsCount ?? DefaultCountValue;
+        int existingCollaboratorsCount = existingCompany?.CollaboratorsCount ?? DefaultCountValue;
+        List<string> collaboratorsCopy = existingCompany?.Collaborators ?? new List<string>();
 
         try
         {
-            _validator.NameValidator(Name);
-            
-            var scenarioTuples = editGame.Scenarios
-                .Select(s => (
-                    scenarioText: s.ScenarioText ?? string.Empty,
-                    choices: (IReadOnlyList<(string advice, string feedback)>)s.Choices
-                        .Select(c => (
-                            advice: c.Advice ?? string.Empty,
-                            feedback: c.Feedback ?? string.Empty))
+            _companyValidator.ValidateName(Name);
+
+            var scenarioTuplesList = editGame.Scenarios
+                .Select(scenario => (
+                    scenarioText: scenario.ScenarioText ?? string.Empty,
+                    choices: (IReadOnlyList<(string advice, string feedback)>)scenario.Choices
+                        .Select(choice => (
+                            advice: choice.Advice ?? string.Empty,
+                            feedback: choice.Feedback ?? string.Empty))
                         .ToList()
                 ))
                 .ToList();
 
-          
-            var gameValidator = new GameValidator();
-            gameValidator.ValidateForActivation(scenarioTuples, editGame.Conclusion ?? string.Empty);
+            _gameValidator.ValidateForActivation(scenarioTuplesList, editGame.Conclusion ?? string.Empty);
 
-            
-            var game = _gameService.CreateGameFromInput(
+            Game newGame = _gameService.CreateGameFromInput(
                 buddyId: editGame.SelectedBuddyId,
                 buddyName: editGame.BuddyName,
                 buddyIntroduction: editGame.BuddyIntroduction,
-                scenarios: scenarioTuples,
+                scenarios: scenarioTuplesList,
                 conclusion: editGame.Conclusion ?? string.Empty,
                 publish: true
             );
 
-          
-            var updated = ToCompany(posted, collab);
-            updated.Collaborators = copy;
-            updated.Game = game; 
+            Company updatedCompany = ToCompany(existingPostedJobsCount, existingCollaboratorsCount);
+            updatedCompany.Collaborators = collaboratorsCopy;
+            updatedCompany.Game = newGame;
 
-          
-            _companyService.UpdateCompany(updated);
-
-           
-             _gameService.Save(game); 
+            _companyService.UpdateCompany(updatedCompany);
+            _gameService.Save(newGame);
 
             return null;
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            StatusMessage = ex.Message;
-            return ex.Message;
+            StatusMessage = exception.Message;
+            return exception.Message;
         }
     }
 }
 
-    public partial class EditGame : ObservableObject
+public partial class EditGame : ObservableObject
+{
+    private const int RequiredScenariosCount = 2;
+    private const int ChoicesPerScenarioCount = 3;
+    private const int DefaultBuddyId = 1;
+    private const string MessageGameCreatedSuccessfully = "Game created and saved successfully.";
+    private const string MessageGameCreateFailedPrefix = "Failed to create game: ";
+
+    private readonly IGameService _gameService;
+    private readonly IGameValidator _gameValidator;
+
+    public ObservableCollection<ScenarioInput> Scenarios { get; } = new ObservableCollection<ScenarioInput>();
+
+    public ObservableCollection<int> AvailableBuddyIds { get; } = new ObservableCollection<int> { 0, 1 };
+
+    [ObservableProperty]
+    private int _selectedBuddyId = DefaultBuddyId;
+
+    public string BuddyImagePath => BuddyImageProvider.GetImagePathById(SelectedBuddyId);
+
+    partial void OnSelectedBuddyIdChanged(int value)
     {
-        private readonly GameService _service;
-        private readonly GameValidator _gameValidator = new GameValidator();
-
-        public ObservableCollection<ScenarioInput> Scenarios { get; } = new ObservableCollection<ScenarioInput>();
-
-        public ObservableCollection<int> AvailableBuddyIds { get; } = new ObservableCollection<int> { 0, 1 };
-
-        [ObservableProperty]
-        private int _selectedBuddyId = 1;
-
-        public string BuddyImagePath => BuddyImageProvider.GetImagePathById(SelectedBuddyId);
-
-        partial void OnSelectedBuddyIdChanged(int value)
-        {
-            OnPropertyChanged(nameof(BuddyImagePath));
-        }
-
-        [ObservableProperty]
-        private string _buddyName = string.Empty;
-
-        [ObservableProperty]
-        private string _buddyIntroduction = string.Empty;
-
-        [ObservableProperty]
-        private string _conclusion = string.Empty;
-
-        [ObservableProperty]
-        private string _statusMessage = string.Empty;
-
-        public EditGame(GameService service)
-        {
-            _service = service;
-
-            for (int i = 0; i < 2; i++)
-            {
-                var s = new ScenarioInput();
-
-                s.Choices.Add(new AdviceChoiceInput());
-                s.Choices.Add(new AdviceChoiceInput());
-                s.Choices.Add(new AdviceChoiceInput());
-                Scenarios.Add(s);
-            }
-
-            ApplyLoadedGame(_service.GetStoredGame());
-            StatusMessage = string.Empty;
-        }
-
-        private void ApplyLoadedGame(Game game)
-        {
-            if (game == null)
-                return;
-
-            SelectedBuddyId = game.Buddy.Id;
-            BuddyName = game.Buddy.Name ?? string.Empty;
-            BuddyIntroduction = game.Buddy.Introduction ?? string.Empty;
-            Conclusion = game.Conclusion ?? string.Empty;
-
-            for (int i = 0; i < Scenarios.Count && i < game.Scenarios.Count; i++)
-            {
-                var scenarioVm = Scenarios[i];
-                var scenarioModel = game.Scenarios[i];
-                scenarioVm.ScenarioText = scenarioModel.Description ?? string.Empty;
-
-                var adviceChoices = scenarioModel.AdviceChoices;
-                for (int j = 0; j < scenarioVm.Choices.Count && j < adviceChoices.Count; j++)
-                {
-                    scenarioVm.Choices[j].Advice = adviceChoices[j].Advice ?? string.Empty;
-                    scenarioVm.Choices[j].Feedback = adviceChoices[j].Feedback ?? string.Empty;
-                }
-            }
-        }
-
-        [RelayCommand]
-        private void CreateGame()
-        {
-            try
-            {
-                var scenarioTuples = Scenarios
-                    .Select(s => (
-                        scenarioText: s.ScenarioText ?? string.Empty,
-                        choices: (IReadOnlyList<(string advice, string feedback)>)s.Choices
-                            .Select(c => (
-                                advice: c.Advice ?? string.Empty,
-                                feedback: c.Feedback ?? string.Empty))
-                            .ToList()
-                    ))
-                    .ToList();
-
-                _gameValidator.ValidateForActivation(scenarioTuples, Conclusion ?? string.Empty);
-
-                var game = _service.CreateGameFromInput(
-                    buddyId: SelectedBuddyId,
-                    buddyName: BuddyName,
-                    buddyIntroduction: BuddyIntroduction,
-                    scenarios: scenarioTuples,
-                    conclusion: Conclusion ?? string.Empty,
-                    publish: false);
-
-                _service.Save(game);
-                StatusMessage = "Game created and saved successfully.";
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Failed to create game: {ex.Message}";
-            }
-        }
-
+        OnPropertyChanged(nameof(BuddyImagePath));
     }
+
+    [ObservableProperty]
+    private string _buddyName = string.Empty;
+
+    [ObservableProperty]
+    private string _buddyIntroduction = string.Empty;
+
+    [ObservableProperty]
+    private string _conclusion = string.Empty;
+
+    [ObservableProperty]
+    private string _statusMessage = string.Empty;
+
+    public EditGame(IGameService gameService, IGameValidator gameValidator)
+    {
+        _gameService = gameService;
+        _gameValidator = gameValidator;
+
+        for (int scenarioIndex = 0; scenarioIndex < RequiredScenariosCount; scenarioIndex++)
+        {
+            var scenarioInput = new ScenarioInput();
+
+            for (int choiceIndex = 0; choiceIndex < ChoicesPerScenarioCount; choiceIndex++)
+            {
+                scenarioInput.Choices.Add(new AdviceChoiceInput());
+            }
+
+            Scenarios.Add(scenarioInput);
+        }
+
+        ApplyLoadedGame(_gameService.GetStoredGame());
+        StatusMessage = string.Empty;
+    }
+
+    private void ApplyLoadedGame(Game game)
+    {
+        if (game == null)
+            return;
+
+        SelectedBuddyId = game.Buddy.Id;
+        BuddyName = game.Buddy.Name ?? string.Empty;
+        BuddyIntroduction = game.Buddy.Introduction ?? string.Empty;
+        Conclusion = game.Conclusion ?? string.Empty;
+
+        for (int scenarioIndex = 0; scenarioIndex < Scenarios.Count && scenarioIndex < game.Scenarios.Count; scenarioIndex++)
+        {
+            var scenarioViewModel = Scenarios[scenarioIndex];
+            var scenarioModel = game.Scenarios[scenarioIndex];
+            scenarioViewModel.ScenarioText = scenarioModel.Description ?? string.Empty;
+
+            var adviceChoicesList = scenarioModel.AdviceChoices;
+            for (int choiceIndex = 0; choiceIndex < scenarioViewModel.Choices.Count && choiceIndex < adviceChoicesList.Count; choiceIndex++)
+            {
+                scenarioViewModel.Choices[choiceIndex].Advice = adviceChoicesList[choiceIndex].Advice ?? string.Empty;
+                scenarioViewModel.Choices[choiceIndex].Feedback = adviceChoicesList[choiceIndex].Feedback ?? string.Empty;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void CreateGame()
+    {
+        try
+        {
+            var scenarioTuplesList = Scenarios
+                .Select(scenario => (
+                    scenarioText: scenario.ScenarioText ?? string.Empty,
+                    choices: (IReadOnlyList<(string advice, string feedback)>)scenario.Choices
+                        .Select(choice => (
+                            advice: choice.Advice ?? string.Empty,
+                            feedback: choice.Feedback ?? string.Empty))
+                        .ToList()
+                ))
+                .ToList();
+
+            _gameValidator.ValidateForActivation(scenarioTuplesList, Conclusion ?? string.Empty);
+
+            var newGame = _gameService.CreateGameFromInput(
+                buddyId: SelectedBuddyId,
+                buddyName: BuddyName,
+                buddyIntroduction: BuddyIntroduction,
+                scenarios: scenarioTuplesList,
+                conclusion: Conclusion ?? string.Empty,
+                publish: false);
+
+            _gameService.Save(newGame);
+            StatusMessage = MessageGameCreatedSuccessfully;
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = $"{MessageGameCreateFailedPrefix}{exception.Message}";
+        }
+    }
+}
 
 public partial class ScenarioInput : ObservableObject
 {
@@ -272,4 +284,3 @@ public partial class AdviceChoiceInput : ObservableObject
     [ObservableProperty]
     private string _feedback = string.Empty;
 }
-

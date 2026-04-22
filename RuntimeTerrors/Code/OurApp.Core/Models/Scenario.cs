@@ -25,9 +25,9 @@ namespace OurApp.Core.Models
         {
             List<string> adviceTexts = new List<string>();
 
-            for (int i = 0; i < _choices.Count; i++)
+            for (int index = 0; index < _choices.Count; index++)
             {
-                adviceTexts.Add(_choices[i].Advice);
+                adviceTexts.Add(_choices[index].Advice);
             }
 
             return adviceTexts;
@@ -37,9 +37,9 @@ namespace OurApp.Core.Models
         {
             List<string> adviceReactions = new List<string>();
 
-            for (int i = 0; i < _choices.Count; i++)
+            for (int index = 0; index < _choices.Count; index++)
             {
-                adviceReactions.Add(_choices[i].Feedback);
+                adviceReactions.Add(_choices[index].Feedback);
             }
 
             return adviceReactions;

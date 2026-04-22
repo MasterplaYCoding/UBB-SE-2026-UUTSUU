@@ -13,24 +13,22 @@ namespace OurApp.Core.Services
     public class CompanyService : ICompanyService
     {
         private readonly ICompanyRepo CompanyRepo;
-        private readonly CompanyValidator _companyValidator;
-        private readonly GameValidator _gameValidator;
+        private readonly ICompanyValidator _companyValidator;
 
         public CompanyService(ICompanyRepo repo) 
         {
             CompanyRepo = repo;
             _companyValidator = new CompanyValidator();
-            _gameValidator = new GameValidator();
         }
 
         private void ValidateCompany(Company company)
         {
-            _companyValidator.NameValidator(company.Name);
-            _companyValidator.AboutUsValidator(company.AboutUs);
-            _companyValidator.PfpValidator(company.ProfilePicturePath);
-            _companyValidator.LogoValidator(company.CompanyLogoPath);
-            _companyValidator.LocationValidator(company.Location);
-            _companyValidator.EmailValidator(company.Email);
+            _companyValidator.ValidateName(company.Name);
+            _companyValidator.ValidateAboutUs(company.AboutUs);
+            _companyValidator.ValidateProfilePicture(company.ProfilePicturePath);
+            _companyValidator.ValidateLogo(company.CompanyLogoPath);
+            _companyValidator.ValidateLocation(company.Location);
+            _companyValidator.ValidateEmail(company.Email);
         }
 
         public void AddCompany(string companyName, string aboutUs, string pfpUrl, string logoUrl, string location, string email)

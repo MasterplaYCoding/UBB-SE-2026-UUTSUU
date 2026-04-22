@@ -2,11 +2,12 @@ using OurApp.Core.Models;
 using OurApp.Core.Repositories;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.ComponentModel.Design;
 
 namespace OurApp.Core.Services
 {
-    public class ProfileCompletionCalculator
+    public class ProfileCompletionCalculator : IProfileCompletionCalculator
     {
         //Company has:
         //    this.Name = name;
@@ -16,117 +17,138 @@ namespace OurApp.Core.Services
         //    this.Location = location;
         //    this.Email = email;
 
+        private const int TotalRequiredTasksCount = 5;
+        private const int MinimumRequiredPostedJobs = 5;
+        private const int MinimumRequiredCollaborators = 2;
+        private const int PercentageMultiplier = 100;
+        private const int TopSkillsLimit = 3;
+        private const int DaysToLookBack = -7;
+        private const int EmptyCount = 0;
+
+        private const string TaskUploadPictureText = "Upload company picture";
+        private const string TaskAddDescriptionText = "Add company description";
+        private const string TaskPostJobsText = "Post at least 5 jobs";
+        private const string TaskAddCollaboratorsText = "Add 2 collaborators";
+        private const string TaskCompleteMiniGameText = "Complete mini-game";
+
+        private const string MessageNoApplicantsText = "No applicants yet. Start posting jobs!";
+        private const string MessageGreatStartPrefix = "Great start! You have ";
+        private const string MessageGreatStartSuffix = " new applicants.";
+        private const string MessageFewerApplicantsPrefix = "You have ";
+        private const string MessageFewerApplicantsSuffix = "% fewer applicants than last week.";
+        private const string MessageMoreApplicantsPrefix = "Congrats! You have ";
+        private const string MessageMoreApplicantsSuffix = "% more applicants than last week.";
+
         private readonly IJobsRepository _jobsRepository;
-        private readonly IApplicantRepository _applRepository;
+        private readonly IApplicantRepository _applicantRepository;
 
         public ProfileCompletionCalculator(IJobsRepository jobsRepository, IApplicantRepository applicantRepository)
         {
             _jobsRepository = jobsRepository;
-            _applRepository = applicantRepository;
+            _applicantRepository = applicantRepository;
         }
 
-            public (int percentage, List<string> remainingTasks) Calculate(Company company)
+        public (int percentage, List<string> remainingTasks) Calculate(Company company)
         {
-            int total = 5;
-            int done = 0;
-            var tasks = new List<string>();
+            int completedTasksCount = EmptyCount;
+            var remainingTasksList = new List<string>();
 
-            if (!string.IsNullOrEmpty(company.ProfilePicturePath)) done++;
-            else tasks.Add("Upload company picture");
+            if (!string.IsNullOrEmpty(company.ProfilePicturePath)) completedTasksCount++;
+            else remainingTasksList.Add(TaskUploadPictureText);
 
-            if (!string.IsNullOrEmpty(company.AboutUs)) done++;
-            else tasks.Add("Add company description");
+            if (!string.IsNullOrEmpty(company.AboutUs)) completedTasksCount++;
+            else remainingTasksList.Add(TaskAddDescriptionText);
 
-            if (company.PostedJobsCount >= 5) done++;
-            else tasks.Add("Post at least 5 jobs");
+            if (company.PostedJobsCount >= MinimumRequiredPostedJobs) completedTasksCount++;
+            else remainingTasksList.Add(TaskPostJobsText);
 
-            if (company.CollaboratorsCount >= 2 || company.CollaboratorsCount >= 2) done++;
-            else tasks.Add("Add 2 collaborators");
+            if (company.CollaboratorsCount >= MinimumRequiredCollaborators || company.CollaboratorsCount >= MinimumRequiredCollaborators) completedTasksCount++;
+            else remainingTasksList.Add(TaskAddCollaboratorsText);
 
-            if (IsMiniGameComplete(company.Game)) done++;
-            else tasks.Add("Complete mini-game");
+            if (IsMiniGameComplete(company.Game)) completedTasksCount++;
+            else remainingTasksList.Add(TaskCompleteMiniGameText);
 
-            return ((done * 100) / total, tasks);
+            return ((completedTasksCount * PercentageMultiplier) / TotalRequiredTasksCount, remainingTasksList);
         }
 
-        private static bool IsMiniGameComplete(Game g)
+        private static bool IsMiniGameComplete(Game game)
         {
-            return g != null && g.IsPublished;
+            return game != null && game.IsPublished;
         }
 
         public (List<string> skillNames, List<int> percents) GetSkillsTop3(int companyId)
         {
-            var jobs = _jobsRepository
+            var companyJobsList = _jobsRepository
                 .GetAllJobs()
-                .Where(j => j.Company != null && j.Company.CompanyId == companyId)
+                .Where(job => job.Company != null && job.Company.CompanyId == companyId)
                 .ToList();
 
-            var skillCounts = new Dictionary<string, int>();
-            int total = 0;
+            var skillCountsDictionary = new Dictionary<string, int>();
+            int totalRequiredPercentage = EmptyCount;
 
-            foreach (var job in jobs)
+            foreach (var job in companyJobsList)
             {
                 if (job.JobSkills == null) continue;
 
-                foreach (var js in job.JobSkills)
+                foreach (var jobSkill in job.JobSkills)
                 {
-                    var name = js.Skill?.SkillName;
-                    if (string.IsNullOrEmpty(name)) continue;
+                    var skillName = jobSkill.Skill?.SkillName;
+                    if (string.IsNullOrEmpty(skillName)) continue;
 
-                    if (!skillCounts.ContainsKey(name))
-                        skillCounts[name] = 0;
+                    if (!skillCountsDictionary.ContainsKey(skillName))
+                        skillCountsDictionary[skillName] = EmptyCount;
 
-                    skillCounts[name] += js.RequiredPercentage;
-                    total += js.RequiredPercentage;
+                    skillCountsDictionary[skillName] += jobSkill.RequiredPercentage;
+                    totalRequiredPercentage += jobSkill.RequiredPercentage;
                 }
             }
 
-            var skillNames = new List<string>();
-            var percents = new List<int>();
+            var topSkillNamesList = new List<string>();
+            var topSkillPercentagesList = new List<int>();
 
-            if (total == 0)
-                return (skillNames, percents);
+            if (totalRequiredPercentage == EmptyCount)
+                return (topSkillNamesList, topSkillPercentagesList);
 
-            var top3 = skillCounts
-                .OrderByDescending(kv => kv.Value)
-                .Take(3);
+            var topThreeSkills = skillCountsDictionary
+                .OrderByDescending(skillEntry => skillEntry.Value)
+                .Take(TopSkillsLimit);
 
-            foreach (var kv in top3)
+            foreach (var skillEntry in topThreeSkills)
             {
-                skillNames.Add(kv.Key);
-                percents.Add((int)Math.Round((double)kv.Value * 100 / total));
+                topSkillNamesList.Add(skillEntry.Key);
+                topSkillPercentagesList.Add((int)Math.Round((double)skillEntry.Value * PercentageMultiplier / totalRequiredPercentage));
             }
 
-            return (skillNames, percents);
+            return (topSkillNamesList, topSkillPercentagesList);
         }
 
         public string applicantsMessage(int companyId)
         {
-            var applicants = _applRepository.GetApplicantsByCompany(companyId);
+            var companyApplicantsList = _applicantRepository.GetApplicantsByCompany(companyId);
 
-            int current = applicants
-                .Count(a => a.AppliedAt >= DateTime.Now.AddDays(-7));
+            int currentWeekApplicantsCount = companyApplicantsList
+                .Count(applicant => applicant.AppliedAt >= DateTime.Now.AddDays(DaysToLookBack));
 
-            int previous = applicants
-                .Count(a => a.AppliedAt < DateTime.Now.AddDays(-7));
+            int previousWeekApplicantsCount = companyApplicantsList
+                .Count(applicant => applicant.AppliedAt < DateTime.Now.AddDays(DaysToLookBack));
 
-            if (previous == 0)
+            if (previousWeekApplicantsCount == EmptyCount)
             {
-                if (current == 0)
-                    return "No applicants yet. Start posting jobs!";
+                if (currentWeekApplicantsCount == EmptyCount)
+                    return MessageNoApplicantsText;
 
-                return $"Great start! You have {current} new applicants.";
+                return $"{MessageGreatStartPrefix}{currentWeekApplicantsCount}{MessageGreatStartSuffix}";
             }
 
-            double change = ((double)(current - previous) / previous) * 100;
+            double percentageChange = ((double)(currentWeekApplicantsCount - previousWeekApplicantsCount) / previousWeekApplicantsCount) * PercentageMultiplier;
 
-            if (change < 0)
+            if (percentageChange < EmptyCount)
             {
-                return $"You have {Math.Abs((int)change)}% fewer applicants than last week.";
+                return $"{MessageFewerApplicantsPrefix}{Math.Abs((int)percentageChange)}{MessageFewerApplicantsSuffix}";
             }
             else
             {
-                return $"Congrats! You have {(int)change}% more applicants than last week.";
+                return $"{MessageMoreApplicantsPrefix}{(int)percentageChange}{MessageMoreApplicantsSuffix}";
             }
         }
     }
