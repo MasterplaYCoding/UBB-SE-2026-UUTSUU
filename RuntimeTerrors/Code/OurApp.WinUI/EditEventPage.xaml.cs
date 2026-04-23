@@ -1,74 +1,57 @@
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using Microsoft.UI.Xaml.Media;
 using OurApp.Core.Models;
-using OurApp.Core.Validators;
 using OurApp.Core.ViewModels;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace OurApp.WinUI
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class EditEventPage : Page
     {
-        private bool StartDateModified = false;
-        private bool EndDateModified = false;
-        private bool IsLoaded = false;
+        private const string DialogTitleSuccess = "YEY!";
+        private const string DialogContentSaveSuccess = "Event saved successfully!";
+        private const string DialogContentDeleteSuccess = "Event deleted successfully!";
+        private const string DialogTitleError = "Oops!";
+        private const string DialogContentSaveError = "We’re sorry, an error occurred. The event was not saved. Please try again.";
+        private const string DialogContentDeleteError = "We’re sorry, an error occurred. The event was not deleted. Please try again.";
+        private const string DialogButtonClose = "Close";
+
+        private const string DialogTitleConfirmCancel = "Confirm cancel";
+        private const string DialogContentConfirmCancel = "Are you sure you want to cancel the modifications?";
+        private const string DialogTitleConfirmDelete = "Confirm delete";
+        private const string DialogContentConfirmDelete = "Are you sure you want to delete the event?";
+        private const string DialogButtonYes = "Yes";
+        private const string DialogButtonNo = "No";
+
+        private bool _startDateModified = false;
+        private bool _endDateModified = false;
+        private bool _isLoaded = false;
+
         public EditEventViewModel ViewModel { get; set; }
 
-        /// <summary>
-        /// Edit event page constructor
-        /// </summary>
         public EditEventPage()
         {
             InitializeComponent();
-
-            IsLoaded = true;
+            _isLoaded = true;
         }
 
-        /// <summary>
-        /// Function that initializes the edit event view model, only when the user
-        /// gets navigated to this page. The selected event is sent as a parameter
-        /// to the view model
-        /// </summary>
-        /// <param name="e"> selected event to edit </param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            var ev = e.Parameter as Event;
+            var eventToEdit = e.Parameter as Event;
+            var mainWindow = App.mainWindow;
 
-            var mainW = App.mainWindow;
-            ViewModel = new EditEventViewModel(mainW.eventsService, ev, mainW.eventValidator);
+            ViewModel = new EditEventViewModel(mainWindow.eventsService, eventToEdit, mainWindow.eventValidator);
             this.DataContext = ViewModel;
 
-            System.Diagnostics.Debug.WriteLine(ev);
+            System.Diagnostics.Debug.WriteLine(eventToEdit);
         }
 
-
-        /// <summary>
-        /// Function that displays an appropriate ContentDialog, based on the success/
-        /// failure of editing an existing event
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private async void SaveEvent_Click(object sender, RoutedEventArgs e)
         {
-            // because click usually runs before command so we must make it run before
             ViewModel.EditEventCommand.Execute(null);
 
             if (ViewModel.isEverythingValid)
@@ -85,9 +68,9 @@ namespace OurApp.WinUI
             {
                 popup = new ContentDialog
                 {
-                    Title = "YEY!",
-                    Content = "Event saved successfully!",
-                    CloseButtonText = "Close",
+                    Title = DialogTitleSuccess,
+                    Content = DialogContentSaveSuccess,
+                    CloseButtonText = DialogButtonClose,
                     XamlRoot = this.XamlRoot
                 };
             }
@@ -95,9 +78,9 @@ namespace OurApp.WinUI
             {
                 popup = new ContentDialog
                 {
-                    Title = "Oops!",
-                    Content = "We’re sorry, an error occurred. The event was not saved. Please try again.",
-                    CloseButtonText = "Close",
+                    Title = DialogTitleError,
+                    Content = DialogContentSaveError,
+                    CloseButtonText = DialogButtonClose,
                     XamlRoot = this.XamlRoot
                 };
             }
@@ -105,25 +88,12 @@ namespace OurApp.WinUI
             await popup.ShowAsync();
         }
 
-
-        /// <summary>
-        /// Function that takes the user back to the "Our events" page
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void NavigateBack_Click(object sender, RoutedEventArgs e)
         {
-            var mainW = App.mainWindow;
-            mainW.RootFrame.Navigate(typeof(OurEventsPage));
+            var mainWindow = App.mainWindow;
+            mainWindow.RootFrame.Navigate(typeof(OurEventsPage));
         }
 
-
-        /// <summary>
-        /// Function that controls the border colour of the title textbox based on 
-        /// its valid state
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void Title_LostFocus(object sender, RoutedEventArgs e)
         {
             var binding = TitleBox.GetBindingExpression(TextBox.TextProperty);
@@ -139,12 +109,6 @@ namespace OurApp.WinUI
             }
         }
 
-        /// <summary>
-        /// Function that controls the border colour of the description textbox based on 
-        /// its valid state
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void Description_LostFocus(object sender, RoutedEventArgs e)
         {
             var binding = DescriptionBox.GetBindingExpression(TextBox.TextProperty);
@@ -160,23 +124,16 @@ namespace OurApp.WinUI
             }
         }
 
-        /// <summary>
-        /// Function that controls the border colour of the start date picker based on 
-        /// its valid state
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
         private void StartDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
-            if (!IsLoaded)
+            if (!_isLoaded)
                 return;
 
-            if (!StartDateModified)
+            if (!_startDateModified)
             {
-                StartDateModified = true;
+                _startDateModified = true;
                 return;
             }
-
 
             if (ViewModel.ValidateDatesCronologity())
             {
@@ -188,25 +145,18 @@ namespace OurApp.WinUI
             }
         }
 
-
-        /// <summary>
-        /// Function that controls the border colour of the end date picker based on 
-        /// its valid state
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
         private void EndDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
-            if (!IsLoaded)
+            if (!_isLoaded)
                 return;
 
-            if (!EndDateModified)
+            if (!_endDateModified)
             {
-                EndDateModified = true;
+                _endDateModified = true;
                 return;
             }
 
-            if (StartDateModified)
+            if (_startDateModified)
             {
                 if (ViewModel.ValidateDatesCronologity())
                 {
@@ -219,12 +169,6 @@ namespace OurApp.WinUI
             }
         }
 
-        /// <summary>
-        /// Function that controls the border colour of the location textbox based on 
-        /// its valid state
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void Location_LostFocus(object sender, RoutedEventArgs e)
         {
             var binding = LocationBox.GetBindingExpression(TextBox.TextProperty);
@@ -238,24 +182,16 @@ namespace OurApp.WinUI
             {
                 LocationBox.BorderBrush = new SolidColorBrush(Colors.Red);
             }
-
         }
 
-        /// <summary>
-        /// Function that displays a ContentDialog if the user tries to press the "Cancel"
-        /// button. The ContentDialog shows 2 buttons: Yes and No. If the chosen button
-        /// was "Yes", the user is taken back to the "Our Events" page.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private async void CancelChanges_Click(object sender, RoutedEventArgs e)
         {
             ContentDialog dialog = new ContentDialog
             {
-                Title = "Confirm cancel",
-                Content = "Are you sure you want to cancel the modifications?",
-                PrimaryButtonText = "Yes",
-                CloseButtonText = "No",
+                Title = DialogTitleConfirmCancel,
+                Content = DialogContentConfirmCancel,
+                PrimaryButtonText = DialogButtonYes,
+                CloseButtonText = DialogButtonNo,
                 DefaultButton = ContentDialogButton.Close,
                 XamlRoot = this.XamlRoot
             };
@@ -268,23 +204,14 @@ namespace OurApp.WinUI
             }
         }
 
-        /// <summary>
-        /// Function that displays a ContentDialog if the user tries to press the "Delete"
-        /// button. The ContentDialog shows 2 buttons: Yes and No. If the chosen button
-        /// was "Yes", the user is taken back to the "Our Events" page and the event gets 
-        /// deleted and an appropriate ContentDialog gets displayed, based on the success/
-        /// failure of deleting the event
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private async void DeleteEvent_Click(object sender, RoutedEventArgs e)
         {
             ContentDialog dialog = new ContentDialog
             {
-                Title = "Confirm delete",
-                Content = "Are you sure you want to delete the event?",
-                PrimaryButtonText = "Yes",
-                CloseButtonText = "No",
+                Title = DialogTitleConfirmDelete,
+                Content = DialogContentConfirmDelete,
+                PrimaryButtonText = DialogButtonYes,
+                CloseButtonText = DialogButtonNo,
                 DefaultButton = ContentDialogButton.Close,
                 XamlRoot = this.XamlRoot
             };
@@ -306,9 +233,9 @@ namespace OurApp.WinUI
             {
                 popup = new ContentDialog
                 {
-                    Title = "YEY!",
-                    Content = "Event deleted successfully!",
-                    CloseButtonText = "Close",
+                    Title = DialogTitleSuccess,
+                    Content = DialogContentDeleteSuccess,
+                    CloseButtonText = DialogButtonClose,
                     XamlRoot = this.XamlRoot
                 };
             }
@@ -316,9 +243,9 @@ namespace OurApp.WinUI
             {
                 popup = new ContentDialog
                 {
-                    Title = "Oops!",
-                    Content = "We’re sorry, an error occurred. The event was not deleted. Please try again.",
-                    CloseButtonText = "Close",
+                    Title = DialogTitleError,
+                    Content = DialogContentDeleteError,
+                    CloseButtonText = DialogButtonClose,
                     XamlRoot = this.XamlRoot
                 };
             }

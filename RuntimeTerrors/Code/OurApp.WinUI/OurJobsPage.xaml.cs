@@ -1,6 +1,5 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
 using OurApp.Core.Models;
 using OurApp.WinUI.ViewModels;
@@ -14,7 +13,8 @@ namespace OurApp.WinUI
         public OurJobsPage()
         {
             this.InitializeComponent();
-            ViewModel = new OurJobsViewModel();
+            var mainWindow = App.mainWindow;
+            ViewModel = new OurJobsViewModel(mainWindow.jobsRepository);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -33,7 +33,7 @@ namespace OurApp.WinUI
 
         private void ViewApplicantsButton_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.Tag is JobPosting job)
+            if (sender is Button button && button.Tag is JobPosting job)
             {
                 Frame.Navigate(typeof(JobApplicantsPage), job);
             }
@@ -41,7 +41,7 @@ namespace OurApp.WinUI
 
         private void PayToPromoteButton_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is Button btn && btn.Tag is JobPosting job)
+            if (sender is Button button && button.Tag is JobPosting job)
             {
                 var paymentWindow = new PaymentWindow(job.JobId);
                 paymentWindow.Activate();

@@ -27,10 +27,10 @@ public sealed partial class OurEventsPage : Page
 {
     public OurEventsViewModel ViewModel { get; }
 
-    /// <summary>
-    /// Our events page constructor that initializes its view model
-    /// </summary>
-    public OurEventsPage()
+    /// <summary>
+    /// Our events page constructor that initializes its view model
+    /// </summary>
+    public OurEventsPage()
     {
         var mainWindow = App.mainWindow;
         InitializeComponent();
@@ -44,13 +44,13 @@ public sealed partial class OurEventsPage : Page
         mainWindow.RootFrame.Navigate(typeof(ViewProfilePage));
     }
 
-    /// <summary>
-    /// Function that navigates the user to the "Create Event" page when clicking 
-    /// the button "Create Event"
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void CreateEventButton_Click(object sender, RoutedEventArgs e)
+    /// <summary>
+    /// Function that navigates the user to the "Create Event" page when clicking 
+    /// the button "Create Event"
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void CreateEventButton_Click(object sender, RoutedEventArgs e)
     {
         var mainWindow = App.mainWindow;
         mainWindow.RootFrame.Navigate(typeof(CreateEventPage));
@@ -62,13 +62,13 @@ public sealed partial class OurEventsPage : Page
         mainWindow.RootFrame.Navigate(typeof(PastEventsPage));
     }
 
-    /// <summary>
-    /// Function that navigates the user to the "Edit Event" page when clicking
-    /// the 3-dot button next to the event
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void EditEvent_Click(object sender, RoutedEventArgs e)
+    /// <summary>
+    /// Function that navigates the user to the "Edit Event" page when clicking
+    /// the 3-dot button next to the event
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void EditEvent_Click(object sender, RoutedEventArgs e)
     {
         var button = sender as Button;
         var selectedEvent = button.Tag as Event;
@@ -77,13 +77,13 @@ public sealed partial class OurEventsPage : Page
         mainWindow.RootFrame.Navigate(typeof(EditEventPage), selectedEvent);
     }
 
-    /// <summary>
-    /// Function that navigates the user to the "Collaborators" page when clicking the
-    /// "See Collaborators" button
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void SeeCollaboratorsButton_Click(object sender, RoutedEventArgs e)
+    /// <summary>
+    /// Function that navigates the user to the "Collaborators" page when clicking the
+    /// "See Collaborators" button
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void SeeCollaboratorsButton_Click(object sender, RoutedEventArgs e)
     {
         var mainWindow = App.mainWindow;
         mainWindow.RootFrame.Navigate(typeof(CollaboratorsPage));

@@ -136,7 +136,7 @@ namespace OurApp.WinUI
                 PrimaryButtonText = "Yes",
                 CloseButtonText = "No",
                 DefaultButton = ContentDialogButton.Close,
-                XamlRoot = this.XamlRoot 
+                XamlRoot = this.XamlRoot
             };
 
             var chosenButton = await cancelConfirmationDialog.ShowAsync();
@@ -296,7 +296,7 @@ namespace OurApp.WinUI
             }
             else
             {
-                DescriptionBox.BorderBrush= new SolidColorBrush(Colors.Red);
+                DescriptionBox.BorderBrush = new SolidColorBrush(Colors.Red);
             }
         }
 

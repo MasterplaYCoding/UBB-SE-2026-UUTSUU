@@ -4,6 +4,7 @@ using OurApp.Core.Models;
 using OurApp.Core.Repositories;
 using OurApp.Core.Services;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -11,22 +12,22 @@ namespace OurApp.Core.ViewModels;
 
 public sealed class CompanyCollabListRow
 {
-    public string Name { get; set; } = "";
+    public string Name { get; set; } = string.Empty;
 }
 
 /// <summary>Rows for the "Posted jobs" / "Events" preview lists on the company view profile page.</summary>
 public sealed class CompanyProfileListRow
 {
-    public string Title { get; set; } = "";
-    public string Subtitle { get; set; } = "";
+    public string Title { get; set; } = string.Empty;
+    public string Subtitle { get; set; } = string.Empty;
 }
 
 /// <summary>One trending skill row for the statistics sidebar (frontend display; fill from analytics later).</summary>
 public sealed class CompanyTrendingSkillRow
 {
-    public string Rank { get; set; } = "";
-    public string SkillName { get; set; } = "";
-    public string Detail { get; set; } = "";
+    public string Rank { get; set; } = string.Empty;
+    public string SkillName { get; set; } = string.Empty;
+    public string Detail { get; set; } = string.Empty;
 }
 
 public partial class CompanyProfileViewModel : ObservableObject
@@ -41,11 +42,21 @@ public partial class CompanyProfileViewModel : ObservableObject
     private const int EmptyTaskCount = 0;
     private const int EmptyCompletionPercentage = 0;
     private const int BaseDisplayRankOffset = 1;
+    private const int InvalidIndexFallback = 0;
 
     private const string ProfileLoadErrorMessage = "We could not load this company profile.";
     private const string EmptySkillNameFallback = "—";
     private const string EmptySkillPercentageFallback = "0%";
     private const string FormattedSkillPercentageSuffix = "%";
+
+    private const string DataUriPrefix = "data:image/";
+    private const string Base64Marker = ";base64,";
+    private const string HintNoLogo = "(no logo)";
+    private const string HintLogoSet = "(logo set)";
+    private const string HintLogoRenderError = "(logo could not be rendered)";
+    private const string HintNoImage = "(no image)";
+    private const string HintImageSet = "(image set)";
+    private const string HintImageRenderError = "(image could not be rendered)";
 
     private readonly ICompanyService _companyService;
     private readonly IGameService _gameService;
@@ -56,6 +67,17 @@ public partial class CompanyProfileViewModel : ObservableObject
     private readonly IProfileCompletionCalculator _calculator;
 
     private int _currentScenarioIndex;
+
+    public Action<byte[]>? OnProfileImageDecoded { get; set; }
+    public Action? OnProfileImageCleared { get; set; }
+    public Action<byte[]>? OnLogoDecoded { get; set; }
+    public Action? OnLogoCleared { get; set; }
+
+    [ObservableProperty]
+    private string _profilePictureHintText = string.Empty;
+
+    [ObservableProperty]
+    private string _companyLogoHintText = string.Empty;
 
     [ObservableProperty]
     private string _currentQuestion = string.Empty;
@@ -167,7 +189,83 @@ public partial class CompanyProfileViewModel : ObservableObject
         LoadMessage = string.Empty;
         RefreshProfileStatistics();
         FillPreviewSections();
+        ProcessImages();
         gamePreview();
+    }
+
+    private void ProcessImages()
+    {
+        var rawLogo = Company?.CompanyLogoPath ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(rawLogo))
+        {
+            CompanyLogoHintText = HintNoLogo;
+            OnLogoCleared?.Invoke();
+        }
+        else if (rawLogo.StartsWith(DataUriPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            var base64Index = rawLogo.IndexOf(Base64Marker, StringComparison.OrdinalIgnoreCase);
+            if (base64Index >= InvalidIndexFallback)
+            {
+                var base64 = rawLogo.Substring(base64Index + Base64Marker.Length);
+                try
+                {
+                    var bytes = Convert.FromBase64String(base64);
+                    CompanyLogoHintText = string.Empty;
+                    OnLogoDecoded?.Invoke(bytes);
+                }
+                catch
+                {
+                    CompanyLogoHintText = HintLogoRenderError;
+                    OnLogoCleared?.Invoke();
+                }
+            }
+            else
+            {
+                CompanyLogoHintText = HintLogoRenderError;
+                OnLogoCleared?.Invoke();
+            }
+        }
+        else
+        {
+            CompanyLogoHintText = HintLogoSet;
+            OnLogoCleared?.Invoke();
+        }
+
+        var rawPic = Company?.ProfilePicturePath ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(rawPic))
+        {
+            ProfilePictureHintText = HintNoImage;
+            OnProfileImageCleared?.Invoke();
+        }
+        else if (rawPic.StartsWith(DataUriPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            var base64Index = rawPic.IndexOf(Base64Marker, StringComparison.OrdinalIgnoreCase);
+            if (base64Index >= InvalidIndexFallback)
+            {
+                var base64 = rawPic.Substring(base64Index + Base64Marker.Length);
+                try
+                {
+                    var bytes = Convert.FromBase64String(base64);
+                    ProfilePictureHintText = string.Empty;
+                    OnProfileImageDecoded?.Invoke(bytes);
+                }
+                catch
+                {
+                    ProfilePictureHintText = HintImageRenderError;
+                    OnProfileImageCleared?.Invoke();
+                }
+            }
+            else
+            {
+                ProfilePictureHintText = HintImageRenderError;
+                OnProfileImageCleared?.Invoke();
+            }
+        }
+        else
+        {
+            ProfilePictureHintText = HintImageSet;
+            OnProfileImageCleared?.Invoke();
+        }
     }
 
     public void RefreshProfileStatistics()
@@ -235,9 +333,6 @@ public partial class CompanyProfileViewModel : ObservableObject
     {
         NavigateAllJobsRequested?.Invoke(this, EventArgs.Empty);
     }
-
-
-    //Game
 
     partial void OnCurrentStateChanged(GameState value)
     {

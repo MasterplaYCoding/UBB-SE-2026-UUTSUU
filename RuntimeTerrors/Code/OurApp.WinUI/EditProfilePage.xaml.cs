@@ -2,27 +2,90 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
-using OurApp.Core.Repositories;
-using OurApp.Core.Services;
 using OurApp.Core.ViewModels;
 using System;
-using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Storage.Streams;
+using System.Threading.Tasks;
 using Windows.Storage.Pickers;
+using Windows.Storage.Streams;
 using WinRT.Interop;
-using OurApp.Core.Validators;
 
 namespace OurApp.WinUI;
 
+public class WinUIImagePickerService : IImagePickerService
+{
+    private const int StreamSeekStartPosition = 0;
+    private const string FileExtensionPng = ".png";
+    private const string FileExtensionJpg = ".jpg";
+    private const string FileExtensionJpeg = ".jpeg";
+    private const string FileExtensionBmp = ".bmp";
+    private const string FileExtensionGif = ".gif";
+
+    public async Task<(string FileName, byte[] Bytes)?> PickImageAsync()
+    {
+        var picker = new FileOpenPicker
+        {
+            SuggestedStartLocation = PickerLocationId.PicturesLibrary
+        };
+
+        picker.FileTypeFilter.Add(FileExtensionPng);
+        picker.FileTypeFilter.Add(FileExtensionJpg);
+        picker.FileTypeFilter.Add(FileExtensionJpeg);
+        picker.FileTypeFilter.Add(FileExtensionBmp);
+        picker.FileTypeFilter.Add(FileExtensionGif);
+
+        IntPtr hwnd = WindowNative.GetWindowHandle(App.mainWindow);
+        InitializeWithWindow.Initialize(picker, hwnd);
+
+        var file = await picker.PickSingleFileAsync();
+        if (file == null)
+            return null;
+
+        byte[] bytes;
+        using (var input = await file.OpenReadAsync())
+        using (var reader = new DataReader(input.GetInputStreamAt(StreamSeekStartPosition)))
+        {
+            await reader.LoadAsync((uint)input.Size);
+            bytes = new byte[input.Size];
+            reader.ReadBytes(bytes);
+        }
+
+        return (file.Name, bytes);
+    }
+}
+
 public sealed partial class EditProfilePage : Page
 {
+    private const int DefaultCompanyIdFallback = 1;
+    private const int StreamSeekStartPosition = 0;
+
+    private const string DialogTitleSaveSuccess = "Profile saved";
+    private const string DialogContentSaveSuccess = "Your changes were saved.";
+    private const string DialogTitleSaveError = "Could not save";
+    private const string DialogButtonOk = "OK";
+
+    private const string DialogTitleCancel = "Discard changes?";
+    private const string DialogContentCancel = "Are you sure you want to cancel the modifications?";
+    private const string DialogButtonYes = "Yes";
+    private const string DialogButtonNo = "No";
+
     public EditCompanyProfileViewModel ViewModel { get; }
 
     public EditProfilePage()
     {
         var mainWindow = App.mainWindow;
-        ViewModel = new EditCompanyProfileViewModel(mainWindow.companyService, mainWindow.gameService, mainWindow.companyValidator, mainWindow.gameValidator);
+        var imagePickerService = new WinUIImagePickerService();
+
+        ViewModel = new EditCompanyProfileViewModel(
+            mainWindow.companyService,
+            mainWindow.gameService,
+            mainWindow.companyValidator,
+            mainWindow.gameValidator,
+            imagePickerService);
+
+        ViewModel.OnProfilePreviewRequested = SetupProfilePreview;
+        ViewModel.OnLogoPreviewRequested = SetupLogoPreview;
+
         InitializeComponent();
         DataContext = ViewModel;
     }
@@ -30,114 +93,38 @@ public sealed partial class EditProfilePage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        var id = e.Parameter is int companyId ? companyId : 1;
+        var id = e.Parameter is int companyId ? companyId : DefaultCompanyIdFallback;
         ViewModel.Load(id);
     }
 
     private void NavigateBack_Click(object sender, RoutedEventArgs e)
     {
-        var mainW = App.mainWindow;
-        if (mainW.RootFrame.CanGoBack)
-            mainW.RootFrame.GoBack();
+        var mainWindow = App.mainWindow;
+        if (mainWindow.RootFrame.CanGoBack)
+            mainWindow.RootFrame.GoBack();
         else
-            mainW.RootFrame.Navigate(typeof(ViewProfilePage), ViewModel.CompanyId);
+            mainWindow.RootFrame.Navigate(typeof(ViewProfilePage), ViewModel.CompanyId);
     }
 
-
-    private async void AttachProfileImage_Click(object sender, RoutedEventArgs e)
+    private async void SetupProfilePreview(byte[] bytes)
     {
-        var picker = new FileOpenPicker
-        {
-            SuggestedStartLocation = PickerLocationId.PicturesLibrary
-        };
-
-        // Common image formats
-        picker.FileTypeFilter.Add(".png");
-        picker.FileTypeFilter.Add(".jpg");
-        picker.FileTypeFilter.Add(".jpeg");
-        picker.FileTypeFilter.Add(".bmp");
-        picker.FileTypeFilter.Add(".gif");
-
-        // Required for WinUI 3 pickers
-        IntPtr hwnd = WindowNative.GetWindowHandle(App.mainWindow);
-        InitializeWithWindow.Initialize(picker, hwnd);
-
-        var file = await picker.PickSingleFileAsync();
-        if (file == null)
-            return;
-
-        PhotoFileNameTextBlock.Text = file.Name;
-
-        // Read file bytes and convert to base64 (stored in ViewModel.Photo)
-        byte[] bytes;
-        using (var input = await file.OpenReadAsync())
-        using (var reader = new DataReader(input.GetInputStreamAt(0)))
-        {
-            await reader.LoadAsync((uint)input.Size);
-            bytes = new byte[input.Size];
-            reader.ReadBytes(bytes);
-        }
-
-        // Store as a data-URI so the backend validator can recognize the image type.
-        var ext = Path.GetExtension(file.Name).TrimStart('.').ToLowerInvariant();
-        var mimeSubtype = ext == "jpg" ? "jpeg" : ext;
-        ViewModel.ProfilePicturePath = $"data:image/{mimeSubtype};base64,{Convert.ToBase64String(bytes)}";
-
-        // Create preview image from the selected bytes
         var bitmapImage = new BitmapImage();
         using (var memStream = new InMemoryRandomAccessStream())
         {
             await memStream.WriteAsync(bytes.AsBuffer());
-            memStream.Seek(0);
+            memStream.Seek(StreamSeekStartPosition);
             bitmapImage.SetSource(memStream);
         }
         PhotoPreviewImage.Source = bitmapImage;
     }
-    private async void AttachLogoImage_Click(object sender, RoutedEventArgs e)
+
+    private async void SetupLogoPreview(byte[] bytes)
     {
-        var picker = new FileOpenPicker
-        {
-            SuggestedStartLocation = PickerLocationId.PicturesLibrary
-        };
-
-        // Common image formats
-        picker.FileTypeFilter.Add(".png");
-        picker.FileTypeFilter.Add(".jpg");
-        picker.FileTypeFilter.Add(".jpeg");
-        picker.FileTypeFilter.Add(".bmp");
-        picker.FileTypeFilter.Add(".gif");
-
-        // Required for WinUI 3 pickers
-        IntPtr hwnd = WindowNative.GetWindowHandle(App.mainWindow);
-        InitializeWithWindow.Initialize(picker, hwnd);
-
-        var file = await picker.PickSingleFileAsync();
-        if (file == null)
-            return;
-
-        LogoFileNameTextBlock.Text = file.Name;
-
-        // Read file bytes and convert to base64 (stored in ViewModel.Photo)
-        byte[] bytes;
-        using (var input = await file.OpenReadAsync())
-        using (var reader = new DataReader(input.GetInputStreamAt(0)))
-        {
-            await reader.LoadAsync((uint)input.Size);
-            bytes = new byte[input.Size];
-            reader.ReadBytes(bytes);
-        }
-
-        // Store as a data-URI so the backend validator can recognize the image type.
-        var ext = Path.GetExtension(file.Name).TrimStart('.').ToLowerInvariant();
-        var mimeSubtype = ext == "jpg" ? "jpeg" : ext;
-        ViewModel.CompanyLogoPath = $"data:image/{mimeSubtype};base64,{Convert.ToBase64String(bytes)}";
-
-        // Create preview image from the selected bytes
         var bitmapImage = new BitmapImage();
         using (var memStream = new InMemoryRandomAccessStream())
         {
             await memStream.WriteAsync(bytes.AsBuffer());
-            memStream.Seek(0);
+            memStream.Seek(StreamSeekStartPosition);
             bitmapImage.SetSource(memStream);
         }
         LogoPreviewImage.Source = bitmapImage;
@@ -148,39 +135,39 @@ public sealed partial class EditProfilePage : Page
         var err = ViewModel.TrySave();
         if (err is null)
         {
-            var ok = new ContentDialog
+            var successDialog = new ContentDialog
             {
-                Title = "Profile saved",
-                Content = "Your changes were saved.",
-                CloseButtonText = "OK",
+                Title = DialogTitleSaveSuccess,
+                Content = DialogContentSaveSuccess,
+                CloseButtonText = DialogButtonOk,
                 XamlRoot = XamlRoot
             };
-            await ok.ShowAsync();
+            await successDialog.ShowAsync();
             App.mainWindow.RootFrame.Navigate(typeof(ViewProfilePage), ViewModel.CompanyId);
             return;
         }
 
-        var bad = new ContentDialog
+        var errorDialog = new ContentDialog
         {
-            Title = "Could not save",
+            Title = DialogTitleSaveError,
             Content = err,
-            CloseButtonText = "OK",
+            CloseButtonText = DialogButtonOk,
             XamlRoot = XamlRoot
         };
-        await bad.ShowAsync();
+        await errorDialog.ShowAsync();
     }
 
     private async void Cancel_Click(object sender, RoutedEventArgs e)
     {
-        var confirm = new ContentDialog
+        var confirmDialog = new ContentDialog
         {
-            Title = "Discard changes?",
-            Content = "Are you sure you want to cancel the modifications?",
-            PrimaryButtonText = "Yes",
-            CloseButtonText = "No",
+            Title = DialogTitleCancel,
+            Content = DialogContentCancel,
+            PrimaryButtonText = DialogButtonYes,
+            CloseButtonText = DialogButtonNo,
             XamlRoot = XamlRoot
         };
-        var result = await confirm.ShowAsync();
+        var result = await confirmDialog.ShowAsync();
         if (result != ContentDialogResult.Primary)
             return;
 

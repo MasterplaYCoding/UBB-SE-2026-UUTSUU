@@ -1,7 +1,6 @@
 using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
 using OurApp.Core.Models;
 using OurApp.WinUI.ViewModels;
@@ -10,6 +9,10 @@ namespace OurApp.WinUI
 {
     public sealed partial class JobApplicantsPage : Page
     {
+        private const string DialogTitleSuccess = "Email sent";
+        private const string DialogTitleError = "Could not send email";
+        private const string DialogButtonOk = "OK";
+
         public JobApplicantsViewModel ViewModel { get; private set; }
 
         public JobApplicantsPage()
@@ -23,7 +26,7 @@ namespace OurApp.WinUI
 
             if (e.Parameter is JobPosting job)
             {
-                ViewModel = new JobApplicantsViewModel(job, App.mainWindow?.sessionService);
+                ViewModel = new JobApplicantsViewModel(job,App.mainWindow.applicantService, App.mainWindow?.sessionService);
             }
         }
 
@@ -76,12 +79,12 @@ namespace OurApp.WinUI
                 return;
             }
 
-            var (ok, message) = await ViewModel.SendStatusMailAsync();
+            var (isSent, message) = await ViewModel.SendStatusMailAsync();
             var dialog = new ContentDialog
             {
-                Title = ok ? "Email sent" : "Could not send email",
+                Title = isSent ? DialogTitleSuccess : DialogTitleError,
                 Content = message,
-                CloseButtonText = "OK",
+                CloseButtonText = DialogButtonOk,
                 XamlRoot = XamlRoot
             };
             await dialog.ShowAsync();
@@ -90,10 +93,12 @@ namespace OurApp.WinUI
 
     public class EmptyStringToPendingConverter : Microsoft.UI.Xaml.Data.IValueConverter
     {
+        private const string FallbackPendingString = "Pending";
+
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            var str = value as string;
-            return string.IsNullOrWhiteSpace(str) ? "Pending" : str;
+            var stringValue = value as string;
+            return string.IsNullOrWhiteSpace(stringValue) ? FallbackPendingString : stringValue;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
