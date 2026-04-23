@@ -66,7 +66,7 @@
                 </StackPanel>
 
                 <Button Grid.Column="4"
-                        Content="Search"
+                        Content="Filter"
                         Height="40"
                         VerticalAlignment="Bottom"
                         Command="{Binding SearchCommand}"/>
@@ -99,7 +99,7 @@
                                 Margin="0,4,0,10"/>
 
                     <!-- AVAILABLE TONIGHT -->
-                    <ListView ItemsSource="{Binding PagedGamesAvailableTonight}"
+                    <ListView ItemsSource="{Binding AvailableTonightGames}"
                               SelectionMode="Single"
                               IsItemClickEnabled="True"
                               ItemClick="Game_Click">
@@ -154,7 +154,7 @@
                     </ListView>
 
                     <!-- OTHERS TITLE -->
-                    <TextBlock Text="{Binding OthersTitle}"
+                    <TextBlock Text=" Others games"
                                FontSize="22"
                                FontWeight="SemiBold"
                                Margin="0,8,0,0"/>
@@ -164,7 +164,7 @@
                                 Margin="0,4,0,10"/>
 
                     <!-- OTHERS -->
-                    <ListView ItemsSource="{Binding PagedGamesOthers}"
+                    <ListView ItemsSource="{Binding OtherAvailableGames}"
                               SelectionMode="Single"
                               IsItemClickEnabled="True"
                               ItemClick="Game_Click">

@@ -21,14 +21,14 @@ namespace SearchAndBook.Repositories;
 /// to the database. It just wipes the data clean and parks it back in the hidden pool for 
 /// the next person to use.
 
-public class RentalsRepository : IRentalsRepository
+public class RentalsRepository : InterfaceRentalsRepository
 {
     /// <summary>
     /// Retrieves a rental time range by its unique identifier.
     /// </summary>
     /// <param name="id">The rental identifier.</param>
     /// <returns>The rental time range if found; otherwise, null.</returns>
-    public TimeRange? Get(int id)
+    public TimeRange? GetGameById(int id)
     {
         try
         {
@@ -59,7 +59,7 @@ public class RentalsRepository : IRentalsRepository
     /// Retrieves all rental time ranges.
     /// </summary>
     /// <returns>A list of all rental time ranges.</returns>
-    public List<TimeRange> GetAll()
+    public List<TimeRange> GetAllGames()
     {
         try
         {

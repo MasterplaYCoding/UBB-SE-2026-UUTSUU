@@ -10,13 +10,26 @@ using Windows.Storage;
 
 namespace SearchAndBook.Services
 {
-    public class GeoService : IGeoService
+    public class GeoService : InterfaceGeographicalService
     {
         private readonly Dictionary<string, City> _lookup = new();
 
+        private const int MinPopulation = 5000;
+        private const int MinColumns = 15;
+        private const string FeatureClassSettlement = "P";
+        private const string FeatureClassCapital = "PPLC";
+
+        private const int ColName = 1;
+        private const int ColAsciiName = 2;
+        private const int ColAlternateNames = 3;
+        private const int ColLatitude = 4;
+        private const int ColLongitude = 5;
+        private const int ColFeatureClass = 6;
+        private const int ColPopulation = 14;
+
         public GeoService() {}
 
-        public static async Task<GeoService> CreateAsync()
+        public static async Task<GeoService> LoadAsync()
         {
             var service = new GeoService();
             await service.InitializeAsync();
@@ -34,21 +47,20 @@ namespace SearchAndBook.Services
             {
                 var parts = line.Split('\t');
 
-                if (parts.Length < 15) continue;
+                if (parts.Length < MinColumns) continue;
 
-                var featureClass = parts[6];
-                if (featureClass != "P" && featureClass != "PPLC") continue;
+                var featureClass = parts[ColFeatureClass];
+                if (featureClass != FeatureClassSettlement && featureClass != FeatureClassCapital) continue;
 
-                long.TryParse(parts[14], out var pop);
+                long.TryParse(parts[ColPopulation], out var pop);
+                if (pop < MinPopulation) continue;
 
-                if (pop < 5000) continue;
+                var name = parts[ColName];
+                var name2 = parts[ColAsciiName];
+                var alternateNames = parts[ColAlternateNames];
 
-                var name = parts[1];
-                var name2 = parts[2];
-                var alternateNames = parts[3];
-
-                if (!double.TryParse(parts[4], NumberStyles.Any, CultureInfo.InvariantCulture, out var lat)) continue;
-                if (!double.TryParse(parts[5], NumberStyles.Any, CultureInfo.InvariantCulture, out var lon)) continue;
+                if (!double.TryParse(parts[ColLatitude], NumberStyles.Any, CultureInfo.InvariantCulture, out var lat)) continue;
+                if (!double.TryParse(parts[ColLongitude], NumberStyles.Any, CultureInfo.InvariantCulture, out var lon)) continue;
 
                 var city = new City
                 {
@@ -58,26 +70,25 @@ namespace SearchAndBook.Services
                     Names = new List<string>(),
                 };
 
-                AddName(city, name);
-                AddName(city, name2);
+                AddCityName(city, name);
+                AddCityName(city, name2);
 
                 if (name2.Trim().Equals("Bucuresti", StringComparison.OrdinalIgnoreCase))
                 {
-                    AddName(city, "Bucharest");
+                    AddCityName(city, "Bucharest");
                 }
 
                 if (!string.IsNullOrWhiteSpace(alternateNames))
                 {
                     foreach (var alt in alternateNames.Split(','))
                     {
-                        AddName(city, alt);
+                        AddCityName(city, alt);
                     }
                 }
             }
-
         }
 
-        private void AddName(City city, string rawName)
+        private void AddCityName(City city, string rawName)
         {
             var normalized = Normalize(rawName);
 

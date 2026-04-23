@@ -35,7 +35,7 @@
                     <TextBlock Text="Game" FontSize="12" FontWeight="Bold"/>
                     <TextBox
                 x:Name="GameSearchBox"
-                PlaceholderText="Search games"/>
+                PlaceholderText="filter games"/>
                 </StackPanel>
 
                 <!-- WHERE -->
@@ -43,7 +43,7 @@
                     <TextBlock Text="Where" FontSize="12" FontWeight="Bold"/>
                     <TextBox
                 x:Name="CitySearchBox"
-                PlaceholderText="Search city"/>
+                PlaceholderText="filter city"/>
                 </StackPanel>
 
                 <!-- WHEN (CALENDAR) -->

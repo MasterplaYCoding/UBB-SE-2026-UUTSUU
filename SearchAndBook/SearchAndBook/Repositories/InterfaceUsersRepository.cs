@@ -2,6 +2,6 @@
 
 namespace SearchAndBook.Repositories;
 
-public interface IUsersRepository : IRepository<User>
+public interface InterfaceUsersRepository : IRepository<User>
 {
 }

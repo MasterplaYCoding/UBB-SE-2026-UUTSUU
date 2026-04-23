@@ -14,9 +14,15 @@ namespace SearchAndBook.ViewModels
 {
     public class GameDetailsViewModel : INotifyPropertyChanged
     {
+        private const long UNREGISTERED_USER_ID = -1;
+        private const long START_OF_STREAM_POSTION = 0;
+
         public event PropertyChangedEventHandler? PropertyChanged;
+
         public event Action? OnGoBackRequested;
+
         public event Action<BookingDTO, TimeRange>? OnStartBookingRequested;
+
         public event Action<string>? OnMessageRequested;
 
         public DateTimeOffset Today => DateTimeOffset.Now.Date;
@@ -25,6 +31,7 @@ namespace SearchAndBook.ViewModels
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
         private BookingDTO _gameAndUserDetails;
+
         public BookingDTO GameAndUserDetails
         {
             get => _gameAndUserDetails;
@@ -36,6 +43,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private bool _hasError;
+
         public bool HasError
         {
             get => _hasError;
@@ -47,6 +55,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private decimal _totalPrice;
+
         public decimal TotalPrice
         {
             get => _totalPrice;
@@ -58,6 +67,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private BitmapImage? _gameImage;
+
         public BitmapImage? GameImage
         {
             get => _gameImage;
@@ -69,6 +79,7 @@ namespace SearchAndBook.ViewModels
         }
 
         private string? _ownerImageUrl;
+
         public string? OwnerImageUrl
         {
             get => _ownerImageUrl;
@@ -79,33 +90,34 @@ namespace SearchAndBook.ViewModels
             }
         }
 
-        private readonly IBookingService _bookingService;
+        private readonly InterfaceBookingService _bookingService;
+
         public TimeRange[] UnavailableTimeRanges { get; private set; } = Array.Empty<TimeRange>();
 
         public ICommand GoBackCommand => new RelayCommand(_ => GoBack());
 
-        public ICommand BookCommand => new RelayCommand(obj =>
+        public ICommand BookCommand => new RelayCommand(commandParameter =>
         {
             try
             {
-                if (obj is TimeRange range)
+                if (commandParameter is TimeRange timeRange)
                 {
-                    StartBooking(range);
+                    StartBooking(timeRange);
                 }
                 else
                 {
                     OnMessageRequested?.Invoke("Invalid booking interval selected.");
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                OnMessageRequested?.Invoke($"Could not start booking. {ex.Message}");
+                OnMessageRequested?.Invoke($"Could not start booking. {exception.Message}");
             }
         });
 
         public ICommand ChatWithOwnerCommand => new RelayCommand(_ => { /* later */ });
 
-        public GameDetailsViewModel(IBookingService bookingService, int gameId)
+        public GameDetailsViewModel(InterfaceBookingService bookingService, int gameId)
         {
             _bookingService = bookingService ?? throw new ArgumentNullException(nameof(bookingService));
 
@@ -117,47 +129,43 @@ namespace SearchAndBook.ViewModels
                 LoadOwnerImage();
                 HasError = false;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
                 HasError = true;
                 UnavailableTimeRanges = Array.Empty<TimeRange>();
-                OnMessageRequested?.Invoke($"Could not load game details. {ex.Message}");
+                OnMessageRequested?.Invoke($"Could not load game details. {exception.Message}");
             }
         }
 
-        public bool CheckAvailability(TimeRange range)
+        public bool IsTimeRangeAvailable(TimeRange timeRange)
         {
             try
             {
-                if (range == null)
+                if (timeRange == null)
                     return false;
 
-                return _bookingService.CheckAvailability(GameAndUserDetails.GameId, range);
+                return _bookingService.IsTimeRangeAvailable(GameAndUserDetails.GameId, timeRange);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                OnMessageRequested?.Invoke($"Could not check availability. {ex.Message}");
+                OnMessageRequested?.Invoke($"Could not check availability. {exception.Message}");
                 return false;
             }
         }
 
-        public decimal CalculatePrice(TimeRange range)
+        public decimal CalculatePrice(TimeRange timeRange)
         {
             try
             {
-                if (range == null)
-                    throw new ArgumentNullException(nameof(range));
+                if (timeRange == null)
+                    throw new ArgumentNullException(nameof(timeRange));
 
-                int days = (range.EndTime - range.StartTime).Days + 1;
-                if (days <= 0)
-                    days = 1;
-
-                TotalPrice = days * GameAndUserDetails.Price;
+                TotalPrice = _bookingService.CalculateTotalPrice(GameAndUserDetails.Price, timeRange);
                 return TotalPrice;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                OnMessageRequested?.Invoke($"Could not calculate price. {ex.Message}");
+                OnMessageRequested?.Invoke($"Could not calculate price. {exception.Message}");
                 TotalPrice = 0;
                 return 0;
             }
@@ -175,16 +183,16 @@ namespace SearchAndBook.ViewModels
 
                 using var stream = new InMemoryRandomAccessStream();
                 await stream.WriteAsync(GameAndUserDetails.Image.AsBuffer());
-                stream.Seek(0);
+                stream.Seek(START_OF_STREAM_POSTION);
 
                 var bitmap = new BitmapImage();
                 await bitmap.SetSourceAsync(stream);
                 GameImage = bitmap;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
                 GameImage = null;
-                OnMessageRequested?.Invoke($"Could not load game image. {ex.Message}");
+                OnMessageRequested?.Invoke($"Could not load game image. {exception.Message}");
             }
         }
 
@@ -200,34 +208,37 @@ namespace SearchAndBook.ViewModels
 
                 OwnerImageUrl = GameAndUserDetails.AvatarUrl;
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
                 OwnerImageUrl = null;
-                OnMessageRequested?.Invoke($"Could not load owner image. {ex.Message}");
+                OnMessageRequested?.Invoke($"Could not load owner image. {exception.Message}");
             }
         }
 
-        public void StartBooking(TimeRange range)
+        public void StartBooking(TimeRange timeRange)
         {
             try
             {
-                if (SessionContext.GetInstance().UserId == -1)
+                if (SessionContext.GetInstance().UserId == UNREGISTERED_USER_ID)
                 {
                     OnMessageRequested?.Invoke("User not logged in. Please log in first");
+
+                    // TODO login
+
                     return;
                 }
 
-                if (range == null)
+                if (timeRange == null)
                 {
-                    OnMessageRequested?.Invoke("Please select a valid booking range.");
+                    OnMessageRequested?.Invoke("Please select a valid booking timeRange.");
                     return;
                 }
 
-                OnStartBookingRequested?.Invoke(GameAndUserDetails, range);
+                OnStartBookingRequested?.Invoke(GameAndUserDetails, timeRange);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                OnMessageRequested?.Invoke($"Could not continue to booking. {ex.Message}");
+                OnMessageRequested?.Invoke($"Could not continue to booking. {exception.Message}");
             }
         }
 
@@ -237,9 +248,9 @@ namespace SearchAndBook.ViewModels
             {
                 OnGoBackRequested?.Invoke();
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                OnMessageRequested?.Invoke($"Could not go back. {ex.Message}");
+                OnMessageRequested?.Invoke($"Could not go back. {exception.Message}");
             }
         }
     }

@@ -19,7 +19,6 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Notifications;
 
-
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
@@ -34,6 +33,7 @@ namespace SearchAndBook.Views
         {
             InitializeComponent();
         }
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -41,9 +41,9 @@ namespace SearchAndBook.Views
             var gamesRepository = new GamesRepository();
             var usersRepository = new UsersRepository();
             var rentalsRepository = new RentalsRepository();
-            var geoService = App.GlobalGeoService!;
-            var service = new SearchAndFilterService(gamesRepository, usersRepository, rentalsRepository, geoService);
-            var viewModel = new FilteredSearchViewModel(service, geoService);
+            var geographicalService = App.GlobalGeoService!;
+            var service = new SearchAndFilterService(gamesRepository, usersRepository, rentalsRepository, geographicalService);
+            var viewModel = new FilteredSearchViewModel(service, geographicalService);
             viewModel.OnGameSelectedRequest += gameId =>
             {
                 Frame.Navigate(typeof(GameDetailsView), gameId);

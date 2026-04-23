@@ -212,7 +212,7 @@ public static class GameQueries
         FROM dbo.Games g
         WHERE g.owner_id = @OwnerId;";
 
-    public const string GetFeedOthers = @"
+    public const string GetOtherGamesFeedByUser = @"
         SELECT
             g.game_id,
             g.name,

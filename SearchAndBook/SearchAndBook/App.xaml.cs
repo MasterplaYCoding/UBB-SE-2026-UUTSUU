@@ -33,7 +33,7 @@ namespace SearchAndBook
     {
         private Window? _window;
 
-        public static IGeoService? GlobalGeoService { get; private set; }
+        public static InterfaceGeographicalService? GlobalGeoService { get; private set; }
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -63,7 +63,7 @@ namespace SearchAndBook
 
             try
             {
-                GlobalGeoService = await GeoService.CreateAsync();
+                GlobalGeoService = await GeoService.LoadAsync();
             }
             catch (Exception ex)
             {
@@ -72,7 +72,7 @@ namespace SearchAndBook
 
             
             var usersRepository = new UsersRepository();
-            var user = usersRepository.Get(1);
+            var user = usersRepository.GetGameById(1);
             //SessionContext.GetInstance().Populate(user);
 
             _window = new MainWindow();
