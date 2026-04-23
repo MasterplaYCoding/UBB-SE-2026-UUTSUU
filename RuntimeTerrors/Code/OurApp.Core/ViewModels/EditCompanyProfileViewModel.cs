@@ -7,21 +7,33 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace OurApp.Core.ViewModels;
 
-/// <summary>
-/// Form state for the company edit-profile page. Saves through <see cref="ICompanyService.UpdateCompany"/>.
-/// </summary>
+public interface IImagePickerService
+{
+    Task<(string FileName, byte[] Bytes)?> PickImageAsync();
+}
+
 public partial class EditCompanyProfileViewModel : ObservableObject
 {
     private const string MessageCompanyNotFound = "Company not found.";
+    private const string DefaultPhotoFileName = "No image selected";
+    private const string DataUriPrefix = "data:image/";
+    private const string DataUriBase64Infix = ";base64,";
+    private const string ExtensionJpg = "jpg";
+    private const string MimeTypeJpeg = "jpeg";
     private const int DefaultCountValue = 0;
 
     private readonly ICompanyService _companyService;
     private readonly IGameService _gameService;
     private readonly ICompanyValidator _companyValidator;
     private readonly IGameValidator _gameValidator;
+    private readonly IImagePickerService _imagePickerService;
+
+    public Action<byte[]>? OnProfilePreviewRequested { get; set; }
+    public Action<byte[]>? OnLogoPreviewRequested { get; set; }
 
     [ObservableProperty]
     private int _companyId;
@@ -36,7 +48,13 @@ public partial class EditCompanyProfileViewModel : ObservableObject
     private string _profilePicturePath = string.Empty;
 
     [ObservableProperty]
+    private string _photoFileName = DefaultPhotoFileName;
+
+    [ObservableProperty]
     private string _companyLogoPath = string.Empty;
+
+    [ObservableProperty]
+    private string _logoFileName = DefaultPhotoFileName;
 
     [ObservableProperty]
     private string _location = string.Empty;
@@ -53,14 +71,44 @@ public partial class EditCompanyProfileViewModel : ObservableObject
         ICompanyService companyService,
         IGameService gameService,
         ICompanyValidator companyValidator,
-        IGameValidator gameValidator)
+        IGameValidator gameValidator,
+        IImagePickerService imagePickerService)
     {
         _companyService = companyService;
         _gameService = gameService;
         _companyValidator = companyValidator;
         _gameValidator = gameValidator;
+        _imagePickerService = imagePickerService;
 
         editGame = new EditGame(_gameService, _gameValidator);
+    }
+
+    [RelayCommand]
+    private async Task PickProfileImageAsync()
+    {
+        var result = await _imagePickerService.PickImageAsync();
+        if (result == null) return;
+
+        PhotoFileName = result.Value.FileName;
+        var extension = System.IO.Path.GetExtension(result.Value.FileName).TrimStart('.').ToLowerInvariant();
+        var mimeSubtype = extension == ExtensionJpg ? MimeTypeJpeg : extension;
+
+        ProfilePicturePath = $"{DataUriPrefix}{mimeSubtype}{DataUriBase64Infix}{Convert.ToBase64String(result.Value.Bytes)}";
+        OnProfilePreviewRequested?.Invoke(result.Value.Bytes);
+    }
+
+    [RelayCommand]
+    private async Task PickLogoImageAsync()
+    {
+        var result = await _imagePickerService.PickImageAsync();
+        if (result == null) return;
+
+        LogoFileName = result.Value.FileName;
+        var extension = System.IO.Path.GetExtension(result.Value.FileName).TrimStart('.').ToLowerInvariant();
+        var mimeSubtype = extension == ExtensionJpg ? MimeTypeJpeg : extension;
+
+        CompanyLogoPath = $"{DataUriPrefix}{mimeSubtype}{DataUriBase64Infix}{Convert.ToBase64String(result.Value.Bytes)}";
+        OnLogoPreviewRequested?.Invoke(result.Value.Bytes);
     }
 
     public void Load(int companyId)

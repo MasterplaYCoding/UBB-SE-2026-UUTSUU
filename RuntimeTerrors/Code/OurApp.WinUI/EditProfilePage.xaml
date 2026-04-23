@@ -26,7 +26,7 @@
                          TextWrapping="Wrap" MinHeight="120" />
                 <StackPanel>
                     <TextBlock Text="Profile picture (.jpg / .jpeg / .png path or URL)"/>
-                    <Button Content="Attach image" Click="AttachProfileImage_Click" />
+                    <Button Content="Attach image" Command="{x:Bind ViewModel.PickProfileImageCommand}" />
                     <Image
                         x:Name="PhotoPreviewImage"
                         Width="200"
@@ -37,11 +37,11 @@
                         x:Name="PhotoFileNameTextBlock"
                         FontSize="12"
                         Foreground="Gray"
-                        Text="No image selected" />
+                        Text="{x:Bind ViewModel.PhotoFileName, Mode=OneWay}" />
                 </StackPanel>
                 <StackPanel>
                     <TextBlock Text="Logo (.jpg / .jpeg / .png path or URL, required)"/>
-                    <Button Content="Attach image" Click="AttachLogoImage_Click" />
+                    <Button Content="Attach image" Command="{x:Bind ViewModel.PickLogoImageCommand}" />
                     <Image
                         x:Name="LogoPreviewImage"
                         Width="200"
@@ -52,7 +52,7 @@
                         x:Name="LogoFileNameTextBlock"
                         FontSize="12"
                         Foreground="Gray"
-                        Text="No image selected" />
+                        Text="{x:Bind ViewModel.LogoFileName, Mode=OneWay}" />
                 </StackPanel>
                 <TextBox Header="Location" Text="{Binding Location, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBox Header="Contact email" Text="{Binding Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />

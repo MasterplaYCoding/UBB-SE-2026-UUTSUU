@@ -1,142 +1,140 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using OurApp.Core.Models;
+using OurApp.Core.Repositories;
+using OurApp.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
-using OurApp.Core.Models;
-using OurApp.Core.Repositories;
 
 namespace OurApp.WinUI.ViewModels;
 
-public sealed class SkillPickItem : INotifyPropertyChanged
+public partial class SkillPickItem : ObservableObject
 {
     public Skill Skill { get; }
 
+    [ObservableProperty]
     private bool _isSelected;
-    public bool IsSelected
-    {
-        get => _isSelected;
-        set
-        {
-            if (_isSelected != value)
-            {
-                _isSelected = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected)));
-            }
-        }
-    }
 
+    [ObservableProperty]
     private string _requiredPercentText = "50";
-    public string RequiredPercentText
-    {
-        get => _requiredPercentText;
-        set
-        {
-            if (_requiredPercentText != value)
-            {
-                _requiredPercentText = value ?? "50";
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RequiredPercentText)));
-            }
-        }
-    }
 
     public SkillPickItem(Skill skill)
     {
         Skill = skill;
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
 }
 
-public sealed class CreateJobViewModel : INotifyPropertyChanged
+public partial class CreateJobViewModel : ObservableObject
 {
     private readonly IJobsRepository _jobsRepository;
+    private readonly SessionService _sessionService;
 
     public ObservableCollection<SkillPickItem> SkillRows { get; } = new();
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+    public Action<bool, string>? OnSaveCompleted { get; set; }
 
-    public CreateJobViewModel(IJobsRepository? jobsRepository = null)
+    [ObservableProperty] private string _jobTitle = string.Empty;
+    [ObservableProperty] private string _industryField = string.Empty;
+    [ObservableProperty] private string _jobType = string.Empty;
+    [ObservableProperty] private string _experienceLevel = string.Empty;
+    [ObservableProperty] private DateTimeOffset? _startDate;
+    [ObservableProperty] private DateTimeOffset? _endDate;
+    [ObservableProperty] private string _jobDescription = string.Empty;
+    [ObservableProperty] private string _jobLocation = string.Empty;
+    [ObservableProperty] private double _availablePositions = 1;
+    [ObservableProperty] private string _photo = string.Empty;
+    [ObservableProperty] private string _salaryText = string.Empty;
+    [ObservableProperty] private DateTimeOffset? _deadline;
+
+    public CreateJobViewModel(IJobsRepository jobsRepository, SessionService sessionService)
     {
-        _jobsRepository = jobsRepository ?? new JobsRepository();
-        foreach (var s in _jobsRepository.GetAllSkills())
+        _jobsRepository = jobsRepository;
+        _sessionService = sessionService;
+
+        foreach (var skillItem in _jobsRepository.GetAllSkills())
         {
-            SkillRows.Add(new SkillPickItem(s));
+            SkillRows.Add(new SkillPickItem(skillItem));
         }
     }
 
-    /// <summary>Try to insert job + job_skills. Returns (success, error or success message).</summary>
-    public (bool Ok, string Message) TrySave(
-        int companyId,
-        string jobTitle,
-        string industryField,
-        string jobType,
-        string experienceLevel,
-        DateTime? startDate,
-        DateTime? endDate,
-        string jobDescription,
-        string jobLocation,
-        int availablePositions,
-        string? photo,
-        int? salary,
-        int? amountPayed,
-        DateTime? deadline)
+    [RelayCommand]
+    public void SaveJob()
     {
-        if (string.IsNullOrWhiteSpace(jobTitle))
+        if (_sessionService?.loggedInUser == null)
         {
-            return (false, "Job title is required.");
+            return;
         }
 
-        if (string.IsNullOrWhiteSpace(industryField))
+        int companyId = _sessionService.loggedInUser.CompanyId;
+
+        int? salary = null;
+        if (!string.IsNullOrWhiteSpace(SalaryText)
+            && int.TryParse(SalaryText.Trim(), NumberStyles.Integer, CultureInfo.CurrentCulture, out var parsedSalary))
         {
-            return (false, "Industry field is required.");
+            salary = parsedSalary;
         }
 
-        if (string.IsNullOrWhiteSpace(jobType))
+        if (string.IsNullOrWhiteSpace(JobTitle))
         {
-            return (false, "Job type is required.");
+            OnSaveCompleted?.Invoke(false, "Job title is required.");
+            return;
         }
 
-        if (string.IsNullOrWhiteSpace(experienceLevel))
+        if (string.IsNullOrWhiteSpace(IndustryField))
         {
-            return (false, "Experience level is required.");
+            OnSaveCompleted?.Invoke(false, "Industry field is required.");
+            return;
         }
 
-        if (!startDate.HasValue || !endDate.HasValue)
+        if (string.IsNullOrWhiteSpace(JobType))
         {
-            return (false, "Start date and end date are required.");
+            OnSaveCompleted?.Invoke(false, "Job type is required.");
+            return;
         }
 
-        if (endDate.Value.Date < startDate.Value.Date)
+        if (string.IsNullOrWhiteSpace(ExperienceLevel))
         {
-            return (false, "End date must be on or after start date.");
+            OnSaveCompleted?.Invoke(false, "Experience level is required.");
+            return;
         }
 
-        if (string.IsNullOrWhiteSpace(jobDescription))
+        if (!StartDate.HasValue || !EndDate.HasValue)
         {
-            return (false, "Job description is required.");
+            OnSaveCompleted?.Invoke(false, "Start date and end date are required.");
+            return;
         }
 
-        if (string.IsNullOrWhiteSpace(jobLocation))
+        if (EndDate.Value.Date < StartDate.Value.Date)
         {
-            return (false, "Job location is required.");
+            OnSaveCompleted?.Invoke(false, "End date must be on or after start date.");
+            return;
         }
 
-        if (availablePositions < 1)
+        if (string.IsNullOrWhiteSpace(JobDescription))
         {
-            return (false, "Available positions must be at least 1.");
+            OnSaveCompleted?.Invoke(false, "Job description is required.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(JobLocation))
+        {
+            OnSaveCompleted?.Invoke(false, "Job location is required.");
+            return;
+        }
+
+        if (AvailablePositions < 1)
+        {
+            OnSaveCompleted?.Invoke(false, "Available positions must be at least 1.");
+            return;
         }
 
         if (salary.HasValue && salary.Value < 0)
         {
-            return (false, "Salary cannot be negative.");
-        }
-
-        var ap = amountPayed ?? 0;
-        if (ap < 0)
-        {
-            return (false, "Amount paid cannot be negative.");
+            OnSaveCompleted?.Invoke(false, "Salary cannot be negative.");
+            return;
         }
 
         var links = new List<(int SkillId, int RequiredPercentage)>();
@@ -145,12 +143,14 @@ public sealed class CreateJobViewModel : INotifyPropertyChanged
             if (!int.TryParse(row.RequiredPercentText, NumberStyles.Integer, CultureInfo.CurrentCulture, out var pct)
                 && !int.TryParse(row.RequiredPercentText, NumberStyles.Integer, CultureInfo.InvariantCulture, out pct))
             {
-                return (false, $"Invalid percentage for skill \"{row.Skill.SkillName}\".");
+                OnSaveCompleted?.Invoke(false, $"Invalid percentage for skill \"{row.Skill.SkillName}\".");
+                return;
             }
 
             if (pct < 1 || pct > 100)
             {
-                return (false, $"Required percentage for \"{row.Skill.SkillName}\" must be between 1 and 100.");
+                OnSaveCompleted?.Invoke(false, $"Required percentage for \"{row.Skill.SkillName}\" must be between 1 and 100.");
+                return;
             }
 
             links.Add((row.Skill.SkillId, pct));
@@ -158,35 +158,36 @@ public sealed class CreateJobViewModel : INotifyPropertyChanged
 
         if (links.Count == 0)
         {
-            return (false, "Select at least one required skill with a valid percentage (1–100).");
+            OnSaveCompleted?.Invoke(false, "Select at least one required skill with a valid percentage (1–100).");
+            return;
         }
 
         var job = new JobPosting
         {
-            JobTitle = jobTitle.Trim(),
-            IndustryField = industryField.Trim(),
-            JobType = jobType.Trim(),
-            ExperienceLevel = experienceLevel.Trim(),
-            StartDate = startDate,
-            EndDate = endDate,
-            JobDescription = jobDescription.Trim(),
-            JobLocation = jobLocation.Trim(),
-            AvailablePositions = availablePositions,
-            Photo = string.IsNullOrWhiteSpace(photo) ? null : photo.Trim(),
+            JobTitle = JobTitle.Trim(),
+            IndustryField = IndustryField.Trim(),
+            JobType = JobType.Trim(),
+            ExperienceLevel = ExperienceLevel.Trim(),
+            StartDate = StartDate?.DateTime.Date,
+            EndDate = EndDate?.DateTime.Date,
+            JobDescription = JobDescription.Trim(),
+            JobLocation = JobLocation.Trim(),
+            AvailablePositions = (int)AvailablePositions,
+            Photo = string.IsNullOrWhiteSpace(Photo) ? null : Photo.Trim(),
             PostedAt = DateTime.Now,
             Salary = salary,
-            AmountPayed = ap,
-            Deadline = deadline
+            AmountPayed = 0,
+            Deadline = Deadline?.DateTime.Date
         };
 
         try
         {
             var newId = _jobsRepository.AddJob(job, companyId, links);
-            return (true, $"Job created with id {newId}.");
+            OnSaveCompleted?.Invoke(true, $"Job created with id {newId}.");
         }
         catch (Exception ex)
         {
-            return (false, ex.Message);
+            OnSaveCompleted?.Invoke(false, ex.Message);
         }
     }
 }

@@ -22,6 +22,7 @@ namespace OurApp.WinUI
         public ICollaboratorsService collabsService { get; }
         public IJobsRepository jobsRepository { get; }
         public IApplicantRepository applicantsRepository { get; }
+        public IApplicantService applicantService { get; }
         public IGameService gameService { get; }
         public IPaymentService paymentService { get; }
         public IGameValidator gameValidator {  get; }
@@ -70,12 +71,15 @@ namespace OurApp.WinUI
             this.sessionService = new SessionService(defaultCompany); // hardcode user = defaultCompany
 
             this.jobsRepository = new JobsRepository();
+
             this.applicantsRepository = new ApplicantRepository();
+            this.applicantService = new ApplicantService(applicantsRepository);
 
             this.companyValidator = new CompanyValidator();
             this.eventValidator = new EventValidator();
             this.paymentValidator = new PaymentValidator();
             this.gameValidator = new GameValidator();
+
 
             IPaymentRepository paymentRepository = new PaymentRepository();
             this.paymentService = new PaymentService(paymentRepository, this.paymentValidator);
