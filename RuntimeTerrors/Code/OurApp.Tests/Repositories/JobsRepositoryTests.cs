@@ -216,5 +216,85 @@ namespace OurApp.Tests.Repositories
             cmd.Parameters.AddWithValue("@jobId", jobId);
             cmd.ExecuteNonQuery();
         }
+
+        [TestMethod]
+        public void AddJob_WithNullDatesAndPhoto_PersistsSuccessfully()
+        {
+            var primarySkillId = GetSkillId(PrimarySkillName);
+
+            var newJob = new JobPosting
+            {
+                JobId = NewJobId,
+                JobTitle = "Null Dates Test Job",
+                IndustryField = "IT",
+                JobType = "Full-time",
+                ExperienceLevel = "Mid",
+                Photo = "photo.jpg",
+                StartDate = null,
+                EndDate = null,
+                PostedAt = null,
+                JobDescription = "Null dates test",
+                JobLocation = "Remote",
+                AvailablePositions = 1
+            };
+
+            var createdId = _repository.AddJob(newJob, TestDbSeeder.CompanyId,
+                new List<(int SkillId, int RequiredPercentage)> { (primarySkillId, 70) });
+
+            var createdJob = _repository.GetAllJobs().First(j => j.JobId == createdId);
+
+            Assert.AreEqual("Null Dates Test Job", createdJob.JobTitle);
+        }
+
+        [TestMethod]
+        public void AddJob_FirstJobForCompany_SetsPostedJobsCountToOne()
+        {
+            var primarySkillId = GetSkillId(PrimarySkillName);
+
+            var newJob = new JobPosting
+            {
+                JobId = NewJobId,
+                JobTitle = "First Job Test",
+                IndustryField = "IT",
+                JobType = "Full-time",
+                ExperienceLevel = "Mid",
+                JobDescription = "First job for company",
+                JobLocation = "Remote",
+                AvailablePositions = 1
+            };
+
+            _repository.AddJob(newJob, TestDbSeeder.CollaboratorCompanyId,
+                new List<(int SkillId, int RequiredPercentage)> { (primarySkillId, 70) });
+
+            var count = GetPostedJobsCount(TestDbSeeder.CollaboratorCompanyId);
+
+            Assert.AreEqual(1, count);
+        }
+
+        [TestMethod]
+        public void AddJob_WithPostedAtSet_PersistsPostedAtCorrectly()
+        {
+            var primarySkillId = GetSkillId(PrimarySkillName);
+
+            var newJob = new JobPosting
+            {
+                JobId = NewJobId,
+                JobTitle = "PostedAt Test Job",
+                IndustryField = "IT",
+                JobType = "Full-time",
+                ExperienceLevel = "Mid",
+                JobDescription = "PostedAt test",
+                JobLocation = "Remote",
+                AvailablePositions = 1,
+                PostedAt = DateTime.Now
+            };
+
+            var createdId = _repository.AddJob(newJob, TestDbSeeder.CompanyId,
+                new List<(int SkillId, int RequiredPercentage)> { (primarySkillId, 70) });
+
+            var createdJob = _repository.GetAllJobs().First(j => j.JobId == createdId);
+
+            Assert.IsNotNull(createdJob);
+        }
     }
 }

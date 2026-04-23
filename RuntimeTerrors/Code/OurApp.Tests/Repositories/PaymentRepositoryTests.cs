@@ -160,5 +160,28 @@ namespace OurApp.Tests.Repositories
             cmd.Parameters.AddWithValue("@companyId", companyId);
             cmd.ExecuteNonQuery();
         }
+
+        [TestMethod]
+        public void GetPaidJobs_JobWithNullAmountPayed_ReturnsDefaultAmount()
+        {
+            using var conn = DbConnectionHelper.GetConnection();
+            conn.Open();
+            using var cmd = new SqlCommand(@"
+                IF NOT EXISTS (SELECT 1 FROM jobs WHERE job_id = 96103)
+                INSERT INTO jobs
+                    (job_id, company_id, job_title, industry_field, job_type, experience_level,
+                     job_description, job_location, available_positions, amount_payed)
+                VALUES
+                    (96103, 96001, 'Null Amount Job', 'IT', 'Full-time', 'Entry Level',
+                     'Test', 'Remote', 1, NULL)", conn);
+            cmd.ExecuteNonQuery();
+
+            var result = _repository.GetPaidJobs("Full-time", "Entry Level");
+
+            using var cleanup = new SqlCommand("DELETE FROM jobs WHERE job_id = 96103", conn);
+            cleanup.ExecuteNonQuery();
+
+            Assert.IsTrue(result.Any(x => x.JobTitle == "Null Amount Job"));
+        }
     }
 }
