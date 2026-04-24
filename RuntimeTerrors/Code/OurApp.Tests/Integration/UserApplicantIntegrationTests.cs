@@ -1,11 +1,11 @@
-﻿using OurApp.Core.Models;
-using OurApp.Core.Repositories;
-using OurApp.Tests.Helpers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OurApp.Core.Models;
+using OurApp.Core.Repositories;
+using OurApp.Tests.Helpers;
 
 namespace OurApp.Tests.Integration
 {

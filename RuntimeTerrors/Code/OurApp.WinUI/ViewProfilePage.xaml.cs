@@ -1,10 +1,10 @@
+using System;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
 using OurApp.Core.Services;
 using OurApp.Core.ViewModels;
-using System;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Storage.Streams;
 
 namespace OurApp.WinUI;
@@ -18,8 +18,8 @@ public sealed partial class ViewProfilePage : Page
 
     public ViewProfilePage()
     {
-        var mainWindow = App.mainWindow;
-        ViewModel = new CompanyProfileViewModel(mainWindow.companyService, new ProfileCompletionCalculator(mainWindow.jobsRepository, mainWindow.applicantsRepository), mainWindow.gameService, mainWindow.eventsService, mainWindow.sessionService, mainWindow.collabsService, mainWindow.jobsRepository);
+        var mainWindow = App.MainWindow;
+        ViewModel = new CompanyProfileViewModel(mainWindow.CompanyService, new ProfileCompletionCalculator(mainWindow.JobsRepository, mainWindow.ApplicantsRepository), mainWindow.GameService, mainWindow.EventsService, mainWindow.SessionService, mainWindow.CollabsService, mainWindow.JobsRepository);
 
         ViewModel.OnProfileImageDecoded = SetupProfileImage;
         ViewModel.OnProfileImageCleared = ClearProfileImage;
@@ -31,19 +31,19 @@ public sealed partial class ViewProfilePage : Page
 
         ViewModel.NavigateEditProfileRequested += (_, _) =>
         {
-            App.mainWindow.RootFrame.Navigate(typeof(EditProfilePage), ViewModel.CompanyId);
+            App.MainWindow.RootFrame.Navigate(typeof(EditProfilePage), ViewModel.CompanyId);
         };
         ViewModel.NavigateAllEventsRequested += (_, _) =>
         {
-            App.mainWindow.RootFrame.Navigate(typeof(OurEventsPage), ViewModel.CompanyId);
+            App.MainWindow.RootFrame.Navigate(typeof(OurEventsPage), ViewModel.CompanyId);
         };
         ViewModel.NavigateAllJobsRequested += (_, _) =>
         {
-            App.mainWindow.RootFrame.Navigate(typeof(OurJobsPage), ViewModel.CompanyId);
+            App.MainWindow.RootFrame.Navigate(typeof(OurJobsPage), ViewModel.CompanyId);
         };
         ViewModel.NavigateAllCollaboratorRequested += (_, _) =>
         {
-            App.mainWindow.RootFrame.Navigate(typeof(CollaboratorsPage), ViewModel.CompanyId);
+            App.MainWindow.RootFrame.Navigate(typeof(CollaboratorsPage), ViewModel.CompanyId);
         };
     }
 

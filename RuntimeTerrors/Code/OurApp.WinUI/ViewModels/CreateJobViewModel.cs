@@ -1,13 +1,13 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using OurApp.Core.Models;
-using OurApp.Core.Repositories;
-using OurApp.Core.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using OurApp.Core.Models;
+using OurApp.Core.Repositories;
+using OurApp.Core.Services;
 
 namespace OurApp.WinUI.ViewModels;
 
@@ -16,10 +16,10 @@ public partial class SkillPickItem : ObservableObject
     public Skill Skill { get; }
 
     [ObservableProperty]
-    private bool _isSelected;
+    private bool isSelected;
 
     [ObservableProperty]
-    private string _requiredPercentText = "50";
+    private string requiredPercentText = "50";
 
     public SkillPickItem(Skill skill)
     {
@@ -29,32 +29,32 @@ public partial class SkillPickItem : ObservableObject
 
 public partial class CreateJobViewModel : ObservableObject
 {
-    private readonly IJobsRepository _jobsRepository;
-    private readonly SessionService _sessionService;
+    private readonly IJobsRepository jobsRepository;
+    private readonly SessionService sessionService;
 
-    public ObservableCollection<SkillPickItem> SkillRows { get; } = new();
+    public ObservableCollection<SkillPickItem> SkillRows { get; } = new ();
 
     public Action<bool, string>? OnSaveCompleted { get; set; }
 
-    [ObservableProperty] private string _jobTitle = string.Empty;
-    [ObservableProperty] private string _industryField = string.Empty;
-    [ObservableProperty] private string _jobType = string.Empty;
-    [ObservableProperty] private string _experienceLevel = string.Empty;
-    [ObservableProperty] private DateTimeOffset? _startDate;
-    [ObservableProperty] private DateTimeOffset? _endDate;
-    [ObservableProperty] private string _jobDescription = string.Empty;
-    [ObservableProperty] private string _jobLocation = string.Empty;
-    [ObservableProperty] private double _availablePositions = 1;
-    [ObservableProperty] private string _photo = string.Empty;
-    [ObservableProperty] private string _salaryText = string.Empty;
-    [ObservableProperty] private DateTimeOffset? _deadline;
+    [ObservableProperty] private string jobTitle = string.Empty;
+    [ObservableProperty] private string industryField = string.Empty;
+    [ObservableProperty] private string jobType = string.Empty;
+    [ObservableProperty] private string experienceLevel = string.Empty;
+    [ObservableProperty] private DateTimeOffset? startDate;
+    [ObservableProperty] private DateTimeOffset? endDate;
+    [ObservableProperty] private string jobDescription = string.Empty;
+    [ObservableProperty] private string jobLocation = string.Empty;
+    [ObservableProperty] private double availablePositions = 1;
+    [ObservableProperty] private string photo = string.Empty;
+    [ObservableProperty] private string salaryText = string.Empty;
+    [ObservableProperty] private DateTimeOffset? deadline;
 
     public CreateJobViewModel(IJobsRepository jobsRepository, SessionService sessionService)
     {
-        _jobsRepository = jobsRepository;
-        _sessionService = sessionService;
+        this.jobsRepository = jobsRepository;
+        this.sessionService = sessionService;
 
-        foreach (var skillItem in _jobsRepository.GetAllSkills())
+        foreach (var skillItem in this.jobsRepository.GetAllSkills())
         {
             SkillRows.Add(new SkillPickItem(skillItem));
         }
@@ -63,12 +63,12 @@ public partial class CreateJobViewModel : ObservableObject
     [RelayCommand]
     public void SaveJob()
     {
-        if (_sessionService?.loggedInUser == null)
+        if (sessionService?.LoggedInUser == null)
         {
             return;
         }
 
-        int companyId = _sessionService.loggedInUser.CompanyId;
+        int companyId = sessionService.LoggedInUser.CompanyId;
 
         int? salary = null;
         if (!string.IsNullOrWhiteSpace(SalaryText)
@@ -182,7 +182,7 @@ public partial class CreateJobViewModel : ObservableObject
 
         try
         {
-            var newId = _jobsRepository.AddJob(job, companyId, links);
+            var newId = jobsRepository.AddJob(job, companyId, links);
             OnSaveCompleted?.Invoke(true, $"Job created with id {newId}.");
         }
         catch (Exception ex)

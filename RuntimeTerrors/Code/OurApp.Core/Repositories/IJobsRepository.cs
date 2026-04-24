@@ -11,7 +11,7 @@ namespace OurApp.Core.Repositories
         IReadOnlyList<Skill> GetAllSkills();
 
         /// <summary>Skills linked to a job with required percentages.</summary>
-        //IReadOnlyList<JobSkill> GetSkillsForJob(int jobId);
+        // IReadOnlyList<JobSkill> GetSkillsForJob(int jobId);
 
         /// <summary>Inserts a job (new job_id = MAX(job_id)+1) and optional job_skills rows. Returns the new id.</summary>
         int AddJob(JobPosting job, int companyId, IReadOnlyList<(int SkillId, int RequiredPercentage)> skillLinks);

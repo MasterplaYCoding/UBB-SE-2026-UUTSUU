@@ -16,38 +16,38 @@ namespace OurApp.WinUI
         private const int DefaultCompanyId = 1;
 
         public Frame RootFrame => rootFrame;
-        public IEventsService eventsService { get; }
-        public ICompanyService companyService { get; }
-        public SessionService sessionService { get; }
-        public ICollaboratorsService collabsService { get; }
-        public IJobsRepository jobsRepository { get; }
-        public IApplicantRepository applicantsRepository { get; }
-        public IApplicantService applicantService { get; }
-        public IGameService gameService { get; }
-        public IPaymentService paymentService { get; }
-        public IGameValidator gameValidator {  get; }
-        public IEventValidator eventValidator { get; }
-        public ICompanyValidator companyValidator { get; }
-        public IPaymentValidator paymentValidator { get; }
+        public IEventsService EventsService { get; }
+        public ICompanyService CompanyService { get; }
+        public SessionService SessionService { get; }
+        public ICollaboratorsService CollabsService { get; }
+        public IJobsRepository JobsRepository { get; }
+        public IApplicantRepository ApplicantsRepository { get; }
+        public IApplicantService ApplicantService { get; }
+        public IGameService GameService { get; }
+        public IPaymentService PaymentService { get; }
+        public IGameValidator GameValidator { get; }
+        public IEventValidator EventValidator { get; }
+        public ICompanyValidator CompanyValidator { get; }
+        public IPaymentValidator PaymentValidator { get; }
+
         /// <summary>
         /// MainWindow constructor that initialize the repositories and services
         /// </summary>
         public MainWindow()
         {
             ICompanyRepo companyRepository = new CompanyRepo();
-            this.companyService = new CompanyService(companyRepository);
+            this.CompanyService = new CompanyService(companyRepository);
 
             // Interface fix: Mapping concrete GameService to IGameService
-            this.gameService = new GameService(companyRepository);
+            this.GameService = new GameService(companyRepository);
 
             ICollaboratorsRepo collaboratorsRepository = new CollaboratorsRepo();
-            this.collabsService = new CollaboratorsService(collaboratorsRepository);
+            this.CollabsService = new CollaboratorsService(collaboratorsRepository);
 
             Company defaultCompany = new Company("ndj", "dnis", "dnjs", "hdjd", "sybau", "dj@");
             //companyService.addCompany("ndj", "dnis", "dnjs", "hdjd", "sybau", "dj@");
             //companyService.addCompany("ndj2", "dnis", "dnjs", "hdjd", "sybau", "dj@");
             //companyService.printAll();
-
             InitializeComponent();
 
             IEventsRepo eventsRepository = new EventsRepo();
@@ -64,25 +64,23 @@ namespace OurApp.WinUI
             //eventsRepo.AddEventToRepo(ev4);
 
             //eventsRepo.printAll();
-
-            this.eventsService = new EventsService(eventsRepository);
+            this.EventsService = new EventsService(eventsRepository);
 
             // Interface fix: Mapping concrete SessionService to ISessionService
-            this.sessionService = new SessionService(defaultCompany); // hardcode user = defaultCompany
+            this.SessionService = new SessionService(defaultCompany); // hardcode user = defaultCompany
 
-            this.jobsRepository = new JobsRepository();
+            this.JobsRepository = new JobsRepository();
 
-            this.applicantsRepository = new ApplicantRepository();
-            this.applicantService = new ApplicantService(applicantsRepository);
+            this.ApplicantsRepository = new ApplicantRepository();
+            this.ApplicantService = new ApplicantService(ApplicantsRepository);
 
-            this.companyValidator = new CompanyValidator();
-            this.eventValidator = new EventValidator();
-            this.paymentValidator = new PaymentValidator();
-            this.gameValidator = new GameValidator();
-
+            this.CompanyValidator = new CompanyValidator();
+            this.EventValidator = new EventValidator();
+            this.PaymentValidator = new PaymentValidator();
+            this.GameValidator = new GameValidator();
 
             IPaymentRepository paymentRepository = new PaymentRepository();
-            this.paymentService = new PaymentService(paymentRepository, this.paymentValidator);
+            this.PaymentService = new PaymentService(paymentRepository, this.PaymentValidator);
         }
 
         /// <summary>

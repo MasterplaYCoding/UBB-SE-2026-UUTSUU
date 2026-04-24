@@ -1,5 +1,5 @@
-﻿using OurApp.Core.Models;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
+using OurApp.Core.Models;
 
 namespace OurApp.Core.Services
 {

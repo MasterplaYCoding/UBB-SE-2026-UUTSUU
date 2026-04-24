@@ -1,28 +1,28 @@
-using CommunityToolkit.Mvvm.DependencyInjection;
-using OurApp.Core.Models;
-using OurApp.Core.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using OurApp.Core.Models;
+using OurApp.Core.Repositories;
 
 namespace OurApp.Core.Services
 {
     public class EventsService : IEventsService
     {
-        IEventsRepo eventsRepository;
-        //Company company;
+        private IEventsRepo eventsRepository;
+        // Company company
 
         /// <summary>
         /// Events service constructor
         /// </summary>
         /// <param name="eventsRepo"> events repository </param>
-        public EventsService(IEventsRepo eventsRepo)//, Company Company)
+        public EventsService(IEventsRepo eventsRepo) // Company Company
         {
             this.eventsRepository = eventsRepo;
-            //this.company = Company;
+            // this.company = Company
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace OurApp.Core.Services
         {
             Event eventToBeAdded = new Event(eventPhoto, eventTitle, eventDescription, eventStartDate, eventEndDate, eventLocation, hostId, collaborators ?? new List<Company>());
             this.eventsRepository.AddEventToRepo(eventToBeAdded);
-            //this.company.CollaboratorsCount += collaborators.Count;
+            // this.company.CollaboratorsCount += collaborators.Count;
             return eventToBeAdded;
         }
 
@@ -58,7 +58,6 @@ namespace OurApp.Core.Services
             this.eventsRepository.UpdateEventToRepo(eventIdToBeUpdated, newEventPhoto, newEventTitle, newEventDescription, newEventStartDate, newEventEndDate, newEventLocation);
         }
 
-
         /// <summary>
         /// Function that deletes an event
         /// </summary>
@@ -68,14 +67,13 @@ namespace OurApp.Core.Services
             this.eventsRepository.RemoveEventFromRepo(eventToBeRemoved);
         }
 
-
         /// <summary>
         /// Function that returns a collection of all the current events
         /// </summary>
         /// <returns> ObservableCollection of the current events </returns>
         public ObservableCollection<Event> GetCurrentEvents(int loggedInUserID)
         {
-            return this.eventsRepository.getCurrentEventsFromRepo(loggedInUserID);
+            return this.eventsRepository.GetCurrentEventsFromRepo(loggedInUserID);
         }
 
         /// <summary>
@@ -84,7 +82,7 @@ namespace OurApp.Core.Services
         /// <returns> ObservableCollection of the past events </returns>
         public ObservableCollection<Event> GetPastEvents(int loggedInUserID)
         {
-            return this.eventsRepository.getPastEventsFromRepo(loggedInUserID);
+            return this.eventsRepository.GetPastEventsFromRepo(loggedInUserID);
         }
     }
 }

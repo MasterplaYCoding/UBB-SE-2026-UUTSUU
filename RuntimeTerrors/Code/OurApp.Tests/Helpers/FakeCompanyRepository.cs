@@ -1,7 +1,7 @@
-﻿using OurApp.Core.Models;
-using OurApp.Core.Repositories;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using OurApp.Core.Models;
+using OurApp.Core.Repositories;
 
 namespace OurApp.Tests.Helpers
 {
@@ -55,9 +55,6 @@ namespace OurApp.Tests.Helpers
 
         public void SaveGame(Game game)
         {
-
         }
-
-
     }
 }

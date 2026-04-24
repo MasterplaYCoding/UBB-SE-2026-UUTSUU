@@ -1,3 +1,4 @@
+using System;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -6,7 +7,6 @@ using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Media;
 using OurApp.Core.Models;
 using OurApp.Core.ViewModels;
-using System;
 
 namespace OurApp.WinUI
 {
@@ -27,24 +27,24 @@ namespace OurApp.WinUI
         private const string DialogButtonYes = "Yes";
         private const string DialogButtonNo = "No";
 
-        private bool _startDateModified = false;
-        private bool _endDateModified = false;
-        private bool _isLoaded = false;
+        private bool startDateModified = false;
+        private bool endDateModified = false;
+        private bool isLoaded = false;
 
         public EditEventViewModel ViewModel { get; set; }
 
         public EditEventPage()
         {
             InitializeComponent();
-            _isLoaded = true;
+            isLoaded = true;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             var eventToEdit = e.Parameter as Event;
-            var mainWindow = App.mainWindow;
+            var mainWindow = App.MainWindow;
 
-            ViewModel = new EditEventViewModel(mainWindow.eventsService, eventToEdit, mainWindow.eventValidator);
+            ViewModel = new EditEventViewModel(mainWindow.EventsService, eventToEdit, mainWindow.EventValidator);
             this.DataContext = ViewModel;
 
             System.Diagnostics.Debug.WriteLine(eventToEdit);
@@ -54,7 +54,7 @@ namespace OurApp.WinUI
         {
             ViewModel.EditEventCommand.Execute(null);
 
-            if (ViewModel.isEverythingValid)
+            if (ViewModel.IsEverythingValid)
             {
                 NavigateBack_Click(sender, e);
             }
@@ -64,7 +64,7 @@ namespace OurApp.WinUI
             }
 
             ContentDialog popup;
-            if (ViewModel.eventUpdatedSuccessfully)
+            if (ViewModel.EventUpdatedSuccessfully)
             {
                 popup = new ContentDialog
                 {
@@ -90,7 +90,7 @@ namespace OurApp.WinUI
 
         private void NavigateBack_Click(object sender, RoutedEventArgs e)
         {
-            var mainWindow = App.mainWindow;
+            var mainWindow = App.MainWindow;
             mainWindow.RootFrame.Navigate(typeof(OurEventsPage));
         }
 
@@ -126,12 +126,13 @@ namespace OurApp.WinUI
 
         private void StartDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
-            if (!_isLoaded)
-                return;
-
-            if (!_startDateModified)
+            if (!isLoaded)
             {
-                _startDateModified = true;
+                return;
+            }
+            if (!startDateModified)
+            {
+                startDateModified = true;
                 return;
             }
 
@@ -147,16 +148,18 @@ namespace OurApp.WinUI
 
         private void EndDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
-            if (!_isLoaded)
-                return;
-
-            if (!_endDateModified)
+            if (!isLoaded)
             {
-                _endDateModified = true;
                 return;
             }
 
-            if (_startDateModified)
+            if (!endDateModified)
+            {
+                endDateModified = true;
+                return;
+            }
+
+            if (startDateModified)
             {
                 if (ViewModel.ValidateDatesCronologity())
                 {
@@ -229,7 +232,7 @@ namespace OurApp.WinUI
             }
 
             ContentDialog popup;
-            if (ViewModel.eventDeletedSuccessfully)
+            if (ViewModel.EventDeletedSuccessfully)
             {
                 popup = new ContentDialog
                 {

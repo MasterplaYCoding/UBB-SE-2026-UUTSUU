@@ -19,14 +19,14 @@ namespace OurApp.Tests.Repositories
         private const string PrimarySkillName = "JobsRepoTest-CSharp";
         private const string SecondarySkillName = "JobsRepoTest-Sql";
 
-        private JobsRepository _repository = null!;
+        private JobsRepository repository = null!;
 
         [TestInitialize]
         public void Setup()
         {
             TestDbSeeder.Clean();
             TestDbSeeder.Seed();
-            _repository = new JobsRepository();
+            repository = new JobsRepository();
 
             EnsureSkillExists(PrimarySkillName);
             EnsureSkillExists(SecondarySkillName);
@@ -45,7 +45,7 @@ namespace OurApp.Tests.Repositories
         [TestMethod]
         public void GetAllJobs_ReturnsJobWithCompanyPopulated()
         {
-            var job = _repository.GetAllJobs().First(j => j.JobId == TestDbSeeder.JobId);
+            var job = repository.GetAllJobs().First(j => j.JobId == TestDbSeeder.JobId);
 
             Assert.IsNotNull(job.Company);
             Assert.AreEqual(TestDbSeeder.CompanyId, job.Company.CompanyId);
@@ -55,7 +55,7 @@ namespace OurApp.Tests.Repositories
         [TestMethod]
         public void GetAllJobs_ReturnsJobWithMappedSkills()
         {
-            var job = _repository.GetAllJobs().First(j => j.JobId == TestDbSeeder.JobId);
+            var job = repository.GetAllJobs().First(j => j.JobId == TestDbSeeder.JobId);
 
             Assert.IsTrue(job.JobSkills.Any(js => js.Skill.SkillName == PrimarySkillName && js.RequiredPercentage == 80));
             Assert.IsTrue(job.JobSkills.Any(js => js.Skill.SkillName == SecondarySkillName && js.RequiredPercentage == 60));
@@ -64,7 +64,7 @@ namespace OurApp.Tests.Repositories
         [TestMethod]
         public void GetAllSkills_ReturnsSeededSkills()
         {
-            var skills = _repository.GetAllSkills();
+            var skills = repository.GetAllSkills();
 
             Assert.IsTrue(skills.Any(s => s.SkillName == PrimarySkillName));
             Assert.IsTrue(skills.Any(s => s.SkillName == SecondarySkillName));
@@ -74,14 +74,14 @@ namespace OurApp.Tests.Repositories
         public void AddJob_NullJob_ThrowsArgumentNullException()
         {
             Assert.ThrowsException<ArgumentNullException>(() =>
-                _repository.AddJob(null!, TestDbSeeder.CompanyId, new List<(int SkillId, int RequiredPercentage)>()));
+                repository.AddJob(null!, TestDbSeeder.CompanyId, new List<(int SkillId, int RequiredPercentage)>()));
         }
 
         [TestMethod]
         public void AddJob_ValidJob_PersistsJobAndValidSkillLinks()
         {
             var primarySkillId = GetSkillId(PrimarySkillName);
-            var secondarySkillId= GetSkillId(SecondarySkillName);
+            var secondarySkillId = GetSkillId(SecondarySkillName);
 
             var newJob = new JobPosting
             {
@@ -100,20 +100,19 @@ namespace OurApp.Tests.Repositories
                 Deadline = new DateTime(2026, 12, 31)
             };
 
-            var createdId = _repository.AddJob(newJob, TestDbSeeder.CompanyId, new List<(int SkillId, int RequiredPercentage)>
+            var createdId = repository.AddJob(newJob, TestDbSeeder.CompanyId, new List<(int SkillId, int RequiredPercentage)>
             {
                 (primarySkillId, 75),
                 (secondarySkillId, 0),
                 (secondarySkillId, 101)
             });
 
-            var createdJob = _repository.GetAllJobs().First(j => j.JobId == createdId);
+            var createdJob = repository.GetAllJobs().First(j => j.JobId == createdId);
 
             Assert.AreEqual("New Repository Test Job", createdJob.JobTitle);
             Assert.AreEqual(1, createdJob.JobSkills.Count);
             Assert.AreEqual(75, createdJob.JobSkills.Single().RequiredPercentage);
             Assert.AreEqual(PrimarySkillName, createdJob.JobSkills.Single().Skill.SkillName);
-
         }
 
         [TestMethod]
@@ -136,7 +135,7 @@ namespace OurApp.Tests.Repositories
                 AvailablePositions = 1
             };
 
-            _repository.AddJob(newJob, TestDbSeeder.CompanyId, new List<(int SkillId, int RequiredPercentage)>
+            repository.AddJob(newJob, TestDbSeeder.CompanyId, new List<(int SkillId, int RequiredPercentage)>
             {
                 (primarySkillId, 70)
             });
@@ -144,9 +143,7 @@ namespace OurApp.Tests.Repositories
             var afterCount = GetPostedJobsCount(TestDbSeeder.CompanyId);
 
             Assert.AreEqual(beforeCount + 1, afterCount);
-
         }
-
         private static void EnsureSkillExists(string skillName)
         {
             using var conn = DbConnectionHelper.GetConnection();
@@ -238,10 +235,10 @@ namespace OurApp.Tests.Repositories
                 AvailablePositions = 1
             };
 
-            var createdId = _repository.AddJob(newJob, TestDbSeeder.CompanyId,
+            var createdId = repository.AddJob(newJob, TestDbSeeder.CompanyId,
                 new List<(int SkillId, int RequiredPercentage)> { (primarySkillId, 70) });
 
-            var createdJob = _repository.GetAllJobs().First(j => j.JobId == createdId);
+            var createdJob = repository.GetAllJobs().First(j => j.JobId == createdId);
 
             Assert.AreEqual("Null Dates Test Job", createdJob.JobTitle);
         }
@@ -263,7 +260,7 @@ namespace OurApp.Tests.Repositories
                 AvailablePositions = 1
             };
 
-            _repository.AddJob(newJob, TestDbSeeder.CollaboratorCompanyId,
+            repository.AddJob(newJob, TestDbSeeder.CollaboratorCompanyId,
                 new List<(int SkillId, int RequiredPercentage)> { (primarySkillId, 70) });
 
             var count = GetPostedJobsCount(TestDbSeeder.CollaboratorCompanyId);
@@ -289,10 +286,10 @@ namespace OurApp.Tests.Repositories
                 PostedAt = DateTime.Now
             };
 
-            var createdId = _repository.AddJob(newJob, TestDbSeeder.CompanyId,
+            var createdId = repository.AddJob(newJob, TestDbSeeder.CompanyId,
                 new List<(int SkillId, int RequiredPercentage)> { (primarySkillId, 70) });
 
-            var createdJob = _repository.GetAllJobs().First(j => j.JobId == createdId);
+            var createdJob = repository.GetAllJobs().First(j => j.JobId == createdId);
 
             Assert.IsNotNull(createdJob);
         }

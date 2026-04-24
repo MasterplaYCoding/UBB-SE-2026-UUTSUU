@@ -9,6 +9,6 @@ namespace OurApp.Core.Services
 
         (List<string> skillNames, List<int> percents) GetSkillsTop3(int companyId);
 
-        string applicantsMessage(int companyId);
+        string ApplicantsMessage(int companyId);
     }
 }

@@ -1,28 +1,26 @@
-﻿using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
-using OurApp.Core.Database;
-using OurApp.Core.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using OurApp.Core.Database;
+using OurApp.Core.Models;
 
 namespace OurApp.Core.Repositories
 {
     public class CollaboratorsRepo : ICollaboratorsRepo
     {
-
         /// <summary>
         /// Function that adds a collaborator to the collaborators table
         /// </summary>
         /// <param name="eventOfCollaboration"> the event that the invited company is collaborating on </param>
         /// <param name="collaboratorToBeAdded"> the company that has been invited to collaborate </param>
         /// <param name="loggedInUserID"></param>
-
         public void AddCollaboratorToRepo(Event eventOfCollaboration, Company collaboratorToBeAdded, int loggedInUserID)
         {
             using (SqlConnection sqlConnection = DbConnectionHelper.GetConnection())
@@ -82,7 +80,6 @@ namespace OurApp.Core.Repositories
             }
         }
 
-
         /// <summary>
         /// Function that returns a list of all the collaborators of the user company
         /// </summary>
@@ -108,21 +105,19 @@ namespace OurApp.Core.Repositories
                     ";
 
                 SqlCommand sqlCommand = new SqlCommand(queryToBeRun, sqlConnection);
-
-
                 sqlCommand.Parameters.AddWithValue("@HostID", loggedInCompanyId);
 
                 SqlDataReader reader = sqlCommand.ExecuteReader();
-                string DefaultDatabaseStringValue = string.Empty;
+                string defaultDatabaseStringValue = string.Empty;
 
                 while (reader.Read())
                 {
                     usersCollaborators.Add(new Company(reader["company_name"].ToString(),
-                        DefaultDatabaseStringValue,
-                        DefaultDatabaseStringValue, 
+                        defaultDatabaseStringValue,
+                        defaultDatabaseStringValue,
                         reader["logo_picture_url"].ToString(),
-                        DefaultDatabaseStringValue,
-                        DefaultDatabaseStringValue));
+                        defaultDatabaseStringValue,
+                        defaultDatabaseStringValue));
                 }
             }
 

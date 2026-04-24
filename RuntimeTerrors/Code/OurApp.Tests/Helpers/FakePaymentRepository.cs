@@ -1,35 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using OurApp.Core.Models;
 using OurApp.Core.Repositories;
 
 namespace OurApp.Tests.Helpers
 {
-    internal class FakePaymentRepository : IPaymentRepository
+    public class FakePaymentRepository : IPaymentRepository
     {
+        private const string ExceptionMessage = "boom";
+
         public int LastUpdatedJobId { get; private set; }
+
         public int LastUpdatedAmount { get; private set; }
+
         public bool UpdateCalled { get; private set; }
+
         public bool ThrowOnUpdate { get; set; }
 
-        public List<JobPaymentInfo> PaidJobsToReturn { get; } = new();
-        public List<string> EmailsToNotify { get; } = new();
+        public List<JobPaymentInfo> PaidJobsToReturn { get; } = new List<JobPaymentInfo>();
+
+        public List<string> EmailsToNotify { get; } = new List<string>();
 
         public void UpdateJobPayment(int jobId, int paymentAmount)
         {
             if (ThrowOnUpdate)
             {
-                throw new Exception("boom");
+                throw new Exception(ExceptionMessage);
             }
 
             UpdateCalled = true;
             LastUpdatedJobId = jobId;
             LastUpdatedAmount = paymentAmount;
         }
-
 
         public List<JobPaymentInfo> GetPaidJobs(string jobType, string experienceLevel)
         {
@@ -40,7 +42,5 @@ namespace OurApp.Tests.Helpers
         {
             return EmailsToNotify;
         }
-
-
     }
 }

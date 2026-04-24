@@ -16,11 +16,7 @@
 		</PackageReference>
 	</ItemGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<CodeAnalysisRuleSet>..\SE.ruleset</CodeAnalysisRuleSet>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	<PropertyGroup>
 		<CodeAnalysisRuleSet>..\SE.ruleset</CodeAnalysisRuleSet>
 	</PropertyGroup>
 

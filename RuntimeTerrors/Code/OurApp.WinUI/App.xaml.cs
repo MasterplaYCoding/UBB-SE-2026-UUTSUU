@@ -18,7 +18,6 @@ using Windows.Foundation.Collections;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
-
 namespace OurApp.WinUI
 {
     /// <summary>
@@ -37,7 +36,7 @@ namespace OurApp.WinUI
             InitializeComponent();
         }
 
-        public static MainWindow mainWindow { get; private set; }
+        public static MainWindow MainWindow { get; private set; }
 
         /// <summary>
         /// Invoked when the application is launched.
@@ -45,8 +44,8 @@ namespace OurApp.WinUI
         /// <param name="args">Details about the launch request and process.</param>
         protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
-            mainWindow = new MainWindow();
-            mainWindow.Activate();
+            MainWindow = new MainWindow();
+            MainWindow.Activate();
         }
     }
 }

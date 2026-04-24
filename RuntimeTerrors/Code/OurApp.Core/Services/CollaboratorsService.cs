@@ -1,16 +1,16 @@
-﻿using OurApp.Core.Repositories;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OurApp.Core.Repositories;
 using OurApp.Core.Models;
 
 namespace OurApp.Core.Services
 {
     public class CollaboratorsService : ICollaboratorsService
     {
-        ICollaboratorsRepo collaboratorsRepository;
+        private ICollaboratorsRepo collaboratorsRepository;
 
         /// <summary>
         /// Collaborators service constructor
@@ -31,7 +31,6 @@ namespace OurApp.Core.Services
         {
             this.collaboratorsRepository.AddCollaboratorToRepo(eventToBeCollaboratedOn, companyInvitedToCollaborate, loggedInUserID);
         }
-
 
         /// <summary>
         /// Function that returns a list of all the collaborators of the user company

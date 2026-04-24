@@ -11,7 +11,7 @@ namespace OurApp.WinUI.ViewModels
     {
         private const string ErrorMessagePrefix = "Database error loading jobs: ";
 
-        private readonly IJobsRepository _jobsRepository;
+        private readonly IJobsRepository jobsRepository;
 
         public Visibility JobsVisibility => Visibility.Visible;
         public Visibility BackButtonVisibility => Visibility.Collapsed;
@@ -20,7 +20,7 @@ namespace OurApp.WinUI.ViewModels
 
         public OurJobsViewModel(IJobsRepository jobsRepository)
         {
-            _jobsRepository = jobsRepository;
+            this.jobsRepository = jobsRepository;
             ReloadJobs();
         }
 
@@ -29,7 +29,7 @@ namespace OurApp.WinUI.ViewModels
             Jobs.Clear();
             try
             {
-                var jobsFromDatabase = _jobsRepository.GetAllJobs();
+                var jobsFromDatabase = jobsRepository.GetAllJobs();
                 foreach (var job in jobsFromDatabase)
                 {
                     Jobs.Add(job);

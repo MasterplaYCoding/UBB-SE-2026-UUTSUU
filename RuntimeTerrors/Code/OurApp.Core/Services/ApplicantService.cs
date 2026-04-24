@@ -59,42 +59,42 @@ namespace OurApp.Core.Services
             { "dotnet", ".net" }
         };
 
-        private readonly IApplicantRepository _repository;
+        private readonly IApplicantRepository repository;
 
         public ApplicantService(IApplicantRepository repository)
         {
-            _repository = repository;
+            this.repository = repository;
         }
 
         public IEnumerable<Applicant> GetApplicantsForJob(JobPosting job)
         {
-            return _repository.GetApplicantsByJob(job);
+            return repository.GetApplicantsByJob(job);
         }
 
         public Applicant GetApplicant(int applicantId)
         {
-            return _repository.GetApplicantById(applicantId);
+            return repository.GetApplicantById(applicantId);
         }
 
         public void UpdateCompanyTestGrade(int applicantId, decimal grade)
         {
-            Applicant applicant = _repository.GetApplicantById(applicantId);
+            Applicant applicant = repository.GetApplicantById(applicantId);
             if (applicant != null)
             {
                 applicant.CompanyTestGrade = grade;
                 EvaluateApplicantStatus(applicant);
-                _repository.UpdateApplicant(applicant);
+                repository.UpdateApplicant(applicant);
             }
         }
 
         public void UpdateInterviewGrade(int applicantId, decimal grade)
         {
-            Applicant applicant = _repository.GetApplicantById(applicantId);
+            Applicant applicant = repository.GetApplicantById(applicantId);
             if (applicant != null)
             {
                 applicant.InterviewGrade = grade;
                 EvaluateApplicantStatus(applicant);
-                _repository.UpdateApplicant(applicant);
+                repository.UpdateApplicant(applicant);
             }
         }
 
@@ -119,7 +119,7 @@ namespace OurApp.Core.Services
                 return false;
             }
 
-            var domainString = emailAddress[(atSymbolIndex + 1)..];
+            var domainString = emailAddress[(atSymbolIndex + 1) ..];
             return domainString.Contains(DotCharacter, StringComparison.Ordinal);
         }
 
@@ -313,7 +313,7 @@ namespace OurApp.Core.Services
 
         public void ProcessCv(int applicantId)
         {
-            Applicant applicant = _repository.GetApplicantById(applicantId);
+            Applicant applicant = repository.GetApplicantById(applicantId);
             if (applicant == null)
             {
                 return;
@@ -327,17 +327,17 @@ namespace OurApp.Core.Services
             }
 
             EvaluateApplicantStatus(applicant);
-            _repository.UpdateApplicant(applicant);
+            repository.UpdateApplicant(applicant);
         }
 
         public void UpdateAppTestGrade(int applicantId, decimal grade)
         {
-            Applicant applicant = _repository.GetApplicantById(applicantId);
+            Applicant applicant = repository.GetApplicantById(applicantId);
             if (applicant != null)
             {
                 applicant.AppTestGrade = grade;
                 EvaluateApplicantStatus(applicant);
-                _repository.UpdateApplicant(applicant);
+                repository.UpdateApplicant(applicant);
             }
         }
 
@@ -384,22 +384,34 @@ namespace OurApp.Core.Services
         public void UpdateApplicant(Applicant applicant)
         {
             EvaluateApplicantStatus(applicant);
-            _repository.UpdateApplicant(applicant);
+            repository.UpdateApplicant(applicant);
         }
 
         public void RemoveApplicant(int applicantId)
         {
-            _repository.RemoveApplicant(applicantId);
+            repository.RemoveApplicant(applicantId);
         }
 
         private void EvaluateApplicantStatus(Applicant applicant)
         {
             List<decimal> nonNullGradesList = new List<decimal>();
 
-            if (applicant.AppTestGrade != null) { nonNullGradesList.Add(applicant.AppTestGrade.Value); }
-            if (applicant.CvGrade != null) { nonNullGradesList.Add(applicant.CvGrade.Value); }
-            if (applicant.CompanyTestGrade != null) { nonNullGradesList.Add(applicant.CompanyTestGrade.Value); }
-            if (applicant.InterviewGrade != null) { nonNullGradesList.Add(applicant.InterviewGrade.Value); }
+            if (applicant.AppTestGrade != null)
+            {
+                nonNullGradesList.Add(applicant.AppTestGrade.Value);
+            }
+            if (applicant.CvGrade != null)
+            {
+                nonNullGradesList.Add(applicant.CvGrade.Value);
+            }
+            if (applicant.CompanyTestGrade != null)
+            {
+                nonNullGradesList.Add(applicant.CompanyTestGrade.Value);
+            }
+            if (applicant.InterviewGrade != null)
+            {
+                nonNullGradesList.Add(applicant.InterviewGrade.Value);
+            }
 
             foreach (decimal grade in nonNullGradesList)
             {

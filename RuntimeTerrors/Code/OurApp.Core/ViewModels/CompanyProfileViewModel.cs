@@ -1,12 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OurApp.Core.Models;
 using OurApp.Core.Repositories;
 using OurApp.Core.Services;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 
 namespace OurApp.Core.ViewModels;
 
@@ -58,15 +58,15 @@ public partial class CompanyProfileViewModel : ObservableObject
     private const string HintImageSet = "(image set)";
     private const string HintImageRenderError = "(image could not be rendered)";
 
-    private readonly ICompanyService _companyService;
-    private readonly IGameService _gameService;
-    private readonly IEventsService _eventsService;
-    private readonly IJobsRepository _jobsRepository;
-    private readonly SessionService _sessionService;
-    private readonly ICollaboratorsService _collaboratorsService;
-    private readonly IProfileCompletionCalculator _calculator;
+    private readonly ICompanyService companyService;
+    private readonly IGameService gameService;
+    private readonly IEventsService eventsService;
+    private readonly IJobsRepository jobsRepository;
+    private readonly SessionService sessionService;
+    private readonly ICollaboratorsService collaboratorsService;
+    private readonly IProfileCompletionCalculator calculator;
 
-    private int _currentScenarioIndex;
+    private int currentScenarioIndex;
 
     public Action<byte[]>? OnProfileImageDecoded { get; set; }
     public Action? OnProfileImageCleared { get; set; }
@@ -74,51 +74,51 @@ public partial class CompanyProfileViewModel : ObservableObject
     public Action? OnLogoCleared { get; set; }
 
     [ObservableProperty]
-    private string _profilePictureHintText = string.Empty;
+    private string profilePictureHintText = string.Empty;
 
     [ObservableProperty]
-    private string _companyLogoHintText = string.Empty;
+    private string companyLogoHintText = string.Empty;
 
     [ObservableProperty]
-    private string _currentQuestion = string.Empty;
+    private string currentQuestion = string.Empty;
 
     [ObservableProperty]
-    private ObservableCollection<string> _currentChoices = new();
+    private ObservableCollection<string> currentChoices = new ();
 
     [ObservableProperty]
-    private string _feedback = string.Empty;
+    private string feedback = string.Empty;
 
-    public string BuddyImagePath => BuddyImageProvider.GetImagePathById(_gameService.GetBuddyId());
-
-    [ObservableProperty]
-    private string _welcomeMessage = string.Empty;
+    public string BuddyImagePath => BuddyImageProvider.GetImagePathById(gameService.GetBuddyId());
 
     [ObservableProperty]
-    private GameState _currentState = GameState.NotCompleted;
+    private string welcomeMessage = string.Empty;
 
     [ObservableProperty]
-    private Company? _company;
+    private GameState currentState = GameState.NotCompleted;
 
     [ObservableProperty]
-    private string _loadMessage = string.Empty;
+    private Company? company;
 
     [ObservableProperty]
-    private int _completionPercentage;
+    private string loadMessage = string.Empty;
 
     [ObservableProperty]
-    private int _completedTasksCount;
+    private int completionPercentage;
 
     [ObservableProperty]
-    private ObservableCollection<string> _remainingTasks = new();
+    private int completedTasksCount;
 
     [ObservableProperty]
-    private string _applicantSummary = string.Empty;
+    private ObservableCollection<string> remainingTasks = new ();
 
     [ObservableProperty]
-    private ObservableCollection<CompanyTrendingSkillRow> _trendingSkills = new();
+    private string applicantSummary = string.Empty;
+
+    [ObservableProperty]
+    private ObservableCollection<CompanyTrendingSkillRow> trendingSkills = new ();
 
     public IEnumerable<CompanyProfileListRow> Top3JobPreviews =>
-        _jobsRepository
+        jobsRepository
             .GetAllJobs()
             .Take(MaximumTopJobsCount)
             .Select(job => new CompanyProfileListRow
@@ -128,8 +128,8 @@ public partial class CompanyProfileViewModel : ObservableObject
             });
 
     public IEnumerable<CompanyProfileListRow> Top3EventPreviews =>
-        _eventsService
-            .GetCurrentEvents(_sessionService.loggedInUser.CompanyId)
+        eventsService
+            .GetCurrentEvents(sessionService.LoggedInUser.CompanyId)
             .Take(MaximumTopEventsCount)
             .Select(eventItem => new CompanyProfileListRow
             {
@@ -138,8 +138,8 @@ public partial class CompanyProfileViewModel : ObservableObject
             });
 
     public IEnumerable<CompanyCollabListRow> Top3CollabsPreviews =>
-        _collaboratorsService
-            .GetAllCollaborators(_sessionService.loggedInUser.CompanyId)
+        collaboratorsService
+            .GetAllCollaborators(sessionService.LoggedInUser.CompanyId)
             .Take(MaximumTopCollaboratorsCount)
             .Select(collaborator => new CompanyCollabListRow
             {
@@ -162,19 +162,19 @@ public partial class CompanyProfileViewModel : ObservableObject
         ICollaboratorsService collaboratorsService,
         IJobsRepository jobsRepository)
     {
-        _gameService = gameService;
-        _companyService = companyService;
-        _calculator = calculator;
-        _eventsService = eventService;
-        _sessionService = sessionService;
-        _collaboratorsService = collaboratorsService;
-        _jobsRepository = jobsRepository;
+        this.gameService = gameService;
+        this.companyService = companyService;
+        this.calculator = calculator;
+        eventsService = eventService;
+        this.sessionService = sessionService;
+        this.collaboratorsService = collaboratorsService;
+        this.jobsRepository = jobsRepository;
     }
 
     public void Load(int companyId)
     {
         CompanyId = companyId;
-        Company = _companyService.GetCompanyById(companyId);
+        Company = companyService.GetCompanyById(companyId);
         if (Company is null)
         {
             LoadMessage = ProfileLoadErrorMessage;
@@ -184,13 +184,13 @@ public partial class CompanyProfileViewModel : ObservableObject
             return;
         }
 
-        ApplicantSummary = _calculator.applicantsMessage(companyId);
+        ApplicantSummary = calculator.ApplicantsMessage(companyId);
 
         LoadMessage = string.Empty;
         RefreshProfileStatistics();
         FillPreviewSections();
         ProcessImages();
-        gamePreview();
+        GamePreview();
     }
 
     private void ProcessImages()
@@ -271,26 +271,34 @@ public partial class CompanyProfileViewModel : ObservableObject
     public void RefreshProfileStatistics()
     {
         if (Company is null)
+        {
             return;
+        }
 
-        var (percentage, tasks) = _calculator.Calculate(Company);
+        var (percentage, tasks) = calculator.Calculate(Company);
         CompletionPercentage = percentage;
         CompletedTasksCount = TotalProfileTasksCount - tasks.Count;
         if (CompletedTasksCount < EmptyTaskCount)
+        {
             CompletedTasksCount = EmptyTaskCount;
+        }
 
         RemainingTasks.Clear();
         foreach (var task in tasks)
+        {
             RemainingTasks.Add(task);
+        }
     }
 
     private void FillPreviewSections()
     {
         if (Company is null)
+        {
             return;
+        }
 
         TrendingSkills.Clear();
-        var (skillNames, percents) = _calculator.GetSkillsTop3(Company.CompanyId);
+        var (skillNames, percents) = calculator.GetSkillsTop3(Company.CompanyId);
 
         for (int index = 0; index < MaximumTrendingSkillsCount; index++)
         {
@@ -360,24 +368,26 @@ public partial class CompanyProfileViewModel : ObservableObject
 
     private void UpdateScenario()
     {
-        if (_currentScenarioIndex < MaximumScenarioCount)
+        if (currentScenarioIndex < MaximumScenarioCount)
         {
-            CurrentQuestion = _gameService.ShowScenarioText(_currentScenarioIndex);
+            CurrentQuestion = gameService.ShowScenarioText(currentScenarioIndex);
 
             CurrentChoices.Clear();
-            var choices = _gameService.ShowChoices(_currentScenarioIndex);
+            var choices = gameService.ShowChoices(currentScenarioIndex);
             foreach (var choice in choices)
+            {
                 CurrentChoices.Add(choice);
+            }
         }
     }
 
-    public void gamePreview()
+    public void GamePreview()
     {
-        if (_gameService.IsPublished())
+        if (gameService.IsPublished())
         {
-            WelcomeMessage = _gameService.ShowCoworker();
+            WelcomeMessage = gameService.ShowCoworker();
             CurrentState = GameState.Start;
-            _currentScenarioIndex = InitialScenarioIndex;
+            currentScenarioIndex = InitialScenarioIndex;
             UpdateScenario();
         }
     }
@@ -385,9 +395,8 @@ public partial class CompanyProfileViewModel : ObservableObject
     [RelayCommand]
     private void RetryGame()
     {
-        gamePreview();
+        GamePreview();
     }
-
 
     [RelayCommand]
     private void StartGame()
@@ -399,29 +408,31 @@ public partial class CompanyProfileViewModel : ObservableObject
     private void SelectChoice(string? choiceText)
     {
         if (string.IsNullOrEmpty(choiceText) || CurrentChoices == null)
+        {
             return;
-
+        }
         int adviceIndex = CurrentChoices.IndexOf(choiceText);
         if (adviceIndex < 0)
+        {
             return;
-
-        Feedback = _gameService.ChoiceMade(_currentScenarioIndex, adviceIndex);
-        CurrentState = _currentScenarioIndex == InitialScenarioIndex ? GameState.Reaction1 : GameState.Reaction2;
+        }
+        Feedback = gameService.ChoiceMade(currentScenarioIndex, adviceIndex);
+        CurrentState = currentScenarioIndex == InitialScenarioIndex ? GameState.Reaction1 : GameState.Reaction2;
     }
 
     [RelayCommand]
     private void GoToNextStep()
     {
-        _currentScenarioIndex++;
+        currentScenarioIndex++;
 
-        if (_currentScenarioIndex < MaximumScenarioCount)
+        if (currentScenarioIndex < MaximumScenarioCount)
         {
             UpdateScenario();
             CurrentState = GameState.Choices2;
         }
         else
         {
-            Feedback = _gameService.ShowConclusion();
+            Feedback = gameService.ShowConclusion();
             CurrentState = GameState.Conclusion;
         }
     }

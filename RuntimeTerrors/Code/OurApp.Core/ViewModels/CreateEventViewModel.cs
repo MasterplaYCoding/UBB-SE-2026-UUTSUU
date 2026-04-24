@@ -1,9 +1,3 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using OurApp.Core.Models;
-using OurApp.Core.Repositories;
-using OurApp.Core.Services;
-using OurApp.Core.Validators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Mail;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using OurApp.Core.Models;
+using OurApp.Core.Repositories;
+using OurApp.Core.Services;
+using OurApp.Core.Validators;
 
 namespace OurApp.Core.ViewModels
 {
@@ -31,41 +31,40 @@ namespace OurApp.Core.ViewModels
         private const string ErrorCompanyNotFound = "Company was not found.";
         private const string ErrorCompanyAlreadyAdded = "Company is already added as a collaborator.";
 
-        private readonly ICollaboratorsService _collaboratorsService;
-        private readonly IEventsService _eventsService;
-        private readonly ICompanyService _companyService;
-        private readonly SessionService _sessionService;
-        private readonly IEventValidator _eventValidator;
+        private readonly ICollaboratorsService collaboratorsService;
+        private readonly IEventsService eventsService;
+        private readonly ICompanyService companyService;
+        private readonly SessionService sessionService;
+        private readonly IEventValidator eventValidator;
 
         public List<Company> SelectedCollaborators { get; } = new List<Company>();
 
-        [ObservableProperty] private string _photo;
+        [ObservableProperty] private string photo;
 
-        [ObservableProperty] private string _title;
-        [ObservableProperty] private string _titleError;
-        private bool _titleIsValid = false;
+        [ObservableProperty] private string title;
+        [ObservableProperty] private string titleError;
+        private bool titleIsValid = false;
 
-        [ObservableProperty] private string _description;
-        [ObservableProperty] private string _descriptionError;
-        private bool _descriptionIsValid = true;
+        [ObservableProperty] private string description;
+        [ObservableProperty] private string descriptionError;
+        private bool descriptionIsValid = true;
 
-        [ObservableProperty] private DateTimeOffset? _startDate = DateTimeOffset.Now;
-        [ObservableProperty] private string _startDateError;
-        private bool _startDateIsValid = true;
+        [ObservableProperty] private DateTimeOffset? startDate = DateTimeOffset.Now;
+        [ObservableProperty] private string startDateError;
+        private bool startDateIsValid = true;
 
-        [ObservableProperty] private DateTimeOffset? _endDate = DateTimeOffset.Now;
-        [ObservableProperty] private string _endDateError;
-        private bool _endDateIsValid = true;
+        [ObservableProperty] private DateTimeOffset? endDate = DateTimeOffset.Now;
+        [ObservableProperty] private string endDateError;
+        private bool endDateIsValid = true;
 
-        [ObservableProperty] private string _location;
-        [ObservableProperty] private string _locationError;
-        private bool _locationIsValid = false;
+        [ObservableProperty] private string location;
+        [ObservableProperty] private string locationError;
+        private bool locationIsValid = false;
 
-        [ObservableProperty] private string _addError = EmptyStringValue;
+        [ObservableProperty] private string addError = EmptyStringValue;
 
-        public bool isEverythingValid => (AddError == EmptyStringValue);
-        public bool eventCreatedSuccessfully = false;
-
+        public bool IsEverythingValid => AddError == EmptyStringValue;
+        public bool EventCreatedSuccessfully = false;
 
         /// <summary>
         /// Create Event View Model constructor
@@ -75,13 +74,12 @@ namespace OurApp.Core.ViewModels
         /// <param name="sessionService"> session service </param>
         public CreateEventViewModel(IEventsService eventsService, ICompanyService companyService, SessionService sessionService, ICollaboratorsService collaboratorsService, IEventValidator eventValidator)
         {
-            _eventsService = eventsService;
-            _companyService = companyService;
-            _sessionService = sessionService;
-            _collaboratorsService = collaboratorsService;
-            _eventValidator = eventValidator;
+            this.eventsService = eventsService;
+            this.companyService = companyService;
+            this.sessionService = sessionService;
+            this.collaboratorsService = collaboratorsService;
+            this.eventValidator = eventValidator;
         }
-
 
         /// <summary>
         /// Function that sends an email to a company
@@ -95,7 +93,7 @@ namespace OurApp.Core.ViewModels
                 return;
             }
 
-            string sourceCompanyName = _sessionService.loggedInUser.Name;
+            string sourceCompanyName = sessionService.LoggedInUser.Name;
             var fromAddress = new MailAddress(AdminEmailAddress, sourceCompanyName);
 
             var toAddress = new MailAddress(destinationCompany.Email, destinationCompany.Name);
@@ -124,7 +122,7 @@ namespace OurApp.Core.ViewModels
         }
 
         /// <summary>
-        /// Function that sends the invitations to all the selected companies, 
+        /// Function that sends the invitations to all the selected companies,
         /// after the user creates the event
         /// </summary>
         private void SendInvitations()
@@ -139,10 +137,9 @@ namespace OurApp.Core.ViewModels
         {
             foreach (Company invitedCompany in SelectedCollaborators)
             {
-                _collaboratorsService.AddCollaborator(eventOfCollaboration, invitedCompany, _sessionService.loggedInUser.CompanyId);
+                collaboratorsService.AddCollaborator(eventOfCollaboration, invitedCompany, sessionService.LoggedInUser.CompanyId);
             }
         }
-
 
         /// <summary>
         /// Function that tries to create a new event
@@ -150,7 +147,7 @@ namespace OurApp.Core.ViewModels
         [RelayCommand]
         public void CreateEvent()
         {
-            if (!_titleIsValid || !_descriptionIsValid || !_startDateIsValid || !_endDateIsValid || !_locationIsValid)
+            if (!titleIsValid || !descriptionIsValid || !startDateIsValid || !endDateIsValid || !locationIsValid)
             {
                 AddError = ErrorInputsInvalid;
                 return;
@@ -162,9 +159,9 @@ namespace OurApp.Core.ViewModels
                 DateTime eventStartDateTime = StartDate.Value.DateTime;
                 DateTime eventEndDateTime = EndDate.Value.DateTime;
 
-                int hostCompanyId = _sessionService.loggedInUser.CompanyId;
-                Event createdEvent = _eventsService.AddEvent(Photo, Title, Description, eventStartDateTime, eventEndDateTime, Location, hostCompanyId, SelectedCollaborators.ToList());
-                eventCreatedSuccessfully = true;
+                int hostCompanyId = sessionService.LoggedInUser.CompanyId;
+                Event createdEvent = eventsService.AddEvent(Photo, Title, Description, eventStartDateTime, eventEndDateTime, Location, hostCompanyId, SelectedCollaborators.ToList());
+                EventCreatedSuccessfully = true;
 
                 AddAllCollaboratorsWhenEventCreated(createdEvent);
                 SendInvitations();
@@ -172,10 +169,9 @@ namespace OurApp.Core.ViewModels
             catch (Exception exception)
             {
                 System.Diagnostics.Debug.WriteLine(exception);
-                eventCreatedSuccessfully = false;
+                EventCreatedSuccessfully = false;
             }
         }
-
 
         /// <summary>
         /// Function that sets some flags, used in the View, if the event title is valid
@@ -185,21 +181,20 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (_eventValidator.ValidateEventTitle(Title))
+                if (eventValidator.ValidateEventTitle(Title))
                 {
                     TitleError = EmptyStringValue;
-                    _titleIsValid = true;
+                    titleIsValid = true;
                     return true;
                 }
             }
             catch (Exception exception)
             {
                 TitleError = exception.Message;
-                _titleIsValid = false;
+                titleIsValid = false;
             }
             return false;
         }
-
 
         /// <summary>
         /// Function that sets some flags, used in the View, if the event description is valid
@@ -209,17 +204,17 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (_eventValidator.ValidateEventDescription(Description))
+                if (eventValidator.ValidateEventDescription(Description))
                 {
                     DescriptionError = EmptyStringValue;
-                    _descriptionIsValid = true;
+                    descriptionIsValid = true;
                     return true;
                 }
             }
             catch (Exception exception)
             {
                 DescriptionError = exception.Message;
-                _descriptionIsValid = false;
+                descriptionIsValid = false;
             }
             return false;
         }
@@ -232,17 +227,17 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (_eventValidator.ValidateEventLocation(Location))
+                if (eventValidator.ValidateEventLocation(Location))
                 {
                     LocationError = EmptyStringValue;
-                    _locationIsValid = true;
+                    locationIsValid = true;
                     return true;
                 }
             }
             catch (Exception exception)
             {
                 LocationError = exception.Message;
-                _locationIsValid = false;
+                locationIsValid = false;
             }
             return false;
         }
@@ -255,21 +250,20 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (_eventValidator.ValidateEventStartDate(StartDate))
+                if (eventValidator.ValidateEventStartDate(StartDate))
                 {
                     StartDateError = EmptyStringValue;
-                    _startDateIsValid = true;
+                    startDateIsValid = true;
                     return true;
                 }
             }
             catch (Exception exception)
             {
                 StartDateError = exception.Message;
-                _startDateIsValid = false;
+                startDateIsValid = false;
             }
             return false;
         }
-
 
         /// <summary>
         /// Function that sets some flags, used in the View, if the event ending date is valid
@@ -279,17 +273,17 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (_eventValidator.ValidateEventEndDate(EndDate))
+                if (eventValidator.ValidateEventEndDate(EndDate))
                 {
                     EndDateError = EmptyStringValue;
-                    _endDateIsValid = true;
+                    endDateIsValid = true;
                     return true;
                 }
             }
             catch (Exception exception)
             {
                 EndDateError = exception.Message;
-                _endDateIsValid = false;
+                endDateIsValid = false;
             }
             return false;
         }
@@ -302,17 +296,17 @@ namespace OurApp.Core.ViewModels
         {
             try
             {
-                if (_eventValidator.ValidateEventDatesChronologically(StartDate, EndDate))
+                if (eventValidator.ValidateEventDatesChronologically(StartDate, EndDate))
                 {
                     EndDateError = EmptyStringValue;
-                    _endDateIsValid = true;
+                    endDateIsValid = true;
                     return true;
                 }
             }
             catch (Exception exception)
             {
                 EndDateError = exception.Message;
-                _endDateIsValid = false;
+                endDateIsValid = false;
             }
             return false;
         }
@@ -333,7 +327,7 @@ namespace OurApp.Core.ViewModels
                 return false;
             }
 
-            Company? companyToInvite = _companyService.GetCompanyByName(companyName);
+            Company? companyToInvite = companyService.GetCompanyByName(companyName);
             if (companyToInvite == null)
             {
                 errorMessage = ErrorCompanyNotFound;

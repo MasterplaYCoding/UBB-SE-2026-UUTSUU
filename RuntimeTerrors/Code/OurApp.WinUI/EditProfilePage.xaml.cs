@@ -1,11 +1,11 @@
+using System;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
 using OurApp.Core.ViewModels;
-using System;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using WinRT.Interop;
@@ -34,12 +34,14 @@ public class WinUIImagePickerService : IImagePickerService
         picker.FileTypeFilter.Add(FileExtensionBmp);
         picker.FileTypeFilter.Add(FileExtensionGif);
 
-        IntPtr hwnd = WindowNative.GetWindowHandle(App.mainWindow);
+        IntPtr hwnd = WindowNative.GetWindowHandle(App.MainWindow);
         InitializeWithWindow.Initialize(picker, hwnd);
 
         var file = await picker.PickSingleFileAsync();
         if (file == null)
+        {
             return null;
+        }
 
         byte[] bytes;
         using (var input = await file.OpenReadAsync())
@@ -73,14 +75,14 @@ public sealed partial class EditProfilePage : Page
 
     public EditProfilePage()
     {
-        var mainWindow = App.mainWindow;
+        var mainWindow = App.MainWindow;
         var imagePickerService = new WinUIImagePickerService();
 
         ViewModel = new EditCompanyProfileViewModel(
-            mainWindow.companyService,
-            mainWindow.gameService,
-            mainWindow.companyValidator,
-            mainWindow.gameValidator,
+            mainWindow.CompanyService,
+            mainWindow.GameService,
+            mainWindow.CompanyValidator,
+            mainWindow.GameValidator,
             imagePickerService);
 
         ViewModel.OnProfilePreviewRequested = SetupProfilePreview;
@@ -99,11 +101,15 @@ public sealed partial class EditProfilePage : Page
 
     private void NavigateBack_Click(object sender, RoutedEventArgs e)
     {
-        var mainWindow = App.mainWindow;
+        var mainWindow = App.MainWindow;
         if (mainWindow.RootFrame.CanGoBack)
+        {
             mainWindow.RootFrame.GoBack();
+        }
         else
+        {
             mainWindow.RootFrame.Navigate(typeof(ViewProfilePage), ViewModel.CompanyId);
+        }
     }
 
     private async void SetupProfilePreview(byte[] bytes)
@@ -143,7 +149,7 @@ public sealed partial class EditProfilePage : Page
                 XamlRoot = XamlRoot
             };
             await successDialog.ShowAsync();
-            App.mainWindow.RootFrame.Navigate(typeof(ViewProfilePage), ViewModel.CompanyId);
+            App.MainWindow.RootFrame.Navigate(typeof(ViewProfilePage), ViewModel.CompanyId);
             return;
         }
 
@@ -169,8 +175,9 @@ public sealed partial class EditProfilePage : Page
         };
         var result = await confirmDialog.ShowAsync();
         if (result != ContentDialogResult.Primary)
+        {
             return;
-
+        }
         NavigateBack_Click(sender, e);
     }
 }

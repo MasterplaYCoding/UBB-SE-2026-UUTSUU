@@ -12,7 +12,6 @@ namespace OurApp.Core.Services
         private const int MaleImageKey = 1;
         private const int GenericPhotoKey = 0;
 
-
         private static readonly Dictionary<int, string> BuddyImages = new Dictionary<int, string>
         {
             { FemaleImageKey, "Assets\\AvatarFemale.png" },

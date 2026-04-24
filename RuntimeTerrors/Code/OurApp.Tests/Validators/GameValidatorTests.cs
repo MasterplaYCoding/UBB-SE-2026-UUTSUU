@@ -1,14 +1,40 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using OurApp.Core.Validators;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using OurApp.Core.Validators;
 
 namespace OurApp.Tests.Validators
 {
     [TestClass]
     public class GameValidatorTests
     {
-        private GameValidator validator;
+        private const char CharFiller = 'a';
+        private const int ExceededLength = 251;
+        private const int ValidScenarioIndex = 0;
+
+        private const string StringEmpty = "";
+
+        private const string ScenarioOneText = "First scenario";
+        private const string AdviceOne = "Advice 1";
+        private const string ReactionOne = "Reaction 1";
+        private const string AdviceTwo = "Advice 2";
+        private const string ReactionTwo = "Reaction 2";
+
+        private const string ScenarioTwoText = "Second scenario";
+        private const string AdviceThree = "Advice 3";
+        private const string ReactionThree = "Reaction 3";
+
+        private const string TestScenarioOne = "Scenario 1";
+        private const string TestScenarioTwo = "Scenario 2";
+        private const string TestAdvice = "Advice";
+        private const string TestReaction = "Reaction";
+
+        private const string InvalidSingleScenario = "Only one scenario";
+
+        private const string ValidConclusion = "Well done!";
+        private const string EndingConclusion = "Good ending";
+
+        private GameValidator validator = null!;
 
         [TestInitialize]
         public void Setup()
@@ -20,21 +46,19 @@ namespace OurApp.Tests.Validators
         {
             return new List<(string, IReadOnlyList<(string, string)>)>
             {
-                ("First scenario", new List<(string, string)>
+                (ScenarioOneText, new List<(string, string)>
                     {
-                        ("Advice 1", "Reaction 1"),
-                        ("Advice 2", "Reaction 2")
+                        (AdviceOne, ReactionOne),
+                        (AdviceTwo, ReactionTwo)
                     }),
 
-                ("Second scenario", new List<(string, string)>
+                (ScenarioTwoText, new List<(string, string)>
                     {
-                        ("Advice 3", "Reaction 3")
+                        (AdviceThree, ReactionThree)
                     })
             };
         }
 
-
-        // MandatoryFieldsValidator
         [TestMethod]
         public void MandatoryFieldsValidator_ValidScenarios_ReturnsTrue()
         {
@@ -46,7 +70,7 @@ namespace OurApp.Tests.Validators
         [TestMethod]
         public void MandatoryFieldsValidator_NullScenarios_ThrowsException()
         {
-            List<(string, IReadOnlyList<(string, string)>)> scenarios = null;
+            List<(string, IReadOnlyList<(string, string)>)> scenarios = null!;
             Action action = () => validator.ValidateMandatoryFields(scenarios);
             Assert.ThrowsException<Exception>(action);
         }
@@ -55,7 +79,7 @@ namespace OurApp.Tests.Validators
         public void MandatoryFieldsValidator_ScenarioTextMissing_ThrowsException()
         {
             var scenarios = GetValidScenarios();
-            scenarios[0] = ("", scenarios[0].choices);
+            scenarios[ValidScenarioIndex] = (StringEmpty, scenarios[ValidScenarioIndex].choices);
             Action action = () => validator.ValidateMandatoryFields(scenarios);
             Assert.ThrowsException<Exception>(action);
         }
@@ -65,8 +89,8 @@ namespace OurApp.Tests.Validators
         {
             var scenarios = new List<(string, IReadOnlyList<(string, string)>)>
             {
-                ("Scenario 1", new List<(string,string)>()),
-                ("Scenario 2", new List<(string,string)>{("Advice","Reaction")})
+                (TestScenarioOne, new List<(string, string)>()),
+                (TestScenarioTwo, new List<(string, string)> { (TestAdvice, TestReaction) })
             };
 
             Action action = () => validator.ValidateMandatoryFields(scenarios);
@@ -78,14 +102,14 @@ namespace OurApp.Tests.Validators
         {
             var scenarios = new List<(string, IReadOnlyList<(string, string)>)>
             {
-                ("Scenario 1", new List<(string,string)>
+                (TestScenarioOne, new List<(string, string)>
                 {
-                    ("", "Reaction")
+                    (StringEmpty, TestReaction)
                 }),
 
-                ("Scenario 2", new List<(string,string)>
+                (TestScenarioTwo, new List<(string, string)>
                 {
-                    ("Advice","Reaction")
+                    (TestAdvice, TestReaction)
                 })
             };
 
@@ -99,14 +123,14 @@ namespace OurApp.Tests.Validators
         {
             var scenarios = new List<(string, IReadOnlyList<(string, string)>)>
             {
-            ("Scenario 1", new List<(string,string)>
+            (TestScenarioOne, new List<(string, string)>
                 {
-                    ("Advice", "")
+                    (TestAdvice, StringEmpty)
                 }),
-        
-                ("Scenario 2", new List<(string,string)>
+
+                (TestScenarioTwo, new List<(string, string)>
                 {
-                    ("Advice","Reaction")
+                    (TestAdvice, TestReaction)
                 })
             };
 
@@ -120,9 +144,9 @@ namespace OurApp.Tests.Validators
         {
             var scenarios = new List<(string, IReadOnlyList<(string, string)>)>
             {
-                ("Only one scenario", new List<(string,string)>
+                (InvalidSingleScenario, new List<(string, string)>
                 {
-                    ("Advice","Reaction")
+                    (TestAdvice, TestReaction)
                 })
             };
 
@@ -131,8 +155,6 @@ namespace OurApp.Tests.Validators
             Assert.ThrowsException<Exception>(action);
         }
 
-
-        //CharacterLimitsValidator
         [TestMethod]
         public void CharacterLimitsValidator_ValidScenario_ReturnsTrue()
         {
@@ -145,7 +167,7 @@ namespace OurApp.Tests.Validators
         public void CharacterLimitsValidator_ScenarioTooLong_ThrowsException()
         {
             var scenarios = GetValidScenarios();
-            scenarios[0] = (new string('a', 251), scenarios[0].choices);
+            scenarios[ValidScenarioIndex] = (new string(CharFiller, ExceededLength), scenarios[ValidScenarioIndex].choices);
             Action action = () => validator.ValidateCharacterLimits(scenarios);
             Assert.ThrowsException<Exception>(action);
         }
@@ -155,14 +177,14 @@ namespace OurApp.Tests.Validators
         {
             var scenarios = new List<(string, IReadOnlyList<(string, string)>)>
             {
-                ("Scenario 1", new List<(string,string)>
+                (TestScenarioOne, new List<(string, string)>
                 {
-                    (new string('a', 251), "Reaction")
+                    (new string(CharFiller, ExceededLength), TestReaction)
                 }),
-            
-                ("Scenario 2", new List<(string,string)>
+
+                (TestScenarioTwo, new List<(string, string)>
                 {
-                    ("Advice","Reaction")
+                    (TestAdvice, TestReaction)
                 })
             };
 
@@ -174,40 +196,38 @@ namespace OurApp.Tests.Validators
         [TestMethod]
         public void CharacterLimitsValidator_NullScenarios_ReturnsTrue()
         {
-            List<(string, IReadOnlyList<(string, string)>)> scenarios = null;
+            List<(string, IReadOnlyList<(string, string)>)> scenarios = null!;
             var result = validator.ValidateCharacterLimits(scenarios);
             Assert.IsTrue(result);
         }
-
 
         [TestMethod]
         public void CharacterLimitsValidator_NullChoices_ReturnsTrue()
         {
             var scenarios = new List<(string, IReadOnlyList<(string, string)>)>
             {
-                ("Scenario 1", null),
-                ("Scenario 2", new List<(string,string)>{("Advice","Reaction")})
+                (TestScenarioOne, null!),
+                (TestScenarioTwo, new List<(string, string)> { (TestAdvice, TestReaction) })
             };
 
             var result = validator.ValidateCharacterLimits(scenarios);
             Assert.IsTrue(result);
         }
 
-
         [TestMethod]
         public void CharacterLimitsValidator_ScenarioAtLimit_ReturnsTrue()
         {
             var scenarios = new List<(string, IReadOnlyList<(string, string)>)>
             {
-                (new string('a', GameValidator.MaxStruggleOrAdviceLength),
-                 new List<(string,string)>
+                (new string(CharFiller, GameValidator.MaxStruggleOrAdviceLength),
+                 new List<(string, string)>
                  {
-                    ("Advice","Reaction")
+                    (TestAdvice, TestReaction)
                  }),
-        
-                ("Scenario 2", new List<(string,string)>
+
+                (TestScenarioTwo, new List<(string, string)>
                 {
-                    ("Advice","Reaction")
+                    (TestAdvice, TestReaction)
                 })
             };
 
@@ -215,33 +235,25 @@ namespace OurApp.Tests.Validators
             Assert.IsTrue(result);
         }
 
-
-        //ConclusionPositiveValidator
-
         [TestMethod]
         public void ConclusionPositiveValidator_ValidConclusion_ReturnsTrue()
         {
-            string conclusion = "Well done!";
-            var result = validator.ValidatePositiveConclusion(conclusion);
+            var result = validator.ValidatePositiveConclusion(ValidConclusion);
             Assert.IsTrue(result);
         }
 
         [TestMethod]
         public void ConclusionPositiveValidator_EmptyConclusion_ThrowsException()
         {
-            string conclusion = "";
-            Action action = () => validator.ValidatePositiveConclusion(conclusion);
+            Action action = () => validator.ValidatePositiveConclusion(StringEmpty);
             Assert.ThrowsException<Exception>(action);
         }
 
-
-        //ValidateForActivation
         [TestMethod]
         public void ValidateForActivation_ValidData_ReturnsTrue()
         {
             var scenarios = GetValidScenarios();
-            string conclusion = "Good ending";
-            var result = validator.ValidateForActivation(scenarios, conclusion);
+            var result = validator.ValidateForActivation(scenarios, EndingConclusion);
             Assert.IsTrue(result);
         }
     }

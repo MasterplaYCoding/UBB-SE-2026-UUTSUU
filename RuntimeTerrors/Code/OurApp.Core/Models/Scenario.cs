@@ -7,27 +7,27 @@ namespace OurApp.Core.Models
     {
         public string Description { get; private set; }
 
-        private List<AdviceChoice> _choices;
-        public IReadOnlyList<AdviceChoice> AdviceChoices => _choices;
+        private List<AdviceChoice> choices;
+        public IReadOnlyList<AdviceChoice> AdviceChoices => choices;
 
         public Scenario(string description)
         {
             Description = description;
-            _choices = new List<AdviceChoice>();
+            choices = new List<AdviceChoice>();
         }
 
         public void AddChoice(AdviceChoice choice)
         {
-            _choices.Add(choice);
+            choices.Add(choice);
         }
 
         public List<string> GetAdviceTexts()
         {
             List<string> adviceTexts = new List<string>();
 
-            for (int index = 0; index < _choices.Count; index++)
+            for (int index = 0; index < choices.Count; index++)
             {
-                adviceTexts.Add(_choices[index].Advice);
+                adviceTexts.Add(choices[index].Advice);
             }
 
             return adviceTexts;
@@ -37,9 +37,9 @@ namespace OurApp.Core.Models
         {
             List<string> adviceReactions = new List<string>();
 
-            for (int index = 0; index < _choices.Count; index++)
+            for (int index = 0; index < choices.Count; index++)
             {
-                adviceReactions.Add(_choices[index].Feedback);
+                adviceReactions.Add(choices[index].Feedback);
             }
 
             return adviceReactions;
@@ -47,10 +47,12 @@ namespace OurApp.Core.Models
 
         public string SelectChoice(int index)
         {
-            if (index < 0 || index >= _choices.Count)
+            if (index < 0 || index >= choices.Count)
+            {
                 throw new ArgumentOutOfRangeException(nameof(index), "Invalid choice index");
+            }
 
-            return _choices[index].IsChosen();
+            return choices[index].IsChosen();
         }
     }
 }

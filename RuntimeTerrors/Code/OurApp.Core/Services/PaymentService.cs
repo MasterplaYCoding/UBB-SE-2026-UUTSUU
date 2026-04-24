@@ -1,12 +1,12 @@
-﻿using OurApp.Core.Database;
-using OurApp.Core.Models;
-using OurApp.Core.Repositories;
-using OurApp.Core.Validators;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
+using OurApp.Core.Database;
+using OurApp.Core.Models;
+using OurApp.Core.Repositories;
+using OurApp.Core.Validators;
 
 namespace OurApp.Core.Services
 {
@@ -24,29 +24,31 @@ namespace OurApp.Core.Services
         private const string EmailSentDebugMessagePrefix = "Email sent to ";
         private const string EmailFailedDebugMessagePrefix = "Failed to send email: ";
 
-        private readonly IPaymentValidator _validator;
-        private readonly IPaymentRepository _repository;
+        private readonly IPaymentValidator validator;
+        private readonly IPaymentRepository repository;
 
         public PaymentService(IPaymentRepository repository, IPaymentValidator paymentValidator)
         {
-            _repository = repository;
-            _validator = paymentValidator;
+            this.repository = repository;
+            validator = paymentValidator;
         }
 
         public async Task<string> ProcessPaymentAsync(int jobId, int amount, string name, string cardNum, string exp, string cvv)
         {
-            string validationError = _validator.ValidatePaymentDetails(name, cardNum, exp, cvv);
-            if (!string.IsNullOrEmpty(validationError)) return validationError;
-
+            string validationError = validator.ValidatePaymentDetails(name, cardNum, exp, cvv);
+            if (!string.IsNullOrEmpty(validationError))
+            {
+                return validationError;
+            }
             try
             {
                 // 1. Save to database
-                _repository.UpdateJobPayment(jobId, amount);
+                repository.UpdateJobPayment(jobId, amount);
 
                 // 2. Fetch emails to notify
-                List<string> emailsToNotify = _repository.GetCompaniesToNotify(jobId, amount);
+                List<string> emailsToNotify = repository.GetCompaniesToNotify(jobId, amount);
 
-                // 3. Send Emails 
+                // 3. Send Emails
                 if (emailsToNotify.Count > EmptyCollectionCount)
                 {
                     await SendNotificationEmailsAsync(emailsToNotify, amount);
@@ -101,7 +103,7 @@ namespace OurApp.Core.Services
 
         public List<JobPaymentInfo> GetPaidJobsInfo(string jobType, string expLevel)
         {
-            return _repository.GetPaidJobs(jobType, expLevel);
+            return repository.GetPaidJobs(jobType, expLevel);
         }
     }
 }

@@ -1,7 +1,7 @@
+using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using OurApp.Core.ViewModels;
-using System;
 
 namespace OurApp.WinUI
 {
@@ -13,8 +13,8 @@ namespace OurApp.WinUI
         {
             this.InitializeComponent();
 
-            var mainWindow = App.mainWindow;
-            ViewModel = new PaymentViewModel(mainWindow.paymentService);
+            var mainWindow = App.MainWindow;
+            ViewModel = new PaymentViewModel(mainWindow.PaymentService);
 
             ViewModel.CurrentJobId = jobId;
 

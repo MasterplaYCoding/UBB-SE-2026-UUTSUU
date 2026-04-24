@@ -1,16 +1,16 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using OurApp.Core.Models;
 using OurApp.Core.Services;
-using System.Collections.ObjectModel;
 
 namespace OurApp.Core.ViewModels
 {
     public partial class OurEventsViewModel : ObservableObject
     {
-        private readonly IEventsService _eventsService;
-        private readonly SessionService _sessionService;
+        private readonly IEventsService eventsService;
+        private readonly SessionService sessionService;
 
-        public ObservableCollection<Event> currentEventsCollection { get; }
+        public ObservableCollection<Event> CurrentEventsCollection { get; }
 
         /// <summary>
         /// Our Events View Model constructor
@@ -19,10 +19,10 @@ namespace OurApp.Core.ViewModels
         /// <param name="sessionService"> session service - the logged in user </param>
         public OurEventsViewModel(IEventsService eventsService, SessionService sessionService)
         {
-            _eventsService = eventsService;
-            _sessionService = sessionService;
+            this.eventsService = eventsService;
+            this.sessionService = sessionService;
 
-            currentEventsCollection = _eventsService.GetCurrentEvents(_sessionService.loggedInUser.CompanyId);
+            CurrentEventsCollection = this.eventsService.GetCurrentEvents(this.sessionService.LoggedInUser.CompanyId);
         }
     }
 }

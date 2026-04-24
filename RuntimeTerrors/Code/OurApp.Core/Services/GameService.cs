@@ -1,28 +1,30 @@
-using Microsoft.Data.SqlClient;
-using OurApp.Core.Models;
-using OurApp.Core.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.PortableExecutable;
+using Microsoft.Data.SqlClient;
+using OurApp.Core.Models;
+using OurApp.Core.Repositories;
 
 namespace OurApp.Core.Services
 {
     public class GameService : IGameService
     {
-        private readonly ICompanyRepo _repository;
+        private readonly ICompanyRepo repository;
         public SessionService SessionService;
 
         public GameService(ICompanyRepo repository)
         {
-            _repository = repository;
+            this.repository = repository;
         }
 
         public Game LoadedGame()
         {
-            var game = _repository.GetGame();
+            var game = repository.GetGame();
             if (game == null)
+            {
                 throw new InvalidOperationException("No game is available from the repository.");
+            }
             return game;
         }
 
@@ -33,18 +35,21 @@ namespace OurApp.Core.Services
 
         public void Save(Game game)
         {
-            if (game == null) throw new ArgumentNullException(nameof(game));
-            _repository.SaveGame(game);
+            if (game == null)
+            {
+                throw new ArgumentNullException(nameof(game));
+            }
+            repository.SaveGame(game);
         }
 
         public Game GetStoredGame()
         {
-            return _repository.GetGame() ?? new Game();
+            return repository.GetGame() ?? new Game();
         }
 
         public bool IsPublished()
         {
-            var game = _repository.GetGame();
+            var game = repository.GetGame();
             return game != null && game.IsPublished;
         }
 
@@ -57,7 +62,9 @@ namespace OurApp.Core.Services
         {
             var game = LoadedGame();
             if (number < 0 || number >= game.Scenarios.Count)
+            {
                 throw new ArgumentOutOfRangeException(nameof(number), "Scenario index is out of bounds.");
+            }
 
             return game.Scenarios[number].Description;
         }
@@ -66,7 +73,9 @@ namespace OurApp.Core.Services
         {
             var game = LoadedGame();
             if (number < 0 || number >= game.Scenarios.Count)
+            {
                 throw new ArgumentOutOfRangeException(nameof(number));
+            }
             return game.Scenarios[number].GetAdviceTexts();
         }
 
@@ -74,7 +83,9 @@ namespace OurApp.Core.Services
         {
             var game = LoadedGame();
             if (numberScenario < 0 || numberScenario >= game.Scenarios.Count)
+            {
                 throw new ArgumentOutOfRangeException(nameof(numberScenario));
+            }
             return game.Scenarios[numberScenario].SelectChoice(numberAdvice);
         }
 

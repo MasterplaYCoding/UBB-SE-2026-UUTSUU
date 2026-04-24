@@ -1,22 +1,21 @@
-using OurApp.Core.Models;
-using OurApp.Core.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel.Design;
+using OurApp.Core.Models;
+using OurApp.Core.Repositories;
 
 namespace OurApp.Core.Services
 {
     public class ProfileCompletionCalculator : IProfileCompletionCalculator
     {
-        //Company has:
+        // Company has:
         //    this.Name = name;
         //    this.AboutUs = aboutus;
         //    this.Pfp_url = pfp_url;
         //    this.Logo_url = logo_url;
         //    this.Location = location;
         //    this.Email = email;
-
         private const int TotalRequiredTasksCount = 5;
         private const int MinimumRequiredPostedJobs = 5;
         private const int MinimumRequiredCollaborators = 2;
@@ -39,13 +38,13 @@ namespace OurApp.Core.Services
         private const string MessageMoreApplicantsPrefix = "Congrats! You have ";
         private const string MessageMoreApplicantsSuffix = "% more applicants than last week.";
 
-        private readonly IJobsRepository _jobsRepository;
-        private readonly IApplicantRepository _applicantRepository;
+        private readonly IJobsRepository jobsRepository;
+        private readonly IApplicantRepository applicantRepository;
 
         public ProfileCompletionCalculator(IJobsRepository jobsRepository, IApplicantRepository applicantRepository)
         {
-            _jobsRepository = jobsRepository;
-            _applicantRepository = applicantRepository;
+            this.jobsRepository = jobsRepository;
+            this.applicantRepository = applicantRepository;
         }
 
         public (int percentage, List<string> remainingTasks) Calculate(Company company)
@@ -53,21 +52,47 @@ namespace OurApp.Core.Services
             int completedTasksCount = EmptyCount;
             var remainingTasksList = new List<string>();
 
-            if (!string.IsNullOrEmpty(company.ProfilePicturePath)) completedTasksCount++;
-            else remainingTasksList.Add(TaskUploadPictureText);
+            if (!string.IsNullOrEmpty(company.ProfilePicturePath))
+            {
+                completedTasksCount++;
+            }
+            else
+            {
+                remainingTasksList.Add(TaskUploadPictureText);
+            }
 
-            if (!string.IsNullOrEmpty(company.AboutUs)) completedTasksCount++;
-            else remainingTasksList.Add(TaskAddDescriptionText);
-
-            if (company.PostedJobsCount >= MinimumRequiredPostedJobs) completedTasksCount++;
-            else remainingTasksList.Add(TaskPostJobsText);
-
-            if (company.CollaboratorsCount >= MinimumRequiredCollaborators || company.CollaboratorsCount >= MinimumRequiredCollaborators) completedTasksCount++;
-            else remainingTasksList.Add(TaskAddCollaboratorsText);
-
-            if (IsMiniGameComplete(company.Game)) completedTasksCount++;
-            else remainingTasksList.Add(TaskCompleteMiniGameText);
-
+            if (!string.IsNullOrEmpty(company.AboutUs))
+            {
+                completedTasksCount++;
+            }
+            else
+            {
+                remainingTasksList.Add(TaskAddDescriptionText);
+            }
+            if (company.PostedJobsCount >= MinimumRequiredPostedJobs)
+            {
+                completedTasksCount++;
+            }
+            else
+            {
+                remainingTasksList.Add(TaskPostJobsText);
+            }
+            if (company.CollaboratorsCount >= MinimumRequiredCollaborators || company.CollaboratorsCount >= MinimumRequiredCollaborators)
+            {
+                completedTasksCount++;
+            }
+            else
+            {
+                remainingTasksList.Add(TaskAddCollaboratorsText);
+            }
+            if (IsMiniGameComplete(company.Game))
+            {
+                completedTasksCount++;
+            }
+            else
+            {
+                remainingTasksList.Add(TaskCompleteMiniGameText);
+            }
             return ((completedTasksCount * PercentageMultiplier) / TotalRequiredTasksCount, remainingTasksList);
         }
 
@@ -78,7 +103,7 @@ namespace OurApp.Core.Services
 
         public (List<string> skillNames, List<int> percents) GetSkillsTop3(int companyId)
         {
-            var companyJobsList = _jobsRepository
+            var companyJobsList = jobsRepository
                 .GetAllJobs()
                 .Where(job => job.Company != null && job.Company.CompanyId == companyId)
                 .ToList();
@@ -88,16 +113,21 @@ namespace OurApp.Core.Services
 
             foreach (var job in companyJobsList)
             {
-                if (job.JobSkills == null) continue;
-
+                if (job.JobSkills == null)
+                {
+                    continue;
+                }
                 foreach (var jobSkill in job.JobSkills)
                 {
                     var skillName = jobSkill.Skill?.SkillName;
-                    if (string.IsNullOrEmpty(skillName)) continue;
-
+                    if (string.IsNullOrEmpty(skillName))
+                    {
+                        continue;
+                    }
                     if (!skillCountsDictionary.ContainsKey(skillName))
+                    {
                         skillCountsDictionary[skillName] = EmptyCount;
-
+                    }
                     skillCountsDictionary[skillName] += jobSkill.RequiredPercentage;
                     totalRequiredPercentage += jobSkill.RequiredPercentage;
                 }
@@ -107,8 +137,9 @@ namespace OurApp.Core.Services
             var topSkillPercentagesList = new List<int>();
 
             if (totalRequiredPercentage == EmptyCount)
+            {
                 return (topSkillNamesList, topSkillPercentagesList);
-
+            }
             var topThreeSkills = skillCountsDictionary
                 .OrderByDescending(skillEntry => skillEntry.Value)
                 .Take(TopSkillsLimit);
@@ -122,9 +153,9 @@ namespace OurApp.Core.Services
             return (topSkillNamesList, topSkillPercentagesList);
         }
 
-        public string applicantsMessage(int companyId)
+        public string ApplicantsMessage(int companyId)
         {
-            var companyApplicantsList = _applicantRepository.GetApplicantsByCompany(companyId);
+            var companyApplicantsList = applicantRepository.GetApplicantsByCompany(companyId);
 
             int currentWeekApplicantsCount = companyApplicantsList
                 .Count(applicant => applicant.AppliedAt >= DateTime.Now.AddDays(DaysToLookBack));
@@ -135,8 +166,9 @@ namespace OurApp.Core.Services
             if (previousWeekApplicantsCount == EmptyCount)
             {
                 if (currentWeekApplicantsCount == EmptyCount)
+                {
                     return MessageNoApplicantsText;
-
+                }
                 return $"{MessageGreatStartPrefix}{currentWeekApplicantsCount}{MessageGreatStartSuffix}";
             }
 

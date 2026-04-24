@@ -1,11 +1,11 @@
-﻿using OurApp.Core.Models;
-using OurApp.Core.Repositories;
-using OurApp.Tests.Helpers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OurApp.Core.Models;
+using OurApp.Core.Repositories;
+using OurApp.Tests.Helpers;
 
 namespace OurApp.Tests.Repositories
 {
@@ -50,7 +50,7 @@ namespace OurApp.Tests.Repositories
             var result = sut.GetApplicantById(TestDbSeeder.ApplicantId);
             Assert.IsNotNull(result);
         }
-        
+
         [TestMethod]
         public void AddApplicant_ValidApplicant_StoresCorrectId()
         {
@@ -176,7 +176,7 @@ namespace OurApp.Tests.Repositories
         public void RemoveApplicant_ExistingApplicant_CanNoLongerBeRetrieved()
         {
             sut.RemoveApplicant(TestDbSeeder.ApplicantId);
-            
+
             var result = sut.GetApplicantById(TestDbSeeder.ApplicantId);
             Assert.IsNull(result);
         }

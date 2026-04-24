@@ -1,27 +1,36 @@
+using System;
+using System.Collections.ObjectModel;
 using Microsoft.Data.SqlClient;
 using OurApp.Core.Database;
 using OurApp.Core.Models;
 using OurApp.Core.Repositories;
-using System;
-using System.Collections.ObjectModel;
 
 namespace OurApp.Core.Repositories
 {
     public class CompanyRepo : ICompanyRepo
     {
-        private ObservableCollection<Company> _companies;
-        private Company? _currentCompany;
+        private ObservableCollection<Company> companies;
+        private Company? currentCompany;
 
         public CompanyRepo()
         {
-            _companies = new ObservableCollection<Company>();
+            companies = new ObservableCollection<Company>();
         }
 
         private void ValidateRequiredFields(Company company)
         {
-            if (company is null) throw new ArgumentNullException(nameof(company));
-            if (string.IsNullOrWhiteSpace(company.Name)) throw new ArgumentException("Company name is required.", nameof(company));
-            if (string.IsNullOrWhiteSpace(company.CompanyLogoPath)) throw new ArgumentException("Company logo url/path is required.", nameof(company));
+            if (company is null)
+            {
+                throw new ArgumentNullException(nameof(company));
+            }
+            if (string.IsNullOrWhiteSpace(company.Name))
+            {
+                throw new ArgumentException("Company name is required.", nameof(company));
+            }
+            if (string.IsNullOrWhiteSpace(company.CompanyLogoPath))
+            {
+                throw new ArgumentException("Company logo url/path is required.", nameof(company));
+            }
         }
 
         private static object GetDatabaseValue(string? value) => value is null ? DBNull.Value : value;
@@ -30,16 +39,15 @@ namespace OurApp.Core.Repositories
         private Company MapCompany(SqlDataReader dataReader)
         {
             var company = new Company(
-                name: dataReader["company_name"]?.ToString() ?? "",
-                aboutus: dataReader["about_us"] is DBNull ? "" : dataReader["about_us"]?.ToString() ?? "",
-                pfpUrl: dataReader["profile_picture_url"] is DBNull ? "" : dataReader["profile_picture_url"]?.ToString() ?? "",
-                logoUrl: dataReader["logo_picture_url"]?.ToString() ?? "",
-                location: dataReader["location"] is DBNull ? "" : dataReader["location"]?.ToString() ?? "",
-                email: dataReader["email"] is DBNull ? "" : dataReader["email"]?.ToString() ?? "",
+                name: dataReader["company_name"]?.ToString() ?? string.Empty,
+                aboutus: dataReader["about_us"] is DBNull ? string.Empty : dataReader["about_us"]?.ToString() ?? string.Empty,
+                pfpUrl: dataReader["profile_picture_url"] is DBNull ? string.Empty : dataReader["profile_picture_url"]?.ToString() ?? string.Empty,
+                logoUrl: dataReader["logo_picture_url"]?.ToString() ?? string.Empty,
+                location: dataReader["location"] is DBNull ? string.Empty : dataReader["location"]?.ToString() ?? string.Empty,
+                email: dataReader["email"] is DBNull ? string.Empty : dataReader["email"]?.ToString() ?? string.Empty,
                 companyId: Convert.ToInt32(dataReader["company_id"]),
                 postedJobsCount: dataReader["posted_jobs_count"] is DBNull ? 0 : Convert.ToInt32(dataReader["posted_jobs_count"]),
-                collaboratorsCount: dataReader["collaborators_count"] is DBNull ? 0 : Convert.ToInt32(dataReader["collaborators_count"])
-            );
+                collaboratorsCount: dataReader["collaborators_count"] is DBNull ? 0 : Convert.ToInt32(dataReader["collaborators_count"]));
 
             company.Game = MapGame(dataReader);
 
@@ -48,18 +56,22 @@ namespace OurApp.Core.Repositories
 
         public Game? GetGame()
         {
-            if (_currentCompany == null)
+            if (currentCompany == null)
+            {
                 return null;
+            }
 
-            return _currentCompany.Game;
+            return currentCompany.Game;
         }
 
         public void SaveGame(Game game)
         {
-            if (_currentCompany == null)
+            if (currentCompany == null)
+            {
                 throw new InvalidOperationException("Nu exista o companie curenta selectata.");
+            }
 
-            _currentCompany.Game = game;
+            currentCompany.Game = game;
 
             using var databaseConnection = DbConnectionHelper.GetConnection();
             databaseConnection.Open();
@@ -87,7 +99,7 @@ namespace OurApp.Core.Repositories
                   WHERE company_id = @CompanyId",
                 databaseConnection);
 
-            sqlCommand.Parameters.AddWithValue("@CompanyId", _currentCompany.CompanyId);
+            sqlCommand.Parameters.AddWithValue("@CompanyId", currentCompany.CompanyId);
             sqlCommand.Parameters.AddWithValue("@BuddyName", GetDatabaseValue(game.Buddy.Name));
             sqlCommand.Parameters.AddWithValue("@BuddyDescription", GetDatabaseValue(game.Buddy.Introduction));
             sqlCommand.Parameters.AddWithValue("@AvatarId", GetDatabaseValue(game.Buddy.Id));
@@ -114,9 +126,8 @@ namespace OurApp.Core.Repositories
         {
             var buddy = new Buddy(
                 dataReader["avatar_id"] is DBNull ? 0 : Convert.ToInt32(dataReader["avatar_id"]),
-                dataReader["buddy_name"]?.ToString() ?? "",
-                dataReader["buddy_description"] is DBNull ? "" : dataReader["buddy_description"]?.ToString() ?? ""
-            );
+                dataReader["buddy_name"]?.ToString() ?? string.Empty,
+                dataReader["buddy_description"] is DBNull ? string.Empty : dataReader["buddy_description"]?.ToString() ?? string.Empty);
 
             var scenarios = new List<Scenario>();
 
@@ -125,19 +136,16 @@ namespace OurApp.Core.Repositories
                 var scenario1 = new Scenario(dataReader["scen_1_text"].ToString());
 
                 scenario1.AddChoice(new AdviceChoice(
-                    dataReader["scen1_answer1"]?.ToString() ?? "",
-                    dataReader["scen1_reaction1"]?.ToString() ?? ""
-                ));
+                    dataReader["scen1_answer1"]?.ToString() ?? string.Empty,
+                    dataReader["scen1_reaction1"]?.ToString() ?? string.Empty));
 
                 scenario1.AddChoice(new AdviceChoice(
-                    dataReader["scen1_answer2"]?.ToString() ?? "",
-                    dataReader["scen1_reaction2"]?.ToString() ?? ""
-                ));
+                    dataReader["scen1_answer2"]?.ToString() ?? string.Empty,
+                    dataReader["scen1_reaction2"]?.ToString() ?? string.Empty));
 
                 scenario1.AddChoice(new AdviceChoice(
-                    dataReader["scen1_answer3"]?.ToString() ?? "",
-                    dataReader["scen1_reaction3"]?.ToString() ?? ""
-                ));
+                    dataReader["scen1_answer3"]?.ToString() ?? string.Empty,
+                    dataReader["scen1_reaction3"]?.ToString() ?? string.Empty));
 
                 scenarios.Add(scenario1);
             }
@@ -147,19 +155,16 @@ namespace OurApp.Core.Repositories
                 var scenario2 = new Scenario(dataReader["scen2_text"].ToString());
 
                 scenario2.AddChoice(new AdviceChoice(
-                    dataReader["scen2_answer1"]?.ToString() ?? "",
-                    dataReader["scen2_reaction1"]?.ToString() ?? ""
-                ));
+                    dataReader["scen2_answer1"]?.ToString() ?? string.Empty,
+                    dataReader["scen2_reaction1"]?.ToString() ?? string.Empty));
 
                 scenario2.AddChoice(new AdviceChoice(
-                    dataReader["scen2_answer2"]?.ToString() ?? "",
-                    dataReader["scen2_reaction2"]?.ToString() ?? ""
-                ));
+                    dataReader["scen2_answer2"]?.ToString() ?? string.Empty,
+                    dataReader["scen2_reaction2"]?.ToString() ?? string.Empty));
 
                 scenario2.AddChoice(new AdviceChoice(
-                    dataReader["scen2_answer3"]?.ToString() ?? "",
-                    dataReader["scen2_reaction3"]?.ToString() ?? ""
-                ));
+                    dataReader["scen2_answer3"]?.ToString() ?? string.Empty,
+                    dataReader["scen2_reaction3"]?.ToString() ?? string.Empty));
 
                 scenarios.Add(scenario2);
             }
@@ -167,9 +172,8 @@ namespace OurApp.Core.Repositories
             return new Game(
                 buddy,
                 scenarios,
-                dataReader["final_quote"]?.ToString() ?? "",
-                true
-            );
+                dataReader["final_quote"]?.ToString() ?? string.Empty,
+                true);
         }
 
         private void RefreshCompaniesFromDatabase()
@@ -203,20 +207,22 @@ namespace OurApp.Core.Repositories
                 companyList.Add(MapCompany(dataReader));
             }
 
-            _companies = companyList;
+            companies = companyList;
         }
 
         public void PrintAll()
         {
             RefreshCompaniesFromDatabase();
-            foreach (var company in _companies)
+            foreach (var company in companies)
+            {
                 System.Diagnostics.Debug.WriteLine($"{company} ");
+            }
         }
 
         ObservableCollection<Company> ICompanyRepo.GetAll()
         {
             RefreshCompaniesFromDatabase();
-            return _companies;
+            return companies;
         }
 
         Company? ICompanyRepo.GetById(int companyId)
@@ -241,10 +247,12 @@ namespace OurApp.Core.Repositories
             sqlCommand.Parameters.AddWithValue("@CompanyId", companyId);
             using var dataReader = sqlCommand.ExecuteReader();
             if (!dataReader.Read())
+            {
                 return null;
+            }
 
-            _currentCompany = MapCompany(dataReader);
-            return _currentCompany;
+            currentCompany = MapCompany(dataReader);
+            return currentCompany;
         }
 
         void ICompanyRepo.Add(Company company)
@@ -392,7 +400,9 @@ namespace OurApp.Core.Repositories
 
             int affectedRows = sqlCommand.ExecuteNonQuery();
             if (affectedRows == 0)
+            {
                 throw new InvalidOperationException($"No company found with id '{company.CompanyId}' to update.");
+            }
 
             RefreshCompaniesFromDatabase();
         }
@@ -400,7 +410,9 @@ namespace OurApp.Core.Repositories
         public Company? GetCompanyByName(string companyName)
         {
             if (string.IsNullOrWhiteSpace(companyName))
+            {
                 return null;
+            }
 
             using var sqlConnection = DbConnectionHelper.GetConnection();
             sqlConnection.Open();

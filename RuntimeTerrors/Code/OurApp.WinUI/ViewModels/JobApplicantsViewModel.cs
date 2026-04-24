@@ -38,8 +38,8 @@ namespace OurApp.WinUI.ViewModels
         private const int MockApplicantId = 999;
         private const string MockApplicantName = "Mock Applicant (DB Error)";
 
-        private readonly IApplicantService _applicantService;
-        private readonly SessionService? _sessionService;
+        private readonly IApplicantService applicantService;
+        private readonly SessionService? sessionService;
 
         public JobPosting SelectedJob { get; private set; }
 
@@ -50,19 +50,19 @@ namespace OurApp.WinUI.ViewModels
             StatusAccepted, StatusRejected, StatusOnHold, StatusRecommendation
         };
 
-        [ObservableProperty] private string _draftStatus = string.Empty;
-        [ObservableProperty] private string _draftAppTestGrade = string.Empty;
-        [ObservableProperty] private string _draftCvGrade = string.Empty;
-        [ObservableProperty] private string _draftCompanyTestGrade = string.Empty;
-        [ObservableProperty] private string _draftInterviewGrade = string.Empty;
+        [ObservableProperty] private string draftStatus = string.Empty;
+        [ObservableProperty] private string draftAppTestGrade = string.Empty;
+        [ObservableProperty] private string draftCvGrade = string.Empty;
+        [ObservableProperty] private string draftCompanyTestGrade = string.Empty;
+        [ObservableProperty] private string draftInterviewGrade = string.Empty;
 
-        private string _cvScanErrorMessage = string.Empty;
+        private string cvScanErrorMessage = string.Empty;
         public string CvScanErrorMessage
         {
-            get => _cvScanErrorMessage;
+            get => cvScanErrorMessage;
             private set
             {
-                if (SetProperty(ref _cvScanErrorMessage, value ?? string.Empty))
+                if (SetProperty(ref cvScanErrorMessage, value ?? string.Empty))
                 {
                     OnPropertyChanged(nameof(CvScanErrorVisibility));
                 }
@@ -70,15 +70,15 @@ namespace OurApp.WinUI.ViewModels
         }
 
         public Visibility CvScanErrorVisibility =>
-            string.IsNullOrEmpty(_cvScanErrorMessage) ? Visibility.Collapsed : Visibility.Visible;
+            string.IsNullOrEmpty(cvScanErrorMessage) ? Visibility.Collapsed : Visibility.Visible;
 
-        private bool _isCvScanning;
+        private bool isCvScanning;
         public bool IsCvScanning
         {
-            get => _isCvScanning;
+            get => isCvScanning;
             private set
             {
-                if (SetProperty(ref _isCvScanning, value))
+                if (SetProperty(ref isCvScanning, value))
                 {
                     OnPropertyChanged(nameof(CanScanCv));
                 }
@@ -87,17 +87,17 @@ namespace OurApp.WinUI.ViewModels
 
         public bool CanScanCv => SelectedApplicant != null && !IsCvScanning;
 
-        private Applicant? _selectedApplicant;
+        private Applicant? selectedApplicant;
         public Applicant? SelectedApplicant
         {
-            get => _selectedApplicant;
+            get => selectedApplicant;
             set
             {
-                if (SetProperty(ref _selectedApplicant, value))
+                if (SetProperty(ref selectedApplicant, value))
                 {
-                    if (_selectedApplicant != null)
+                    if (selectedApplicant != null)
                     {
-                        LoadDraft(_selectedApplicant);
+                        LoadDraft(selectedApplicant);
                         DetailsVisibility = Visibility.Visible;
                         TableVisibility = Visibility.Collapsed;
                     }
@@ -111,32 +111,32 @@ namespace OurApp.WinUI.ViewModels
             }
         }
 
-        private Visibility _tableVisibility = Visibility.Visible;
+        private Visibility tableVisibility = Visibility.Visible;
         public Visibility TableVisibility
         {
-            get => _tableVisibility;
-            set => SetProperty(ref _tableVisibility, value);
+            get => tableVisibility;
+            set => SetProperty(ref tableVisibility, value);
         }
 
-        private Visibility _detailsVisibility = Visibility.Collapsed;
+        private Visibility detailsVisibility = Visibility.Collapsed;
         public Visibility DetailsVisibility
         {
-            get => _detailsVisibility;
-            set => SetProperty(ref _detailsVisibility, value);
+            get => detailsVisibility;
+            set => SetProperty(ref detailsVisibility, value);
         }
 
         public JobApplicantsViewModel(JobPosting job, IApplicantService applicantService, SessionService? sessionService)
         {
             SelectedJob = job;
-            _applicantService = applicantService;
-            _sessionService = sessionService;
+            this.applicantService = applicantService;
+            this.sessionService = sessionService;
 
             LoadApplicants();
         }
 
         public async Task<(bool Ok, string Message)> SendStatusMailAsync()
         {
-            if (_sessionService?.loggedInUser == null)
+            if (sessionService?.LoggedInUser == null)
             {
                 return (false, ErrorNoSession);
             }
@@ -154,7 +154,7 @@ namespace OurApp.WinUI.ViewModels
 
             var statusForMail = string.IsNullOrWhiteSpace(DraftStatus) ? StatusPending : DraftStatus;
             var jobTitle = SelectedJob?.JobTitle ?? DefaultJobTitle;
-            var sourceName = _sessionService.loggedInUser.Name ?? DefaultCompanyName;
+            var sourceName = sessionService.LoggedInUser.Name ?? DefaultCompanyName;
             var applicantName = string.IsNullOrWhiteSpace(SelectedApplicant.User.Name) ? DefaultApplicantName : SelectedApplicant.User.Name;
 
             var fromAddress = new MailAddress(AdminEmailAddress, sourceName);
@@ -200,7 +200,7 @@ namespace OurApp.WinUI.ViewModels
             {
                 try
                 {
-                    var applicants = _applicantService.GetApplicantsForJob(SelectedJob);
+                    var applicants = applicantService.GetApplicantsForJob(SelectedJob);
                     foreach (var applicant in applicants)
                     {
                         Applicants.Add(applicant);
@@ -235,7 +235,7 @@ namespace OurApp.WinUI.ViewModels
             try
             {
                 var applicant = SelectedApplicant;
-                decimal? grade = await Task.Run(() => _applicantService.ScanCvXml(applicant)).ConfigureAwait(true);
+                decimal? grade = await Task.Run(() => applicantService.ScanCvXml(applicant)).ConfigureAwait(true);
 
                 if (grade.HasValue)
                 {
@@ -255,23 +255,46 @@ namespace OurApp.WinUI.ViewModels
 
         public void SaveChanges()
         {
-            if (SelectedApplicant == null) return;
+            if (SelectedApplicant == null)
+            {
+                return;
+            }
 
             SelectedApplicant.ApplicationStatus = DraftStatus;
 
-            if (decimal.TryParse(DraftAppTestGrade, out decimal parsedAppTest)) SelectedApplicant.AppTestGrade = parsedAppTest;
-            else if (string.IsNullOrWhiteSpace(DraftAppTestGrade)) SelectedApplicant.AppTestGrade = null;
-
-            if (decimal.TryParse(DraftCvGrade, out decimal parsedCvGrade)) SelectedApplicant.CvGrade = parsedCvGrade;
-            else if (string.IsNullOrWhiteSpace(DraftCvGrade)) SelectedApplicant.CvGrade = null;
-
-            if (decimal.TryParse(DraftCompanyTestGrade, out decimal parsedCompanyTest)) SelectedApplicant.CompanyTestGrade = parsedCompanyTest;
-            else if (string.IsNullOrWhiteSpace(DraftCompanyTestGrade)) SelectedApplicant.CompanyTestGrade = null;
-
-            if (decimal.TryParse(DraftInterviewGrade, out decimal parsedInterview)) SelectedApplicant.InterviewGrade = parsedInterview;
-            else if (string.IsNullOrWhiteSpace(DraftInterviewGrade)) SelectedApplicant.InterviewGrade = null;
-
-            _applicantService.UpdateApplicant(SelectedApplicant);
+            if (decimal.TryParse(DraftAppTestGrade, out decimal parsedAppTest))
+            {
+                SelectedApplicant.AppTestGrade = parsedAppTest;
+            }
+            else if (string.IsNullOrWhiteSpace(DraftAppTestGrade))
+            {
+                SelectedApplicant.AppTestGrade = null;
+            }
+            if (decimal.TryParse(DraftCvGrade, out decimal parsedCvGrade))
+            {
+                SelectedApplicant.CvGrade = parsedCvGrade;
+            }
+            else if (string.IsNullOrWhiteSpace(DraftCvGrade))
+            {
+                SelectedApplicant.CvGrade = null;
+            }
+            if (decimal.TryParse(DraftCompanyTestGrade, out decimal parsedCompanyTest))
+            {
+                SelectedApplicant.CompanyTestGrade = parsedCompanyTest;
+            }
+            else if (string.IsNullOrWhiteSpace(DraftCompanyTestGrade))
+            {
+                SelectedApplicant.CompanyTestGrade = null;
+            }
+            if (decimal.TryParse(DraftInterviewGrade, out decimal parsedInterview))
+            {
+                SelectedApplicant.InterviewGrade = parsedInterview;
+            }
+            else if (string.IsNullOrWhiteSpace(DraftInterviewGrade))
+            {
+                SelectedApplicant.InterviewGrade = null;
+            }
+            applicantService.UpdateApplicant(SelectedApplicant);
 
             int index = Applicants.IndexOf(SelectedApplicant);
             if (index >= 0)
@@ -291,7 +314,7 @@ namespace OurApp.WinUI.ViewModels
         {
             if (applicant != null)
             {
-                _applicantService.RemoveApplicant(applicant.ApplicantId);
+                applicantService.RemoveApplicant(applicant.ApplicantId);
                 Applicants.Remove(applicant);
                 if (SelectedApplicant == applicant)
                 {

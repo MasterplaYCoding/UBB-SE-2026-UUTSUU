@@ -55,8 +55,7 @@ namespace OurApp.Core.Repositories
                                 DefaultLogoPicture,
                                 DefaultLocation,
                                 DefaultEmail,
-                                dataReader.GetInt32(dataReader.GetOrdinal("company_id"))
-                            );
+                                dataReader.GetInt32(dataReader.GetOrdinal("company_id")));
                         }
 
                         jobPostingList.Add(jobPosting);

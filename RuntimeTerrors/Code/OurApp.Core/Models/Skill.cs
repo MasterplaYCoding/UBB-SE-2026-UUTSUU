@@ -7,6 +7,5 @@ namespace OurApp.Core.Models
     {
         public int SkillId { get; set; }
         public string SkillName { get; set; }
-        
     }
 }

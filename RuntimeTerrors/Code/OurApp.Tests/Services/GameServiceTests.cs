@@ -1,17 +1,40 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OurApp.Core.Models;
 using OurApp.Core.Services;
 using OurApp.Tests.Helpers;
-using System;
-using System.Collections.Generic;
 
 namespace OurApp.Tests.Services
 {
     [TestClass]
     public class GameServiceTests
     {
-        private FakeGameRepository repo;
-        private GameService service;
+        private const string DefaultBuddyName = "Buddy";
+        private const string DefaultBuddyIntro = "Hello there";
+        private const string AltBuddyIntro = "Hello";
+        private const string DefaultScenarioText = "Scenario text";
+        private const string AdviceOne = "Advice 1";
+        private const string ReactionOne = "Reaction 1";
+        private const string AdviceTwo = "Advice 2";
+        private const string ReactionTwo = "Reaction 2";
+        private const string DefaultConclusion = "Good ending";
+
+        private const string ScenarioOneText = "Scenario 1";
+        private const string AltAdviceOne = "Advice";
+        private const string AltReactionOne = "Reaction";
+        private const string ScenarioTwoText = "Scenario 2";
+        private const string AltAdviceTwo = "Advice2";
+        private const string AltReactionTwo = "Reaction2";
+
+        private const int DefaultBuddyId = 1;
+        private const int ValidIndex = 0;
+        private const int ExpectedChoicesCount = 2;
+        private const int InvalidIndexPositive = 5;
+        private const int InvalidIndexNegative = -1;
+
+        private FakeGameRepository repo = null!;
+        private GameService service = null!;
 
         [TestInitialize]
         public void Setup()
@@ -22,15 +45,15 @@ namespace OurApp.Tests.Services
 
         private Game CreateTestGame()
         {
-            var buddy = new Buddy(1, "Buddy", "Hello there");
+            var buddy = new Buddy(DefaultBuddyId, DefaultBuddyName, DefaultBuddyIntro);
 
-            var scenario = new Scenario("Scenario text");
-            scenario.AddChoice(new AdviceChoice("Advice 1", "Reaction 1"));
-            scenario.AddChoice(new AdviceChoice("Advice 2", "Reaction 2"));
+            var scenario = new Scenario(DefaultScenarioText);
+            scenario.AddChoice(new AdviceChoice(AdviceOne, ReactionOne));
+            scenario.AddChoice(new AdviceChoice(AdviceTwo, ReactionTwo));
 
             var scenarios = new List<Scenario> { scenario };
 
-            return new Game(buddy, scenarios, "Good ending", true);
+            return new Game(buddy, scenarios, DefaultConclusion, true);
         }
 
         [TestMethod]
@@ -54,7 +77,7 @@ namespace OurApp.Tests.Services
         {
             repo.StoredGame = CreateTestGame();
             int id = service.GetBuddyId();
-            Assert.AreEqual(1, id);
+            Assert.AreEqual(DefaultBuddyId, id);
         }
 
         [TestMethod]
@@ -68,7 +91,7 @@ namespace OurApp.Tests.Services
         [TestMethod]
         public void Save_NullGame_ThrowsException()
         {
-            Game game = null;
+            Game game = null!;
             Action action = () => service.Save(game);
             Assert.ThrowsException<ArgumentNullException>(action);
         }
@@ -94,22 +117,22 @@ namespace OurApp.Tests.Services
         {
             repo.StoredGame = CreateTestGame();
             var intro = service.ShowCoworker();
-            Assert.AreEqual("Hello there", intro);
+            Assert.AreEqual(DefaultBuddyIntro, intro);
         }
 
         [TestMethod]
         public void ShowScenarioText_ReturnsText()
         {
             repo.StoredGame = CreateTestGame();
-            var text = service.ShowScenarioText(0);
-            Assert.AreEqual("Scenario text", text);
+            var text = service.ShowScenarioText(ValidIndex);
+            Assert.AreEqual(DefaultScenarioText, text);
         }
 
         [TestMethod]
         public void ShowScenarioText_InvalidIndex_ThrowsException()
         {
             repo.StoredGame = CreateTestGame();
-            Action action = () => service.ShowScenarioText(5);
+            Action action = () => service.ShowScenarioText(InvalidIndexPositive);
             Assert.ThrowsException<ArgumentOutOfRangeException>(action);
         }
 
@@ -117,8 +140,8 @@ namespace OurApp.Tests.Services
         public void ShowChoices_ReturnsChoices()
         {
             repo.StoredGame = CreateTestGame();
-            var choices = service.ShowChoices(0);
-            Assert.AreEqual(2, choices.Count);
+            var choices = service.ShowChoices(ValidIndex);
+            Assert.AreEqual(ExpectedChoicesCount, choices.Count);
         }
 
         [TestMethod]
@@ -126,7 +149,7 @@ namespace OurApp.Tests.Services
         {
             repo.StoredGame = CreateTestGame();
             var result = service.ShowConclusion();
-            Assert.AreEqual("Good ending", result);
+            Assert.AreEqual(DefaultConclusion, result);
         }
 
         [TestMethod]
@@ -142,7 +165,7 @@ namespace OurApp.Tests.Services
         public void UnpublishGame_SetsGameUnpublished()
         {
             var game = CreateTestGame();
-            game.Publish();   
+            game.Publish();
 
             service.UnpublishGame(game);
             Assert.IsFalse(game.IsPublished);
@@ -168,7 +191,7 @@ namespace OurApp.Tests.Services
         public void ShowChoices_InvalidIndex_ThrowsException()
         {
             repo.StoredGame = CreateTestGame();
-            Action action = () => service.ShowChoices(5);
+            Action action = () => service.ShowChoices(InvalidIndexPositive);
             Assert.ThrowsException<ArgumentOutOfRangeException>(action);
         }
 
@@ -176,7 +199,7 @@ namespace OurApp.Tests.Services
         public void ChoiceMade_ReturnsReaction()
         {
             repo.StoredGame = CreateTestGame();
-            var result = service.ChoiceMade(0, 0);
+            var result = service.ChoiceMade(ValidIndex, ValidIndex);
             Assert.IsNotNull(result);
         }
 
@@ -185,35 +208,34 @@ namespace OurApp.Tests.Services
         {
             var scenarios = new List<(string, IReadOnlyList<(string, string)>)>
             {
-                ("Scenario 1", new List<(string,string)>
+                (ScenarioOneText, new List<(string, string)>
                 {
-                    ("Advice","Reaction")
+                    (AltAdviceOne, AltReactionOne)
                 }),
-            
-                ("Scenario 2", new List<(string,string)>
+
+                (ScenarioTwoText, new List<(string, string)>
                 {
-                    ("Advice2","Reaction2")
+                    (AltAdviceTwo, AltReactionTwo)
                 })
             };
 
             var game = service.CreateGameFromInput(
-                1,
-                "Buddy",
-                "Hello",
+                DefaultBuddyId,
+                DefaultBuddyName,
+                AltBuddyIntro,
                 scenarios,
-                "Good ending",
-                true
-            );
+                DefaultConclusion,
+                true);
 
             Assert.IsNotNull(game);
-            Assert.AreEqual("Good ending", game.Conclusion);
+            Assert.AreEqual(DefaultConclusion, game.Conclusion);
         }
 
         [TestMethod]
         public void ChoiceMade_InvalidScenarioIndex_ThrowsException()
         {
             repo.StoredGame = CreateTestGame();
-            Action action = () => service.ChoiceMade(-1, 0);
+            Action action = () => service.ChoiceMade(InvalidIndexNegative, ValidIndex);
             Assert.ThrowsException<ArgumentOutOfRangeException>(action);
         }
     }
