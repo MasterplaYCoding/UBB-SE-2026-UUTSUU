@@ -13,8 +13,8 @@ namespace OurApp.WinUI
         public OurJobsPage()
         {
             this.InitializeComponent();
-            var mainWindow = App.mainWindow;
-            ViewModel = new OurJobsViewModel(mainWindow.jobsRepository);
+            var mainWindow = App.MainWindow;
+            ViewModel = new OurJobsViewModel(mainWindow.JobsRepository);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)

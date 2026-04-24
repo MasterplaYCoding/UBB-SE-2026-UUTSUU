@@ -19,16 +19,25 @@ namespace OurApp.Core.Validators
 
         public string ValidatePaymentDetails(string cardHolderName, string cardNumber, string expirationDate, string cardVerificationValue)
         {
-            if (string.IsNullOrWhiteSpace(cardHolderName)) return "Card Holder Name is required.";
+            if (string.IsNullOrWhiteSpace(cardHolderName))
+            {
+                return "Card Holder Name is required.";
+            }
 
             if (string.IsNullOrWhiteSpace(cardNumber) || cardNumber.Length < CardNumberValidLength)
+            {
                 return "Please enter a valid Card Number.";
+            }
 
             if (string.IsNullOrWhiteSpace(expirationDate) || !expirationDate.Contains(ExpirationDateSeparatorString))
+            {
                 return "Expiration Date must be in MM/YY format.";
+            }
 
             if (string.IsNullOrWhiteSpace(cardVerificationValue) || cardVerificationValue.Length < CardVerificationValueValidLength)
+            {
                 return "Please enter a valid CVV.";
+            }
 
             var expirationDateParts = expirationDate.Split(ExpirationDateSeparatorCharacter);
             if (expirationDateParts.Length != ExpirationDateValidNumberOfParts ||
@@ -46,7 +55,7 @@ namespace OurApp.Core.Validators
             // Convert "YY" to "YYYY"
             expirationYear += CenturyYearOffset;
 
-            //Check if the card is expired
+            // Check if the card is expired
             DateTime currentDate = DateTime.Now;
             if (expirationYear < currentDate.Year || (expirationYear == currentDate.Year && expirationMonth < currentDate.Month))
             {

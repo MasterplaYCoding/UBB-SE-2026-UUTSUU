@@ -1,9 +1,9 @@
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Media.Imaging;
 using System;
-using Windows.Storage.Streams;
 using System.Globalization;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Storage.Streams;
+using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace OurApp.WinUI.Converters
 {
@@ -20,7 +20,9 @@ namespace OurApp.WinUI.Converters
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             if (value is not string base64 || string.IsNullOrWhiteSpace(base64))
+            {
                 return null;
+            }
 
             byte[] bytes;
             try

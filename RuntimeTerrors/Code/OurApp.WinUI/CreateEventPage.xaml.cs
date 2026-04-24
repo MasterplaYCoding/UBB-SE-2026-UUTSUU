@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -10,11 +15,6 @@ using Microsoft.UI.Xaml.Navigation;
 using OurApp.Core.Models;
 using OurApp.Core.Validators;
 using OurApp.Core.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage.Pickers;
@@ -23,7 +23,6 @@ using WinRT.Interop;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
-
 namespace OurApp.WinUI
 {
     /// <summary>
@@ -31,7 +30,7 @@ namespace OurApp.WinUI
     /// </summary>
     public sealed partial class CreateEventPage : Page
     {
-        public CreateEventViewModel createEventViewModel { get; }
+        public CreateEventViewModel CreateEventViewModel { get; }
         private bool pageIsLoaded = false;
         private bool isStartDateModified = false;
         private bool isEndDateModified = false;
@@ -41,15 +40,14 @@ namespace OurApp.WinUI
         /// </summary>
         public CreateEventPage()
         {
-            var mainWindow = App.mainWindow;
+            var mainWindow = App.MainWindow;
 
-            createEventViewModel = new CreateEventViewModel(mainWindow.eventsService, mainWindow.companyService, mainWindow.sessionService, mainWindow.collabsService, mainWindow.eventValidator);
-            this.DataContext = createEventViewModel;
+            CreateEventViewModel = new CreateEventViewModel(mainWindow.EventsService, mainWindow.CompanyService, mainWindow.SessionService, mainWindow.CollabsService, mainWindow.EventValidator);
+            this.DataContext = CreateEventViewModel;
 
             InitializeComponent();
             pageIsLoaded = true;
         }
-
 
         /// <summary>
         /// Function that calls the "AddCollaborator" function and displays the error text, if one exists
@@ -58,11 +56,11 @@ namespace OurApp.WinUI
         /// <param name="e"></param>
         private void AddCollaborator_Click(object sender, RoutedEventArgs e)
         {
-            var companyName = CollaboratorNameBox.Text?.Trim() ?? "";
-            if (createEventViewModel.TryAddCollaboratorByName(companyName, out var errorMessage))
+            var companyName = CollaboratorNameBox.Text?.Trim() ?? string.Empty;
+            if (CreateEventViewModel.TryAddCollaboratorByName(companyName, out var errorMessage))
             {
-                CollaboratorNameBox.Text = "";
-                CollaboratorErrorTextBlock.Text = "";
+                CollaboratorNameBox.Text = string.Empty;
+                CollaboratorErrorTextBlock.Text = string.Empty;
                 RenderCollaboratorTags();
             }
             else
@@ -71,7 +69,6 @@ namespace OurApp.WinUI
             }
         }
 
-
         /// <summary>
         /// Function that adds a "Collaborator" tag and "Remove" button if a collaborator was added to an event
         /// </summary>
@@ -79,7 +76,7 @@ namespace OurApp.WinUI
         {
             CollaboratorsPanel.Children.Clear();
 
-            foreach (var collaborator in createEventViewModel.SelectedCollaborators)
+            foreach (var collaborator in CreateEventViewModel.SelectedCollaborators)
             {
                 var removeButton = new Button
                 {
@@ -114,8 +111,8 @@ namespace OurApp.WinUI
         {
             if (sender is Button button && button.Tag is string collaboratorName)
             {
-                createEventViewModel.RemoveCollaboratorByName(collaboratorName);
-                CollaboratorErrorTextBlock.Text = "";
+                CreateEventViewModel.RemoveCollaboratorByName(collaboratorName);
+                CollaboratorErrorTextBlock.Text = string.Empty;
                 RenderCollaboratorTags();
             }
         }
@@ -147,7 +144,6 @@ namespace OurApp.WinUI
             }
         }
 
-
         /// <summary>
         /// Function that takes the user back to the "Our events" page
         /// </summary>
@@ -155,7 +151,7 @@ namespace OurApp.WinUI
         /// <param name="e"></param>
         private void NavigateBack_Click(object sender, RoutedEventArgs e)
         {
-            var mainWindow = App.mainWindow;
+            var mainWindow = App.MainWindow;
             mainWindow.RootFrame.Navigate(typeof(OurEventsPage));
         }
 
@@ -168,9 +164,9 @@ namespace OurApp.WinUI
         private async void CreateEvent_Click(object sender, RoutedEventArgs e)
         {
             // because click usually runs before command so we must make it run before
-            createEventViewModel.CreateEventCommand.Execute(null);
+            CreateEventViewModel.CreateEventCommand.Execute(null);
 
-            if (createEventViewModel.isEverythingValid)
+            if (CreateEventViewModel.IsEverythingValid)
             {
                 NavigateBack_Click(sender, e);
             }
@@ -180,7 +176,7 @@ namespace OurApp.WinUI
             }
 
             ContentDialog popup;
-            if (createEventViewModel.eventCreatedSuccessfully)
+            if (CreateEventViewModel.EventCreatedSuccessfully)
             {
                 popup = new ContentDialog
                 {
@@ -225,12 +221,14 @@ namespace OurApp.WinUI
             picker.FileTypeFilter.Add(".gif");
 
             // Required for WinUI 3 pickers
-            IntPtr hwnd = WindowNative.GetWindowHandle(App.mainWindow);
+            IntPtr hwnd = WindowNative.GetWindowHandle(App.MainWindow);
             InitializeWithWindow.Initialize(picker, hwnd);
 
             var file = await picker.PickSingleFileAsync();
             if (file == null)
+            {
                 return;
+            }
 
             PhotoFileNameTextBlock.Text = file.Name;
 
@@ -244,7 +242,7 @@ namespace OurApp.WinUI
                 reader.ReadBytes(bytes);
             }
 
-            createEventViewModel.Photo = Convert.ToBase64String(bytes);
+            CreateEventViewModel.Photo = Convert.ToBase64String(bytes);
 
             // Create preview image from the selected bytes
             var bitmapImage = new BitmapImage();
@@ -258,7 +256,7 @@ namespace OurApp.WinUI
         }
 
         /// <summary>
-        /// Function that controls the border colour of the title textbox based on 
+        /// Function that controls the border colour of the title textbox based on
         /// its valid state
         /// </summary>
         /// <param name="sender"></param>
@@ -268,7 +266,7 @@ namespace OurApp.WinUI
             var binding = TitleBox.GetBindingExpression(TextBox.TextProperty);
             binding?.UpdateSource();
 
-            if (createEventViewModel.ValidateTitle())
+            if (CreateEventViewModel.ValidateTitle())
             {
                 TitleBox.BorderBrush = new SolidColorBrush(Colors.Green);
             }
@@ -278,9 +276,8 @@ namespace OurApp.WinUI
             }
         }
 
-
         /// <summary>
-        /// Function that controls the border colour of the description textbox based on 
+        /// Function that controls the border colour of the description textbox based on
         /// its valid state
         /// </summary>
         /// <param name="sender"></param>
@@ -290,7 +287,7 @@ namespace OurApp.WinUI
             var binding = DescriptionBox.GetBindingExpression(TextBox.TextProperty);
             binding?.UpdateSource();
 
-            if (createEventViewModel.ValidateDescription())
+            if (CreateEventViewModel.ValidateDescription())
             {
                 DescriptionBox.BorderBrush = new SolidColorBrush(Colors.Green);
             }
@@ -300,9 +297,8 @@ namespace OurApp.WinUI
             }
         }
 
-
         /// <summary>
-        /// Function that controls the border colour of the location textbox based on 
+        /// Function that controls the border colour of the location textbox based on
         /// its valid state
         /// </summary>
         /// <param name="sender"></param>
@@ -312,7 +308,7 @@ namespace OurApp.WinUI
             var binding = LocationBox.GetBindingExpression(TextBox.TextProperty);
             binding?.UpdateSource();
 
-            if (createEventViewModel.ValidateLocation())
+            if (CreateEventViewModel.ValidateLocation())
             {
                 LocationBox.BorderBrush = new SolidColorBrush(Colors.Green);
             }
@@ -320,12 +316,10 @@ namespace OurApp.WinUI
             {
                 LocationBox.BorderBrush = new SolidColorBrush(Colors.Red);
             }
-
         }
 
-
         /// <summary>
-        /// Function that controls the border colour of the start date picker based on 
+        /// Function that controls the border colour of the start date picker based on
         /// its valid state
         /// </summary>
         /// <param name="sender"></param>
@@ -333,15 +327,16 @@ namespace OurApp.WinUI
         private void StartDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
             if (!pageIsLoaded)
+            {
                 return;
-
+            }
             if (!isStartDateModified)
             {
                 isStartDateModified = true;
                 return;
             }
 
-            if (createEventViewModel.ValidateStartDate())
+            if (CreateEventViewModel.ValidateStartDate())
             {
                 StartDatePicker.BorderBrush = new SolidColorBrush(Colors.Green);
             }
@@ -351,9 +346,8 @@ namespace OurApp.WinUI
             }
         }
 
-
         /// <summary>
-        /// Function that controls the border colour of the end date picker based on 
+        /// Function that controls the border colour of the end date picker based on
         /// its valid state
         /// </summary>
         /// <param name="sender"></param>
@@ -361,15 +355,16 @@ namespace OurApp.WinUI
         private void EndDatePicker_DateChanged(CalendarDatePicker sender, CalendarDatePickerDateChangedEventArgs args)
         {
             if (!pageIsLoaded)
+            {
                 return;
-
+            }
             if (!isEndDateModified)
             {
                 isEndDateModified = true;
                 return;
             }
 
-            if (createEventViewModel.ValidateEndDate())
+            if (CreateEventViewModel.ValidateEndDate())
             {
                 EndDatePicker.BorderBrush = new SolidColorBrush(Colors.Green);
             }
@@ -380,7 +375,7 @@ namespace OurApp.WinUI
 
             if (isStartDateModified)
             {
-                if (createEventViewModel.ValidateDatesCronologity())
+                if (CreateEventViewModel.ValidateDatesCronologity())
                 {
                     EndDatePicker.BorderBrush = new SolidColorBrush(Colors.Green);
                 }

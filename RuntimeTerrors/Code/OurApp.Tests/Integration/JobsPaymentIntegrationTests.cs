@@ -18,8 +18,8 @@ namespace OurApp.Tests.Integration
         private const int CompetitorJobId = 97101;
         private const string IntegrationSkillName = "JobsIntegrationSkill";
 
-        private JobsRepository _jobsRepository = null!;
-        private PaymentRepository _paymentRepository = null!;
+        private JobsRepository jobsRepository = null!;
+        private PaymentRepository paymentRepository = null!;
 
         [TestInitialize]
         public void Setup()
@@ -27,8 +27,8 @@ namespace OurApp.Tests.Integration
             TestDbSeeder.Clean();
             TestDbSeeder.Seed();
 
-            _jobsRepository = new JobsRepository();
-            _paymentRepository = new PaymentRepository();
+            jobsRepository = new JobsRepository();
+            paymentRepository = new PaymentRepository();
 
             EnsureSkillExists(IntegrationSkillName);
             EnsureJobSkillLink(TestDbSeeder.JobId, GetSkillId(IntegrationSkillName), 90);
@@ -49,7 +49,7 @@ namespace OurApp.Tests.Integration
         [TestMethod]
         public void GetAllJobs_ReturnsRelatedCompanyAndSkillsTogether()
         {
-            var job = _jobsRepository.GetAllJobs().First(j => j.JobId == TestDbSeeder.JobId);
+            var job = jobsRepository.GetAllJobs().First(j => j.JobId == TestDbSeeder.JobId);
 
             Assert.IsNotNull(job.Company);
             Assert.AreEqual("TestCompany", job.Company.Name);
@@ -59,7 +59,7 @@ namespace OurApp.Tests.Integration
         [TestMethod]
         public void GetCompaniesToNotify_TraversesJobsAndCompaniesTables()
         {
-            var emails = _paymentRepository.GetCompaniesToNotify(TestDbSeeder.JobId, 200);
+            var emails = paymentRepository.GetCompaniesToNotify(TestDbSeeder.JobId, 200);
 
             Assert.AreEqual(1, emails.Count);
             Assert.AreEqual("integration@test.com", emails[0]);

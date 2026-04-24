@@ -1,8 +1,8 @@
-﻿using OurApp.Core.Models;
+﻿using System;
+using System.Collections.Generic;
+using OurApp.Core.Models;
 using OurApp.Core.Repositories;
 using OurApp.Tests.Helpers;
-using System;
-using System.Collections.Generic;
 
 namespace OurApp.Tests.Repositories
 {
@@ -25,8 +25,7 @@ namespace OurApp.Tests.Repositories
                 new DateTime(2027, 2, 2),
                 "Cluj-Napoca",
                 TestDbSeeder.CompanyId,
-                new List<Company>()
-            );
+                new List<Company>());
         }
 
         [TestInitialize]
@@ -65,7 +64,7 @@ namespace OurApp.Tests.Repositories
             eventsRepo.AddEventToRepo(insertedEvent);
             int countBefore = collaboratorsRepo.GetAllCollaborators(TestDbSeeder.CompanyId).Count;
 
-            var collaborator = new Company("TestCollaboratorCompany", "", "", "logo.png", "", "")
+            var collaborator = new Company("TestCollaboratorCompany", string.Empty, string.Empty, "logo.png", string.Empty, string.Empty)
             {
                 CompanyId = TestDbSeeder.CollaboratorCompanyId
             };
@@ -80,7 +79,7 @@ namespace OurApp.Tests.Repositories
         {
             eventsRepo.AddEventToRepo(insertedEvent);
 
-            var collaborator = new Company("TestCollaboratorCompany", "", "", "logo.png", "", "")
+            var collaborator = new Company("TestCollaboratorCompany", string.Empty, string.Empty, "logo.png", string.Empty, string.Empty)
             {
                 CompanyId = TestDbSeeder.CollaboratorCompanyId
             };
@@ -98,7 +97,7 @@ namespace OurApp.Tests.Repositories
             var companyBefore = companyRepo.GetCompanyByName("TestCompany");
             int countBefore = companyBefore.CollaboratorsCount;
 
-            var collaborator = new Company("TestCollaboratorCompany", "", "", "logo.png", "", "")
+            var collaborator = new Company("TestCollaboratorCompany", string.Empty, string.Empty, "logo.png", string.Empty, string.Empty)
             {
                 CompanyId = TestDbSeeder.CollaboratorCompanyId
             };
@@ -118,7 +117,7 @@ namespace OurApp.Tests.Repositories
                 "Cluj-Napoca", TestDbSeeder.CompanyId, new List<Company>());
             invalidEvent.Id = 99999;
 
-            var collaborator = new Company("TestCollaboratorCompany", "", "", "logo.png", "", "")
+            var collaborator = new Company("TestCollaboratorCompany", string.Empty, string.Empty, "logo.png", string.Empty, string.Empty)
             {
                 CompanyId = TestDbSeeder.CollaboratorCompanyId
             };
@@ -126,6 +125,5 @@ namespace OurApp.Tests.Repositories
             Assert.ThrowsException<Microsoft.Data.SqlClient.SqlException>(() =>
                 collaboratorsRepo.AddCollaboratorToRepo(invalidEvent, collaborator, TestDbSeeder.CompanyId));
         }
-
     }
 }

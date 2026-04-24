@@ -220,8 +220,7 @@ namespace OurApp.Core.Repositories
                     dataReader.GetInt32(dataReader.GetOrdinal("user_id")),
                     dataReader.IsDBNull(dataReader.GetOrdinal("name")) ? DefaultUserName : dataReader.GetString(dataReader.GetOrdinal("name")),
                     dataReader.IsDBNull(dataReader.GetOrdinal("email")) ? DefaultUserEmail : dataReader.GetString(dataReader.GetOrdinal("email")),
-                    dataReader.IsDBNull(curriculumVitaeXmlOrdinal) ? null : dataReader.GetString(curriculumVitaeXmlOrdinal)
-                );
+                    dataReader.IsDBNull(curriculumVitaeXmlOrdinal) ? null : dataReader.GetString(curriculumVitaeXmlOrdinal));
             }
 
             if (!dataReader.IsDBNull(dataReader.GetOrdinal("recommended_from_company_id")))

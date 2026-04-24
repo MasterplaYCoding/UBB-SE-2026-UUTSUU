@@ -1,7 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
-using OurApp.Core.Database;
-using OurApp.Core.Models;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,6 +6,9 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
+using OurApp.Core.Database;
+using OurApp.Core.Models;
 
 namespace OurApp.Core.Repositories
 {
@@ -136,7 +136,7 @@ namespace OurApp.Core.Repositories
             }
         }
 
-        public ObservableCollection<Event> getCurrentEventsFromRepo(int loggedInUser)
+        public ObservableCollection<Event> GetCurrentEventsFromRepo(int loggedInUser)
         {
             var currentEvents = new ObservableCollection<Event>();
 
@@ -165,8 +165,7 @@ namespace OurApp.Core.Repositories
                             (DateTime)dataReader["end_date"],
                             dataReader["location"].ToString(),
                             DefaultHostCompanyId,
-                            new List<Company>()
-                        )
+                            new List<Company>())
                         {
                             Id = (int)dataReader["event_id"]
                         });
@@ -182,7 +181,7 @@ namespace OurApp.Core.Repositories
             return currentEvents;
         }
 
-        public ObservableCollection<Event> getPastEventsFromRepo(int loggedInUser)
+        public ObservableCollection<Event> GetPastEventsFromRepo(int loggedInUser)
         {
             var pastEvents = new ObservableCollection<Event>();
 
@@ -209,8 +208,7 @@ namespace OurApp.Core.Repositories
                         (DateTime)dataReader["end_date"],
                         dataReader["location"].ToString(),
                         DefaultHostCompanyId,
-                        new List<Company>()
-                    )
+                        new List<Company>())
                     {
                         Id = (int)dataReader["event_id"]
                     });

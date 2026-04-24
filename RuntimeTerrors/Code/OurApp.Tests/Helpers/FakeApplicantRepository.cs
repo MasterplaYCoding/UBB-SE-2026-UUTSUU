@@ -24,7 +24,9 @@ namespace OurApp.Tests.Helpers
         public IEnumerable<Applicant> GetApplicantsByJob(JobPosting job)
         {
             if (job == null)
+            {
                 return new List<Applicant>();
+            }
 
             return store.Where(a => a.Job != null && a.Job.JobId == job.JobId).ToList();
         }
@@ -40,7 +42,9 @@ namespace OurApp.Tests.Helpers
             LastUpdated = applicant;
             var index = store.FindIndex(a => a.ApplicantId == applicant.ApplicantId);
             if (index >= 0)
+            {
                 store[index] = applicant;
+            }
         }
 
         public void RemoveApplicant(int applicantId)

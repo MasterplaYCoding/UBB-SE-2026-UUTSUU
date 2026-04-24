@@ -21,9 +21,11 @@ namespace OurApp.Core.Models
         public int PostedJobsCount { get; set; }
         public int CollaboratorsCount { get; set; }
 
-        public List<string> Collaborators { get; set; } = new();
+        public List<string> Collaborators { get; set; } = new ();
 
-        public Company() { }
+        public Company()
+        {
+        }
 
         public Company(
             string name,

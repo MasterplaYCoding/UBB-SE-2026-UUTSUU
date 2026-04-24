@@ -1,6 +1,6 @@
-﻿using OurApp.Core.Models;
+﻿using System.Collections.ObjectModel;
+using OurApp.Core.Models;
 using OurApp.Core.Repositories;
-using System.Collections.ObjectModel;
 
 namespace OurApp.Tests.Helpers
 {
@@ -18,9 +18,15 @@ namespace OurApp.Tests.Helpers
         {
             SavedGame = game;
         }
-        public void Add(Company c) { }
-        public void Remove(int id) { }
-        public void Update(Company c) { }
+        public void Add(Company c)
+        {
+        }
+        public void Remove(int id)
+        {
+        }
+        public void Update(Company c)
+        {
+        }
         public Company GetById(int id)
         {
             return null;
@@ -38,7 +44,6 @@ namespace OurApp.Tests.Helpers
 
         public void PrintAll()
         {
-
         }
     }
 }

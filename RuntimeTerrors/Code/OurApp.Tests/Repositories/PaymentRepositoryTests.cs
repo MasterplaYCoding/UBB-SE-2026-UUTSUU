@@ -19,14 +19,14 @@ namespace OurApp.Tests.Repositories
         private const int LowerBudgetJobId = 96101;
         private const int HigherBudgetJobId = 96102;
 
-        private PaymentRepository _repository = null!;
+        private PaymentRepository repository = null!;
 
         [TestInitialize]
         public void Setup()
         {
             TestDbSeeder.Clean();
             TestDbSeeder.Seed();
-            _repository = new PaymentRepository();
+            repository = new PaymentRepository();
 
             InsertCompany(BudgetCompanyId, "Budget Company", "budget@test.com");
             InsertCompany(HigherBudgetCompanyId, "Higher Budget Company", "higher@test.com");
@@ -49,7 +49,7 @@ namespace OurApp.Tests.Repositories
         [TestMethod]
         public void UpdateJobPayment_ExistingJob_PersistsNewAmount()
         {
-            _repository.UpdateJobPayment(TestDbSeeder.JobId, 250);
+            repository.UpdateJobPayment(TestDbSeeder.JobId, 250);
 
             var amountInDb = GetPaymentFromDb(TestDbSeeder.JobId);
             Assert.AreEqual(250, amountInDb);
@@ -58,7 +58,7 @@ namespace OurApp.Tests.Repositories
         [TestMethod]
         public void UpdateJobPayment_MissingJob_ThrowsException()
         {
-            var ex = Assert.ThrowsException<Exception>(() => _repository.UpdateJobPayment(999999, 200));
+            var ex = Assert.ThrowsException<Exception>(() => repository.UpdateJobPayment(999999, 200));
 
             Assert.AreEqual("Job ID not found. Payment not applied to database.", ex.Message);
         }
@@ -66,7 +66,7 @@ namespace OurApp.Tests.Repositories
         [TestMethod]
         public void GetPaidJobs_MatchingTypeAndExperience_ReturnsExpectedRows()
         {
-            var result = _repository.GetPaidJobs("Full-time", "Entry Level");
+            var result = repository.GetPaidJobs("Full-time", "Entry Level");
 
             Assert.IsTrue(result.Any(x => x.CompanyName == "TestCompany" && x.JobTitle == "Test Job"));
             Assert.IsTrue(result.Any(x => x.CompanyName == "Budget Company" && x.JobTitle == "Budget Job" && x.AmountPayed == 150));
@@ -76,7 +76,7 @@ namespace OurApp.Tests.Repositories
         [TestMethod]
         public void GetCompaniesToNotify_ReturnsOnlyLowerBudgetCompetitorEmails()
         {
-            var result = _repository.GetCompaniesToNotify(TestDbSeeder.JobId, 200);
+            var result = repository.GetCompaniesToNotify(TestDbSeeder.JobId, 200);
 
             Assert.AreEqual(1, result.Count);
             Assert.AreEqual("budget@test.com", result[0]);
@@ -176,7 +176,7 @@ namespace OurApp.Tests.Repositories
                      'Test', 'Remote', 1, NULL)", conn);
             cmd.ExecuteNonQuery();
 
-            var result = _repository.GetPaidJobs("Full-time", "Entry Level");
+            var result = repository.GetPaidJobs("Full-time", "Entry Level");
 
             using var cleanup = new SqlCommand("DELETE FROM jobs WHERE job_id = 96103", conn);
             cleanup.ExecuteNonQuery();

@@ -1,10 +1,10 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OurApp.Core.Models;
 using OurApp.Core.Services;
-using System;
-using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 
 namespace OurApp.Core.ViewModels
 {
@@ -21,16 +21,16 @@ namespace OurApp.Core.ViewModels
         private const string MessageBodySuccessPrefix = "Payment of $";
         private const string MessageBodySuccessSuffix = " processed successfully. Emails dispatched!";
 
-        private readonly IPaymentService _paymentService;
+        private readonly IPaymentService paymentService;
 
-        [ObservableProperty] private string _cardHolderName = string.Empty;
-        [ObservableProperty] private string _cardNumber = string.Empty;
-        [ObservableProperty] private string _expDate = string.Empty;
-        [ObservableProperty] private string _cvv = string.Empty;
-        [ObservableProperty] private string _amountToPayText = string.Empty;
+        [ObservableProperty] private string cardHolderName = string.Empty;
+        [ObservableProperty] private string cardNumber = string.Empty;
+        [ObservableProperty] private string expDate = string.Empty;
+        [ObservableProperty] private string cvv = string.Empty;
+        [ObservableProperty] private string amountToPayText = string.Empty;
 
-        [ObservableProperty] private string _selectedJobType = DefaultJobTypeValue;
-        [ObservableProperty] private string _selectedExperienceLevel = DefaultExperienceLevelValue;
+        [ObservableProperty] private string selectedJobType = DefaultJobTypeValue;
+        [ObservableProperty] private string selectedExperienceLevel = DefaultExperienceLevelValue;
 
         public ObservableCollection<JobPaymentInfo> PaymentData { get; } = new ObservableCollection<JobPaymentInfo>();
 
@@ -40,7 +40,7 @@ namespace OurApp.Core.ViewModels
 
         public PaymentViewModel(IPaymentService paymentService)
         {
-            _paymentService = paymentService;
+            this.paymentService = paymentService;
             LoadData(); // Load initially
         }
 
@@ -49,10 +49,13 @@ namespace OurApp.Core.ViewModels
 
         private void LoadData()
         {
-            if (string.IsNullOrEmpty(SelectedJobType) || string.IsNullOrEmpty(SelectedExperienceLevel)) return;
+            if (string.IsNullOrEmpty(SelectedJobType) || string.IsNullOrEmpty(SelectedExperienceLevel))
+            {
+                return;
+            }
 
             PaymentData.Clear();
-            var dataFromDatabase = _paymentService.GetPaidJobsInfo(SelectedJobType, SelectedExperienceLevel);
+            var dataFromDatabase = paymentService.GetPaidJobsInfo(SelectedJobType, SelectedExperienceLevel);
 
             foreach (var item in dataFromDatabase)
             {
@@ -69,7 +72,7 @@ namespace OurApp.Core.ViewModels
                 return;
             }
 
-            string resultMessage = await _paymentService.ProcessPaymentAsync(CurrentJobId, amountToPay, CardHolderName, CardNumber, ExpDate, Cvv);
+            string resultMessage = await paymentService.ProcessPaymentAsync(CurrentJobId, amountToPay, CardHolderName, CardNumber, ExpDate, Cvv);
 
             if (!string.IsNullOrEmpty(resultMessage))
             {

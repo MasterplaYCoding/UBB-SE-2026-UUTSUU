@@ -26,4 +26,7 @@
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
+	<PropertyGroup>
+		<CodeAnalysisRuleSet>..\SE.ruleset</CodeAnalysisRuleSet>
+	</PropertyGroup>
 </Project>

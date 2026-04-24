@@ -12,7 +12,7 @@ namespace OurApp.Core.ViewModels
         Start,
         Choices1,
         Reaction1,
-        Choices2, 
+        Choices2,
         Reaction2,
         Conclusion
     }

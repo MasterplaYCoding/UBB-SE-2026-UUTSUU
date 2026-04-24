@@ -1,13 +1,13 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using OurApp.Core.Models;
-using OurApp.Core.Services;
-using OurApp.Core.Validators;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using OurApp.Core.Models;
+using OurApp.Core.Services;
+using OurApp.Core.Validators;
 
 namespace OurApp.Core.ViewModels;
 
@@ -26,46 +26,46 @@ public partial class EditCompanyProfileViewModel : ObservableObject
     private const string MimeTypeJpeg = "jpeg";
     private const int DefaultCountValue = 0;
 
-    private readonly ICompanyService _companyService;
-    private readonly IGameService _gameService;
-    private readonly ICompanyValidator _companyValidator;
-    private readonly IGameValidator _gameValidator;
-    private readonly IImagePickerService _imagePickerService;
+    private readonly ICompanyService companyService;
+    private readonly IGameService gameService;
+    private readonly ICompanyValidator companyValidator;
+    private readonly IGameValidator gameValidator;
+    private readonly IImagePickerService imagePickerService;
 
     public Action<byte[]>? OnProfilePreviewRequested { get; set; }
     public Action<byte[]>? OnLogoPreviewRequested { get; set; }
 
     [ObservableProperty]
-    private int _companyId;
+    private int companyId;
 
     [ObservableProperty]
-    private string _name = string.Empty;
+    private string name = string.Empty;
 
     [ObservableProperty]
-    private string _aboutUs = string.Empty;
+    private string aboutUs = string.Empty;
 
     [ObservableProperty]
-    private string _profilePicturePath = string.Empty;
+    private string profilePicturePath = string.Empty;
 
     [ObservableProperty]
-    private string _photoFileName = DefaultPhotoFileName;
+    private string photoFileName = DefaultPhotoFileName;
 
     [ObservableProperty]
-    private string _companyLogoPath = string.Empty;
+    private string companyLogoPath = string.Empty;
 
     [ObservableProperty]
-    private string _logoFileName = DefaultPhotoFileName;
+    private string logoFileName = DefaultPhotoFileName;
 
     [ObservableProperty]
-    private string _location = string.Empty;
+    private string location = string.Empty;
 
     [ObservableProperty]
-    private string _email = string.Empty;
+    private string email = string.Empty;
 
     [ObservableProperty]
-    private string _statusMessage = string.Empty;
+    private string statusMessage = string.Empty;
 
-    public EditGame editGame { get; }
+    public EditGame EditGame { get; }
 
     public EditCompanyProfileViewModel(
         ICompanyService companyService,
@@ -74,20 +74,23 @@ public partial class EditCompanyProfileViewModel : ObservableObject
         IGameValidator gameValidator,
         IImagePickerService imagePickerService)
     {
-        _companyService = companyService;
-        _gameService = gameService;
-        _companyValidator = companyValidator;
-        _gameValidator = gameValidator;
-        _imagePickerService = imagePickerService;
+        this.companyService = companyService;
+        this.gameService = gameService;
+        this.companyValidator = companyValidator;
+        this.gameValidator = gameValidator;
+        this.imagePickerService = imagePickerService;
 
-        editGame = new EditGame(_gameService, _gameValidator);
+        EditGame = new EditGame(this.gameService, this.gameValidator);
     }
 
     [RelayCommand]
     private async Task PickProfileImageAsync()
     {
-        var result = await _imagePickerService.PickImageAsync();
-        if (result == null) return;
+        var result = await imagePickerService.PickImageAsync();
+        if (result == null)
+        {
+            return;
+        }
 
         PhotoFileName = result.Value.FileName;
         var extension = System.IO.Path.GetExtension(result.Value.FileName).TrimStart('.').ToLowerInvariant();
@@ -100,8 +103,11 @@ public partial class EditCompanyProfileViewModel : ObservableObject
     [RelayCommand]
     private async Task PickLogoImageAsync()
     {
-        var result = await _imagePickerService.PickImageAsync();
-        if (result == null) return;
+        var result = await imagePickerService.PickImageAsync();
+        if (result == null)
+        {
+            return;
+        }
 
         LogoFileName = result.Value.FileName;
         var extension = System.IO.Path.GetExtension(result.Value.FileName).TrimStart('.').ToLowerInvariant();
@@ -116,7 +122,7 @@ public partial class EditCompanyProfileViewModel : ObservableObject
         CompanyId = companyId;
         StatusMessage = string.Empty;
 
-        Company? existingCompany = _companyService.GetCompanyById(companyId);
+        Company? existingCompany = companyService.GetCompanyById(companyId);
         if (existingCompany is null)
         {
             StatusMessage = MessageCompanyNotFound;
@@ -149,43 +155,41 @@ public partial class EditCompanyProfileViewModel : ObservableObject
     {
         StatusMessage = string.Empty;
 
-        Company? existingCompany = _companyService.GetCompanyById(CompanyId);
+        Company? existingCompany = companyService.GetCompanyById(CompanyId);
         int existingPostedJobsCount = existingCompany?.PostedJobsCount ?? DefaultCountValue;
         int existingCollaboratorsCount = existingCompany?.CollaboratorsCount ?? DefaultCountValue;
         List<string> collaboratorsCopy = existingCompany?.Collaborators ?? new List<string>();
 
         try
         {
-            _companyValidator.ValidateName(Name);
+            companyValidator.ValidateName(Name);
 
-            var scenarioTuplesList = editGame.Scenarios
+            var scenarioTuplesList = EditGame.Scenarios
                 .Select(scenario => (
                     scenarioText: scenario.ScenarioText ?? string.Empty,
                     choices: (IReadOnlyList<(string advice, string feedback)>)scenario.Choices
                         .Select(choice => (
                             advice: choice.Advice ?? string.Empty,
                             feedback: choice.Feedback ?? string.Empty))
-                        .ToList()
-                ))
+                        .ToList()))
                 .ToList();
 
-            _gameValidator.ValidateForActivation(scenarioTuplesList, editGame.Conclusion ?? string.Empty);
+            gameValidator.ValidateForActivation(scenarioTuplesList, EditGame.Conclusion ?? string.Empty);
 
-            Game newGame = _gameService.CreateGameFromInput(
-                buddyId: editGame.SelectedBuddyId,
-                buddyName: editGame.BuddyName,
-                buddyIntroduction: editGame.BuddyIntroduction,
+            Game newGame = gameService.CreateGameFromInput(
+                buddyId: EditGame.SelectedBuddyId,
+                buddyName: EditGame.BuddyName,
+                buddyIntroduction: EditGame.BuddyIntroduction,
                 scenarios: scenarioTuplesList,
-                conclusion: editGame.Conclusion ?? string.Empty,
-                publish: true
-            );
+                conclusion: EditGame.Conclusion ?? string.Empty,
+                publish: true);
 
             Company updatedCompany = ToCompany(existingPostedJobsCount, existingCollaboratorsCount);
             updatedCompany.Collaborators = collaboratorsCopy;
             updatedCompany.Game = newGame;
 
-            _companyService.UpdateCompany(updatedCompany);
-            _gameService.Save(newGame);
+            companyService.UpdateCompany(updatedCompany);
+            gameService.Save(newGame);
 
             return null;
         }
@@ -205,15 +209,15 @@ public partial class EditGame : ObservableObject
     private const string MessageGameCreatedSuccessfully = "Game created and saved successfully.";
     private const string MessageGameCreateFailedPrefix = "Failed to create game: ";
 
-    private readonly IGameService _gameService;
-    private readonly IGameValidator _gameValidator;
+    private readonly IGameService gameService;
+    private readonly IGameValidator gameValidator;
 
     public ObservableCollection<ScenarioInput> Scenarios { get; } = new ObservableCollection<ScenarioInput>();
 
     public ObservableCollection<int> AvailableBuddyIds { get; } = new ObservableCollection<int> { 0, 1 };
 
     [ObservableProperty]
-    private int _selectedBuddyId = DefaultBuddyId;
+    private int selectedBuddyId = DefaultBuddyId;
 
     public string BuddyImagePath => BuddyImageProvider.GetImagePathById(SelectedBuddyId);
 
@@ -223,21 +227,21 @@ public partial class EditGame : ObservableObject
     }
 
     [ObservableProperty]
-    private string _buddyName = string.Empty;
+    private string buddyName = string.Empty;
 
     [ObservableProperty]
-    private string _buddyIntroduction = string.Empty;
+    private string buddyIntroduction = string.Empty;
 
     [ObservableProperty]
-    private string _conclusion = string.Empty;
+    private string conclusion = string.Empty;
 
     [ObservableProperty]
-    private string _statusMessage = string.Empty;
+    private string statusMessage = string.Empty;
 
     public EditGame(IGameService gameService, IGameValidator gameValidator)
     {
-        _gameService = gameService;
-        _gameValidator = gameValidator;
+        this.gameService = gameService;
+        this.gameValidator = gameValidator;
 
         for (int scenarioIndex = 0; scenarioIndex < RequiredScenariosCount; scenarioIndex++)
         {
@@ -251,14 +255,16 @@ public partial class EditGame : ObservableObject
             Scenarios.Add(scenarioInput);
         }
 
-        ApplyLoadedGame(_gameService.GetStoredGame());
+        ApplyLoadedGame(this.gameService.GetStoredGame());
         StatusMessage = string.Empty;
     }
 
     private void ApplyLoadedGame(Game game)
     {
         if (game == null)
+        {
             return;
+        }
 
         SelectedBuddyId = game.Buddy.Id;
         BuddyName = game.Buddy.Name ?? string.Empty;
@@ -292,13 +298,12 @@ public partial class EditGame : ObservableObject
                         .Select(choice => (
                             advice: choice.Advice ?? string.Empty,
                             feedback: choice.Feedback ?? string.Empty))
-                        .ToList()
-                ))
+                        .ToList()))
                 .ToList();
 
-            _gameValidator.ValidateForActivation(scenarioTuplesList, Conclusion ?? string.Empty);
+            gameValidator.ValidateForActivation(scenarioTuplesList, Conclusion ?? string.Empty);
 
-            var newGame = _gameService.CreateGameFromInput(
+            var newGame = gameService.CreateGameFromInput(
                 buddyId: SelectedBuddyId,
                 buddyName: BuddyName,
                 buddyIntroduction: BuddyIntroduction,
@@ -306,7 +311,7 @@ public partial class EditGame : ObservableObject
                 conclusion: Conclusion ?? string.Empty,
                 publish: false);
 
-            _gameService.Save(newGame);
+            gameService.Save(newGame);
             StatusMessage = MessageGameCreatedSuccessfully;
         }
         catch (Exception exception)
@@ -319,7 +324,7 @@ public partial class EditGame : ObservableObject
 public partial class ScenarioInput : ObservableObject
 {
     [ObservableProperty]
-    private string _scenarioText = string.Empty;
+    private string scenarioText = string.Empty;
 
     public ObservableCollection<AdviceChoiceInput> Choices { get; } = new ObservableCollection<AdviceChoiceInput>();
 }
@@ -327,8 +332,8 @@ public partial class ScenarioInput : ObservableObject
 public partial class AdviceChoiceInput : ObservableObject
 {
     [ObservableProperty]
-    private string _advice = string.Empty;
+    private string advice = string.Empty;
 
     [ObservableProperty]
-    private string _feedback = string.Empty;
+    private string feedback = string.Empty;
 }

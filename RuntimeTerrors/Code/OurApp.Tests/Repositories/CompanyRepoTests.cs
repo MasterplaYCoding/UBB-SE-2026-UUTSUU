@@ -1,8 +1,8 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OurApp.Core.Models;
 using OurApp.Core.Repositories;
 using OurApp.Tests.Helpers;
-using System.Collections.Generic;
 
 namespace OurApp.Tests.Repositories
 {
@@ -78,7 +78,7 @@ namespace OurApp.Tests.Repositories
         [TestMethod]
         public void Add_AddsCompanyToDatabase()
         {
-            var company = new Company("NewCompany", "", "", "logo.png", "", "");
+            var company = new Company("NewCompany", string.Empty, string.Empty, "logo.png", string.Empty, string.Empty);
 
             company.Game = CreateDummyGame();
 
@@ -130,7 +130,7 @@ namespace OurApp.Tests.Repositories
         [TestMethod]
         public void Add_InvalidCompanyName_ThrowsException()
         {
-            var company = new Company("", "", "", "logo.png", "", "");
+            var company = new Company(string.Empty, string.Empty, string.Empty, "logo.png", string.Empty, string.Empty);
             company.Game = CreateDummyGame();
             Assert.ThrowsException<System.ArgumentException>(() => ((ICompanyRepo)repo).Add(company));
         }
@@ -138,7 +138,7 @@ namespace OurApp.Tests.Repositories
         [TestMethod]
         public void GetCompanyByName_InvalidName_ReturnsNull()
         {
-            var result = repo.GetCompanyByName("");
+            var result = repo.GetCompanyByName(string.Empty);
             Assert.IsNull(result);
         }
     }

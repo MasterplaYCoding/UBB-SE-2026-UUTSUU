@@ -1,11 +1,11 @@
-﻿using OurApp.Core.Models;
-using OurApp.Core.Repositories;
-using OurApp.Tests.Helpers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OurApp.Core.Models;
+using OurApp.Core.Repositories;
+using OurApp.Tests.Helpers;
 
 namespace OurApp.Tests.Repositories
 {
@@ -25,8 +25,7 @@ namespace OurApp.Tests.Repositories
                 new DateTime(2027, 1, 2),
                 "Cluj-Napoca",
                 TestDbSeeder.CompanyId,
-                new List<Company>()
-            );
+                new List<Company>());
         }
         private static Event MakePastEvent()
         {
@@ -38,8 +37,7 @@ namespace OurApp.Tests.Repositories
                 new DateTime(2020, 1, 2),
                 "Cluj-Napoca",
                 TestDbSeeder.CompanyId,
-                new List<Company>()
-            );
+                new List<Company>());
         }
 
         [TestInitialize]
@@ -67,7 +65,7 @@ namespace OurApp.Tests.Repositories
         public void AddEventToRepo_ValidEvent_InsertedEventTitleIsPersistedCorrectly()
         {
             eventsRepo.AddEventToRepo(insertedEvent);
-            var result = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId);
+            var result = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId);
             Assert.AreEqual("Test Event", result[0].Title);
         }
 
@@ -75,7 +73,7 @@ namespace OurApp.Tests.Repositories
         public void AddEventToRepo_ValidEvent_InsertedEventLocationIsPersistedCorrectly()
         {
             eventsRepo.AddEventToRepo(insertedEvent);
-            var result = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId);
+            var result = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId);
             Assert.AreEqual("Cluj-Napoca", result[0].Location);
         }
 
@@ -83,16 +81,15 @@ namespace OurApp.Tests.Repositories
         public void AddEventToRepo_ValidEvent_InsertedEventStartDateIsPersistedCorrectly()
         {
             eventsRepo.AddEventToRepo(insertedEvent);
-            var result = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId);
+            var result = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId);
             Assert.AreEqual(new DateTime(2027, 1, 1), result[0].StartDate);
         }
 
         [TestMethod]
         public void AddEventToRepo_ValidEvent_InsertedEventEndDateIsPersistedCorrectly()
         {
-
             eventsRepo.AddEventToRepo(insertedEvent);
-            var result = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId);
+            var result = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId);
             Assert.AreEqual(new DateTime(2027, 1, 2), result[0].EndDate);
         }
 
@@ -100,9 +97,9 @@ namespace OurApp.Tests.Repositories
         public void RemoveEventFromRepo_ExistingEvent_CurrentEventsCountDecreases()
         {
             eventsRepo.AddEventToRepo(insertedEvent);
-            int countBefore = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId).Count;
+            int countBefore = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId).Count;
             eventsRepo.RemoveEventFromRepo(insertedEvent);
-            int countAfter = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId).Count;
+            int countAfter = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId).Count;
             insertedEvent = MakeCurrentEvent();
             Assert.AreEqual(countBefore - 1, countAfter);
         }
@@ -113,7 +110,7 @@ namespace OurApp.Tests.Repositories
             eventsRepo.AddEventToRepo(insertedEvent);
             eventsRepo.UpdateEventToRepo(insertedEvent.Id, null, "Updated Title", "Test description", new DateTime(2027, 1, 1), new DateTime(2027, 1, 2), "Cluj-Napoca");
 
-            var result = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId);
+            var result = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId);
             var updatedEvent = result.First(e => e.Id == insertedEvent.Id);
 
             Assert.AreEqual("Updated Title", updatedEvent.Title);
@@ -125,7 +122,7 @@ namespace OurApp.Tests.Repositories
             eventsRepo.AddEventToRepo(insertedEvent);
             eventsRepo.UpdateEventToRepo(insertedEvent.Id, null, "Updated Title", "Test description", new DateTime(2027, 1, 1), new DateTime(2027, 1, 2), "Bucharest");
 
-            var result = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId);
+            var result = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId);
             var updatedEvent = result.First(e => e.Id == insertedEvent.Id);
 
             Assert.AreEqual("Bucharest", updatedEvent.Location);
@@ -138,7 +135,7 @@ namespace OurApp.Tests.Repositories
             DateTime expectedStartDate = new DateTime(2027, 6, 1);
             eventsRepo.UpdateEventToRepo(insertedEvent.Id, null, "Test Event", "Test description", expectedStartDate, new DateTime(2027, 6, 2), "Cluj-Napoca");
 
-            var result = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId);
+            var result = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId);
             var updatedEvent = result.First(e => e.Id == insertedEvent.Id);
 
             Assert.AreEqual(expectedStartDate, updatedEvent.StartDate);
@@ -147,9 +144,9 @@ namespace OurApp.Tests.Repositories
         [TestMethod]
         public void GetCurrentEventsFromRepo_AfterAddingCurrentEvent_CountIncreasesByOne()
         {
-            int countBefore = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId).Count;
+            int countBefore = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId).Count;
             eventsRepo.AddEventToRepo(insertedEvent);
-            int countAfter = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId).Count;
+            int countAfter = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId).Count;
             Assert.AreEqual(countBefore + 1, countAfter);
         }
 
@@ -157,27 +154,27 @@ namespace OurApp.Tests.Repositories
         public void GetCurrentEventsFromRepo_PastEventAdded_CountDoesNotIncrease()
         {
             insertedEvent = MakePastEvent();
-            int countBefore = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId).Count;
+            int countBefore = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId).Count;
             eventsRepo.AddEventToRepo(insertedEvent);
-            int countAfter = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId).Count;
+            int countAfter = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId).Count;
             Assert.AreEqual(countBefore, countAfter);
         }
         [TestMethod]
         public void GetPastEventsFromRepo_AfterAddingPastEvent_CountIncreasesByOne()
         {
             insertedEvent = MakePastEvent();
-            int countBefore = eventsRepo.getPastEventsFromRepo(TestDbSeeder.CompanyId).Count;
+            int countBefore = eventsRepo.GetPastEventsFromRepo(TestDbSeeder.CompanyId).Count;
             eventsRepo.AddEventToRepo(insertedEvent);
-            int countAfter = eventsRepo.getPastEventsFromRepo(TestDbSeeder.CompanyId).Count;
+            int countAfter = eventsRepo.GetPastEventsFromRepo(TestDbSeeder.CompanyId).Count;
             Assert.AreEqual(countBefore + 1, countAfter);
         }
 
         [TestMethod]
         public void GetPastEventsFromRepo_CurrentEventAdded_CountDoesNotIncrease()
         {
-            int countBefore = eventsRepo.getPastEventsFromRepo(TestDbSeeder.CompanyId).Count;
+            int countBefore = eventsRepo.GetPastEventsFromRepo(TestDbSeeder.CompanyId).Count;
             eventsRepo.AddEventToRepo(insertedEvent);
-            int countAfter = eventsRepo.getPastEventsFromRepo(TestDbSeeder.CompanyId).Count;
+            int countAfter = eventsRepo.GetPastEventsFromRepo(TestDbSeeder.CompanyId).Count;
             Assert.AreEqual(countBefore, countAfter);
         }
 
@@ -202,11 +199,10 @@ namespace OurApp.Tests.Repositories
                 new DateTime(2027, 1, 2),
                 "Cluj-Napoca",
                 TestDbSeeder.CompanyId,
-                new List<Company>()
-            );
+                new List<Company>());
 
             eventsRepo.AddEventToRepo(eventWithPhoto);
-            var result = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId);
+            var result = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId);
             var found = result.First(e => e.Id == eventWithPhoto.Id);
 
             eventsRepo.RemoveEventFromRepo(eventWithPhoto);
@@ -220,7 +216,7 @@ namespace OurApp.Tests.Repositories
             eventsRepo.AddEventToRepo(insertedEvent);
             eventsRepo.UpdateEventToRepo(insertedEvent.Id, null, "Updated Title", null, new DateTime(2027, 1, 1), new DateTime(2027, 1, 2), "Cluj-Napoca");
 
-            var result = eventsRepo.getCurrentEventsFromRepo(TestDbSeeder.CompanyId);
+            var result = eventsRepo.GetCurrentEventsFromRepo(TestDbSeeder.CompanyId);
             var updatedEvent = result.First(e => e.Id == insertedEvent.Id);
 
             Assert.AreEqual("Updated Title", updatedEvent.Title);
@@ -237,8 +233,7 @@ namespace OurApp.Tests.Repositories
                 new DateTime(2027, 1, 2),
                 "Cluj-Napoca",
                 TestDbSeeder.CompanyId,
-                new List<Company>()
-            );
+                new List<Company>());
 
             Assert.ThrowsException<Microsoft.Data.SqlClient.SqlException>(() =>
                 eventsRepo.AddEventToRepo(invalidEvent));

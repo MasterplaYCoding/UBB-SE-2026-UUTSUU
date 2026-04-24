@@ -1,20 +1,19 @@
-﻿using Microsoft.Data.SqlClient;
-using OurApp.Core.Database;
-using OurApp.Core.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
+using OurApp.Core.Database;
+using OurApp.Core.Models;
 
 namespace OurApp.Core.Repositories
 {
     public class PaymentRepository : IPaymentRepository
     {
-        //change it to your own 
+        // change it to your own
         // private readonly string _connectionString =
-        //     "Data Source=Aron\\SQLEXPRESS;Initial Catalog=iss_project;Integrated Security=True;Trust Server Certificate=True";
-
+        // "Data Source=Aron\\SQLEXPRESS;Initial Catalog=iss_project;Integrated Security=True;Trust Server Certificate=True";
         private const string UpdateJobPaymentSqlQuery = "UPDATE jobs SET amount_payed = @amount WHERE job_id = @jobId";
         private const string GetPaidJobsSqlQuery = @"
                 SELECT c.company_name, j.job_title, j.amount_payed 

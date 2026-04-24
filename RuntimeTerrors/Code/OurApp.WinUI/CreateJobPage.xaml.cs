@@ -1,7 +1,7 @@
+using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using OurApp.WinUI.ViewModels;
-using System;
 
 namespace OurApp.WinUI;
 
@@ -15,8 +15,8 @@ public sealed partial class CreateJobPage : Page
 
     public CreateJobPage()
     {
-        var mainWindow = App.mainWindow;
-        ViewModel = new CreateJobViewModel(mainWindow.jobsRepository, mainWindow.sessionService);
+        var mainWindow = App.MainWindow;
+        ViewModel = new CreateJobViewModel(mainWindow.JobsRepository, mainWindow.SessionService);
         ViewModel.OnSaveCompleted = HandleSaveCompleted;
 
         InitializeComponent();

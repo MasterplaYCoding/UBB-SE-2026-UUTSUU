@@ -1,11 +1,11 @@
-﻿using OurApp.Core.Models;
-using OurApp.Core.Repositories;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OurApp.Core.Models;
+using OurApp.Core.Repositories;
 
 namespace OurApp.Tests.Helpers
 {
@@ -34,12 +34,12 @@ namespace OurApp.Tests.Helpers
             RemovedEvent = e;
         }
 
-        public ObservableCollection<Event> getCurrentEventsFromRepo(int loggedInUser)
+        public ObservableCollection<Event> GetCurrentEventsFromRepo(int loggedInUser)
         {
             return CurrentEventsToReturn;
         }
 
-        public ObservableCollection<Event> getPastEventsFromRepo(int loggedInUser)
+        public ObservableCollection<Event> GetPastEventsFromRepo(int loggedInUser)
         {
             return PastEventsToReturn;
         }

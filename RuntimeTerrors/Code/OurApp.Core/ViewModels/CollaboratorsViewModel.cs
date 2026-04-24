@@ -1,17 +1,17 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using OurApp.Core.Models;
-using OurApp.Core.Services;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
+using OurApp.Core.Models;
+using OurApp.Core.Services;
 
 namespace OurApp.Core.ViewModels
 {
     public partial class CollaboratorsViewModel : ObservableObject
     {
-        public List<Company> allCollaborators { get; }
+        public List<Company> AllCollaborators { get; }
         private readonly ICollaboratorsService collaboratorsService;
         private readonly SessionService sessionService;
 
@@ -25,7 +25,7 @@ namespace OurApp.Core.ViewModels
             this.collaboratorsService = collaboratorsService;
             this.sessionService = sessionService;
 
-            this.allCollaborators = collaboratorsService.GetAllCollaborators(sessionService.loggedInUser.CompanyId);
+            this.AllCollaborators = collaboratorsService.GetAllCollaborators(sessionService.LoggedInUser.CompanyId);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace OurApp.WinUI
 
             if (e.Parameter is JobPosting job)
             {
-                ViewModel = new JobApplicantsViewModel(job,App.mainWindow.applicantService, App.mainWindow?.sessionService);
+                ViewModel = new JobApplicantsViewModel(job, App.MainWindow.ApplicantService, App.MainWindow?.SessionService);
             }
         }
 

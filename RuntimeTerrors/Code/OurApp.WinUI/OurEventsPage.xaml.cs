@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -7,17 +12,11 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using OurApp.Core.Models;
 using OurApp.Core.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
-
 namespace OurApp.WinUI;
 
 /// <summary>
@@ -32,33 +31,33 @@ public sealed partial class OurEventsPage : Page
     /// </summary>
     public OurEventsPage()
     {
-        var mainWindow = App.mainWindow;
+        var mainWindow = App.MainWindow;
         InitializeComponent();
-        ViewModel = new OurEventsViewModel(mainWindow.eventsService, mainWindow.sessionService);
+        ViewModel = new OurEventsViewModel(mainWindow.EventsService, mainWindow.SessionService);
         this.DataContext = ViewModel;
     }
 
     private void NavigateBack_Click(object sender, RoutedEventArgs e)
     {
-        var mainWindow = App.mainWindow;
+        var mainWindow = App.MainWindow;
         mainWindow.RootFrame.Navigate(typeof(ViewProfilePage));
     }
 
     /// <summary>
-    /// Function that navigates the user to the "Create Event" page when clicking 
+    /// Function that navigates the user to the "Create Event" page when clicking
     /// the button "Create Event"
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
     private void CreateEventButton_Click(object sender, RoutedEventArgs e)
     {
-        var mainWindow = App.mainWindow;
+        var mainWindow = App.MainWindow;
         mainWindow.RootFrame.Navigate(typeof(CreateEventPage));
     }
 
     private void PastEventsButton_Click(object sender, RoutedEventArgs e)
     {
-        var mainWindow = App.mainWindow;
+        var mainWindow = App.MainWindow;
         mainWindow.RootFrame.Navigate(typeof(PastEventsPage));
     }
 
@@ -73,7 +72,7 @@ public sealed partial class OurEventsPage : Page
         var button = sender as Button;
         var selectedEvent = button.Tag as Event;
 
-        var mainWindow = App.mainWindow;
+        var mainWindow = App.MainWindow;
         mainWindow.RootFrame.Navigate(typeof(EditEventPage), selectedEvent);
     }
 
@@ -85,7 +84,7 @@ public sealed partial class OurEventsPage : Page
     /// <param name="e"></param>
     private void SeeCollaboratorsButton_Click(object sender, RoutedEventArgs e)
     {
-        var mainWindow = App.mainWindow;
+        var mainWindow = App.MainWindow;
         mainWindow.RootFrame.Navigate(typeof(CollaboratorsPage));
     }
 }

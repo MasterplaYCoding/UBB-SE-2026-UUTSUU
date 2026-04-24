@@ -1,33 +1,72 @@
-﻿using OurApp.Core.Models;
-using OurApp.Core.Services;
-using OurApp.Tests.Helpers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using OurApp.Core.Models;
+using OurApp.Core.Services;
+using OurApp.Tests.Helpers;
 
 namespace OurApp.Tests.Services
 {
     [TestClass]
     public class EventsServiceTests
     {
-        private FakeEventsRepo fakeEventsRepo;
-        private EventsService eventsService;
+        private const string DefaultPhoto = "photo.jpg";
+        private const string UpdatedPhoto = "new_photo.jpg";
+
+        private const string DefaultTitle = "Test Event";
+        private const string TitleHackathon = "Hackathon";
+        private const string TitleGeneric = "Event";
+        private const string TitleSpecific = "Event Title";
+        private const string TitleUpdated = "Updated Title";
+        private const string TitleShort = "Title";
+
+        private const string DefaultDesc = "Test Description";
+        private const string DescLower = "description";
+        private const string DescSpecific = "Description for event";
+        private const string DescShort = "desc";
+        private const string DescEvent = "Event Description";
+        private const string DescUpdated = "Updated description";
+
+        private const string LocClujNapoca = "Cluj-Napoca";
+        private const string LocCluj = "Cluj";
+        private const string LocTimisoara = "Timisoara";
+
+        private const string CollabName = "Collaborator";
+
+        private const int Year = 2026;
+        private const int MonthJune = 6;
+        private const int MonthJuly = 7;
+
+        private const int Day1 = 1;
+        private const int Day2 = 2;
+        private const int Day3 = 3;
+        private const int Day10 = 10;
+        private const int Day15 = 15;
+
+        private const int DefaultId = 1;
+        private const int ExpectedHostId = 42;
+        private const int AltEventId = 5;
+        private const int CollabId = 10;
+
+        private const int CountZero = 0;
+        private const int CountOne = 1;
+        private const int CountTwo = 2;
+
+        private FakeEventsRepo fakeEventsRepo = null!;
+        private EventsService eventsService = null!;
 
         private static Event MakeEvent()
         {
             return new Event(
-                "photo.jpg",
-                "Test Event",
-                "Test Description",
-                new DateTime(2026, 6, 1),
-                new DateTime(2026, 6, 2),
-                "Cluj-Napoca",
-                1,
-                new List<Company>()
-            );
+                DefaultPhoto,
+                DefaultTitle,
+                DefaultDesc,
+                new DateTime(Year, MonthJune, Day1),
+                new DateTime(Year, MonthJune, Day2),
+                LocClujNapoca,
+                DefaultId,
+                new List<Company>());
         }
 
         [TestInitialize]
@@ -40,138 +79,135 @@ namespace OurApp.Tests.Services
         [TestMethod]
         public void AddEvent_ValidData_AddEventToRepo()
         {
-            eventsService.AddEvent("photo.jpg", "Title", "description",
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), "Cluj", 1, new List<Company>());
+            eventsService.AddEvent(DefaultPhoto, TitleShort, DescLower,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj, DefaultId, new List<Company>());
             Assert.IsNotNull(fakeEventsRepo.AddedEvent);
         }
-
 
         [TestMethod]
         public void AddEvent_ValidData_EventPassedToRepoHasCorrectTitle()
         {
-            string expectedTitle = "Hackathon";
-            eventsService.AddEvent("photo.jpg", expectedTitle, "description",
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), "Cluj", 1, new List<Company>());
-            Assert.AreEqual(expectedTitle, fakeEventsRepo.AddedEvent.Title);
+            eventsService.AddEvent(DefaultPhoto, TitleHackathon, DescLower,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj, DefaultId, new List<Company>());
+            Assert.AreEqual(TitleHackathon, fakeEventsRepo.AddedEvent?.Title);
         }
 
         [TestMethod]
         public void AddEvent_ValidData_EventPassedToRepoHasCorrectDescription()
         {
-            string expectedDescription = "Description for event";
-            eventsService.AddEvent("photo.jpg", "Event", expectedDescription,
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), "Cluj", 1, new List<Company>());
-            Assert.AreEqual(expectedDescription, fakeEventsRepo.AddedEvent.Description);
+            eventsService.AddEvent(DefaultPhoto, TitleGeneric, DescSpecific,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj, DefaultId, new List<Company>());
+            Assert.AreEqual(DescSpecific, fakeEventsRepo.AddedEvent?.Description);
         }
 
         [TestMethod]
         public void AddEvent_ValidData_EventPassedToRepoHasCorrectStartDate()
         {
-            DateTime expectedStartDate = new DateTime(2026, 6, 1);
-            eventsService.AddEvent("photo.jpg", "Event", "Description for event",
-                expectedStartDate, new DateTime(2026, 6, 2), "Cluj", 1, new List<Company>());
-            Assert.AreEqual(expectedStartDate, fakeEventsRepo.AddedEvent.StartDate);
+            DateTime expectedStartDate = new DateTime(Year, MonthJune, Day1);
+            eventsService.AddEvent(DefaultPhoto, TitleGeneric, DescSpecific,
+                expectedStartDate, new DateTime(Year, MonthJune, Day2), LocCluj, DefaultId, new List<Company>());
+            Assert.AreEqual(expectedStartDate, fakeEventsRepo.AddedEvent?.StartDate);
         }
 
         [TestMethod]
         public void AddEvent_ValidData_EventPassedToRepoHasCorrectEndDate()
         {
-            DateTime expectedEndDate = new DateTime(2026, 6, 3);
-            eventsService.AddEvent("photo.jpg", "Event", "Description for event",
-                new DateTime(2026, 6, 1), expectedEndDate, "Cluj", 1, new List<Company>());
-            Assert.AreEqual(expectedEndDate, fakeEventsRepo.AddedEvent.EndDate);
+            DateTime expectedEndDate = new DateTime(Year, MonthJune, Day3);
+            eventsService.AddEvent(DefaultPhoto, TitleGeneric, DescSpecific,
+                new DateTime(Year, MonthJune, Day1), expectedEndDate, LocCluj, DefaultId, new List<Company>());
+            Assert.AreEqual(expectedEndDate, fakeEventsRepo.AddedEvent?.EndDate);
         }
 
         [TestMethod]
         public void AddEvent_ValidData_EventPassedToRepoHasCorrectLocation()
         {
-            string expectedLocation = "Cluj";
-            eventsService.AddEvent("photo.jpg", "Event", "Description for event",
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), expectedLocation, 1, new List<Company>());
-            Assert.AreEqual(expectedLocation, fakeEventsRepo.AddedEvent.Location);
+            eventsService.AddEvent(DefaultPhoto, TitleGeneric, DescSpecific,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj, DefaultId, new List<Company>());
+            Assert.AreEqual(LocCluj, fakeEventsRepo.AddedEvent?.Location);
         }
+
         [TestMethod]
         public void AddEvent_ValidData_EventPassedToRepoHasCorrectHostId()
         {
-            int expectedHostId = 42;
-            eventsService.AddEvent("photo.jpg", "Event", "Description for event",
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), "Cluj", expectedHostId, new List<Company>());
-            Assert.AreEqual(expectedHostId, fakeEventsRepo.AddedEvent.HostID);
+            eventsService.AddEvent(DefaultPhoto, TitleGeneric, DescSpecific,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj, ExpectedHostId, new List<Company>());
+            Assert.AreEqual(ExpectedHostId, fakeEventsRepo.AddedEvent?.HostID);
         }
 
         [TestMethod]
         public void AddEvent_ValidData_ReturnsTheCreatedEvent()
         {
-            Event result = eventsService.AddEvent("photo.jpg", "Title", "description",
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), "Cluj", 1, new List<Company>());
+            Event result = eventsService.AddEvent(DefaultPhoto, TitleShort, DescLower,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj, DefaultId, new List<Company>());
             Assert.IsNotNull(result);
         }
+
         [TestMethod]
         public void AddEvent_ValidData_ReturnedEventHasCorrectTitle()
         {
-            string expectedTitle = "Event Title";
-            Event result = eventsService.AddEvent("photo.jpg", expectedTitle, "desc",
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), "Cluj", 1, new List<Company>());
-            Assert.AreEqual(expectedTitle, result.Title);
+            Event result = eventsService.AddEvent(DefaultPhoto, TitleSpecific, DescShort,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj, DefaultId, new List<Company>());
+            Assert.AreEqual(TitleSpecific, result.Title);
         }
+
         [TestMethod]
         public void AddEvent_ValidData_ReturnedEventHasCorrectDescription()
         {
-            string expectedDescription = "Event Description";
-            Event result = eventsService.AddEvent("photo.jpg", "Event", expectedDescription,
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), "Cluj", 1, new List<Company>());
-            Assert.AreEqual(expectedDescription, result.Description);
+            Event result = eventsService.AddEvent(DefaultPhoto, TitleGeneric, DescEvent,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj, DefaultId, new List<Company>());
+            Assert.AreEqual(DescEvent, result.Description);
         }
+
         [TestMethod]
         public void AddEvent_ValidData_ReturnedEventHasCorrectStartDate()
         {
-            DateTime expectedStartDate = new DateTime(2026, 6, 1);
-            Event result = eventsService.AddEvent("photo.jpg", "Event", "Description for event",
-                expectedStartDate, new DateTime(2026, 6, 2), "Cluj", 1, new List<Company>());
+            DateTime expectedStartDate = new DateTime(Year, MonthJune, Day1);
+            Event result = eventsService.AddEvent(DefaultPhoto, TitleGeneric, DescSpecific,
+                expectedStartDate, new DateTime(Year, MonthJune, Day2), LocCluj, DefaultId, new List<Company>());
             Assert.AreEqual(expectedStartDate, result.StartDate);
         }
 
         [TestMethod]
         public void AddEvent_ValidData_ReturnedEventHasCorrectEndDate()
         {
-            DateTime expectedEndDate = new DateTime(2026, 6, 3);
-            Event result = eventsService.AddEvent("photo.jpg", "Event", "Description for event",
-                new DateTime(2026, 6, 1), expectedEndDate, "Cluj", 1, new List<Company>());
+            DateTime expectedEndDate = new DateTime(Year, MonthJune, Day3);
+            Event result = eventsService.AddEvent(DefaultPhoto, TitleGeneric, DescSpecific,
+                new DateTime(Year, MonthJune, Day1), expectedEndDate, LocCluj, DefaultId, new List<Company>());
             Assert.AreEqual(expectedEndDate, result.EndDate);
         }
+
         [TestMethod]
         public void AddEvent_ValidData_ReturnedEventHasCorrectLocation()
         {
-            string expectedLocation = "Cluj";
-            Event result = eventsService.AddEvent("photo.jpg", "Event", "Description for event",
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), expectedLocation, 1, new List<Company>());
-            Assert.AreEqual(expectedLocation, result.Location);
+            Event result = eventsService.AddEvent(DefaultPhoto, TitleGeneric, DescSpecific,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj, DefaultId, new List<Company>());
+            Assert.AreEqual(LocCluj, result.Location);
         }
 
         [TestMethod]
         public void AddEvent_ValidData_ReturnedEventHasCorrectHostId()
         {
-            int expectedHostId = 42;
-            Event result = eventsService.AddEvent("photo.jpg", "Event", "Description for event",
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), "Cluj", expectedHostId, new List<Company>());
-            Assert.AreEqual(expectedHostId, result.HostID);
+            Event result = eventsService.AddEvent(DefaultPhoto, TitleGeneric, DescSpecific,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj, ExpectedHostId, new List<Company>());
+            Assert.AreEqual(ExpectedHostId, result.HostID);
         }
+
         [TestMethod]
         public void AddEvent_WithOneCollaborator_EventPassedToRepoContainsCollaborator()
         {
-            var collaborator = new Company("Collaborator", "", "", "", "", "", 10);
+            var collaborator = new Company(CollabName, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, CollabId);
             var collaborators = new List<Company> { collaborator };
-            eventsService.AddEvent("photo.jpg", "Event", "desc",
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), "Cluj", 1, collaborators);
-            Assert.AreEqual(1, fakeEventsRepo.AddedEvent.Collaborators.Count);
+            eventsService.AddEvent(DefaultPhoto, TitleGeneric, DescShort,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj, DefaultId, collaborators);
+            Assert.AreEqual(CountOne, fakeEventsRepo.AddedEvent?.Collaborators.Count);
         }
 
         [TestMethod]
         public void AddEvent_NullCollaboratorsList_EventPassedToRepoHasNoCollaborators()
         {
-            eventsService.AddEvent("photo.jpg", "Event", "desc",
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), "Cluj", 1, null);
-            Assert.AreEqual(0, fakeEventsRepo.AddedEvent.Collaborators.Count);
+            eventsService.AddEvent(DefaultPhoto, TitleGeneric, DescShort,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj, DefaultId, null!);
+            Assert.AreEqual(CountZero, fakeEventsRepo.AddedEvent?.Collaborators.Count);
         }
 
         [TestMethod]
@@ -181,75 +217,73 @@ namespace OurApp.Tests.Services
             eventsService.DeleteEvent(eventToDelete);
             Assert.AreEqual(eventToDelete, fakeEventsRepo.RemovedEvent);
         }
+
         [TestMethod]
         public void DeleteEvent_ValidEvent_CallsRemoveEventFromRepo()
-        { 
+        {
             Event eventToDelete = MakeEvent();
             eventsService.DeleteEvent(eventToDelete);
             Assert.IsNotNull(fakeEventsRepo.RemovedEvent);
         }
+
         [TestMethod]
         public void UpdateEvent_ValidData_RepoReceivesCorrectEventId()
-        { 
-            int expectedId = 5;
-            eventsService.UpdateEvent(expectedId, "photo.jpg", "Title", "desc",
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), "Cluj");
-            Assert.AreEqual(expectedId, fakeEventsRepo.UpdatedEventId);
+        {
+            eventsService.UpdateEvent(AltEventId, DefaultPhoto, TitleShort, DescShort,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj);
+            Assert.AreEqual(AltEventId, fakeEventsRepo.UpdatedEventId);
         }
 
         [TestMethod]
         public void UpdateEvent_ValidData_RepoReceivesCorrectPhoto()
-        { 
-            string expectedPhoto = "new_photo.jpg";
-            eventsService.UpdateEvent(1, expectedPhoto, "Title", "desc",
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), "Cluj");
-            Assert.AreEqual(expectedPhoto, fakeEventsRepo.UpdatedPhoto);
+        {
+            eventsService.UpdateEvent(DefaultId, UpdatedPhoto, TitleShort, DescShort,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj);
+            Assert.AreEqual(UpdatedPhoto, fakeEventsRepo.UpdatedPhoto);
         }
 
         [TestMethod]
         public void UpdateEvent_ValidData_RepoReceivesCorrectTitle()
         {
-            string expectedTitle = "Updated Title";
-            eventsService.UpdateEvent(1, "photo.jpg", expectedTitle, "desc",
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), "Cluj");
-            Assert.AreEqual(expectedTitle, fakeEventsRepo.UpdatedTitle);
+            eventsService.UpdateEvent(DefaultId, DefaultPhoto, TitleUpdated, DescShort,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj);
+            Assert.AreEqual(TitleUpdated, fakeEventsRepo.UpdatedTitle);
         }
 
         [TestMethod]
         public void UpdateEvent_ValidData_RepoReceivesCorrectDescription()
         {
-            string expectedDescription = "Updated description";
-            eventsService.UpdateEvent(1, "photo.jpg", "Title", expectedDescription,
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), "Cluj");
-            Assert.AreEqual(expectedDescription, fakeEventsRepo.UpdatedDescription);
+            eventsService.UpdateEvent(DefaultId, DefaultPhoto, TitleShort, DescUpdated,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocCluj);
+            Assert.AreEqual(DescUpdated, fakeEventsRepo.UpdatedDescription);
         }
 
         [TestMethod]
         public void UpdateEvent_ValidData_RepoReceivesCorrectStartDate()
         {
-            DateTime expectedStartDate = new DateTime(2026, 7, 10);
-            eventsService.UpdateEvent(1, "photo.jpg", "Title", "desc",
-                expectedStartDate, new DateTime(2026, 7, 15), "Cluj");
+            DateTime expectedStartDate = new DateTime(Year, MonthJuly, Day10);
+            eventsService.UpdateEvent(DefaultId, DefaultPhoto, TitleShort, DescShort,
+                expectedStartDate, new DateTime(Year, MonthJuly, Day15), LocCluj);
             Assert.AreEqual(expectedStartDate, fakeEventsRepo.UpdatedStartDate);
         }
 
         [TestMethod]
         public void UpdateEvent_ValidData_RepoReceivesCorrectEndDate()
-        {        
-            DateTime expectedEndDate = new DateTime(2026, 7, 15);
-            eventsService.UpdateEvent(1, "photo.jpg", "Title", "desc",
-                new DateTime(2026, 7, 10), expectedEndDate, "Cluj");
+        {
+            DateTime expectedEndDate = new DateTime(Year, MonthJuly, Day15);
+            eventsService.UpdateEvent(DefaultId, DefaultPhoto, TitleShort, DescShort,
+                new DateTime(Year, MonthJuly, Day10), expectedEndDate, LocCluj);
             Assert.AreEqual(expectedEndDate, fakeEventsRepo.UpdatedEndDate);
         }
 
         [TestMethod]
         public void UpdateEvent_ValidData_RepoReceivesCorrectLocation()
         {
-            string expectedLocation = "Timisoara";
-            eventsService.UpdateEvent(1, "photo.jpg", "Title", "desc",
-                new DateTime(2026, 6, 1), new DateTime(2026, 6, 2), expectedLocation);
-            Assert.AreEqual(expectedLocation, fakeEventsRepo.UpdatedLocation);
+            eventsService.UpdateEvent(DefaultId, DefaultPhoto, TitleShort, DescShort,
+                new DateTime(Year, MonthJune, Day1), new DateTime(Year, MonthJune, Day2), LocTimisoara);
+            Assert.AreEqual(LocTimisoara, fakeEventsRepo.UpdatedLocation);
         }
+
         [TestMethod]
         public void GetCurrentEvents_RepoReturnsTwoEvents_ServiceReturnsTwoEvents()
         {
@@ -258,17 +292,18 @@ namespace OurApp.Tests.Services
                 MakeEvent(),
                 MakeEvent()
             };
-            var result = eventsService.GetCurrentEvents(1);
-            Assert.AreEqual(2, result.Count);
+            var result = eventsService.GetCurrentEvents(DefaultId);
+            Assert.AreEqual(CountTwo, result.Count);
         }
 
         [TestMethod]
         public void GetCurrentEvents_RepoReturnsEmptyCollection_ServiceReturnsEmptyCollection()
         {
             fakeEventsRepo.CurrentEventsToReturn = new ObservableCollection<Event>();
-            var result = eventsService.GetCurrentEvents(1);
-            Assert.AreEqual(0, result.Count);
+            var result = eventsService.GetCurrentEvents(DefaultId);
+            Assert.AreEqual(CountZero, result.Count);
         }
+
         [TestMethod]
         public void GetPastEvents_RepoReturnsTwoEvents_ServiceReturnsTwoEvents()
         {
@@ -277,17 +312,16 @@ namespace OurApp.Tests.Services
                 MakeEvent(),
                 MakeEvent()
             };
-            var result = eventsService.GetPastEvents(1);
-            Assert.AreEqual(2, result.Count);
+            var result = eventsService.GetPastEvents(DefaultId);
+            Assert.AreEqual(CountTwo, result.Count);
         }
 
         [TestMethod]
         public void GetPastEvents_RepoReturnsEmptyCollection_ServiceReturnsEmptyCollection()
         {
             fakeEventsRepo.PastEventsToReturn = new ObservableCollection<Event>();
-            var result = eventsService.GetPastEvents(1);
-            Assert.AreEqual(0, result.Count);
+            var result = eventsService.GetPastEvents(DefaultId);
+            Assert.AreEqual(CountZero, result.Count);
         }
     }
 }
-  
